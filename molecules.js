@@ -54,19 +54,19 @@
   }
 
   /* Haworth-Projektion: Ring in Perspektive (vorne fett), Gruppen senkrecht nach oben (+1) oder unten (-1) */
-  function hring(h, cx, cy, R, angles, labels) {
+  function hring(h, cx, cy, R, angles, labels, sh) {
     var idx = [], n = angles.length, k, q, f = 0, best = -1e9, ys = [];
-    for (k = 0; k < n; k++) { q = angles[k] * Math.PI / 180; idx.push(h.add(cx + R * Math.cos(q), cy + 0.4 * R * Math.sin(q), labels && labels[k])); h.m.atoms[idx[k]].rc = [cx, cy]; }
+    for (k = 0; k < n; k++) { q = angles[k] * Math.PI / 180; idx.push(h.add(cx + R * Math.cos(q) - (sh || 0) * R * Math.sin(q), cy + 0.4 * R * Math.sin(q), labels && labels[k])); h.m.atoms[idx[k]].rc = [cx, cy]; }
     for (k = 0; k < n; k++) { ys[k] = (h.m.atoms[idx[k]].y + h.m.atoms[idx[(k + 1) % n]].y) / 2; if (ys[k] > best) { best = ys[k]; f = k; } }
-    for (k = 0; k < n; k++) h.bd(idx[k], idx[(k + 1) % n], k === f ? 'b' : ((k === (f + 1) % n || k === (f + n - 1) % n) ? 'm' : 1));
+    for (k = 0; k < n; k++) h.bd(idx[k], idx[(k + 1) % n], k === f ? 'b' : (k === (f + 1) % n ? 'mi' : (k === (f + n - 1) % n ? 'mj' : 1)));
     h.m.haworth = true;
     return idx;
   }
-  function hpyr(h, cx, cy) { return hring(h, cx, cy, 46, [0, 60, 120, 180, 240, 300], { 5: 'O' }); }
-  function hv(h, a, dir, label, len) {
+  function hpyr(h, cx, cy) { return hring(h, cx, cy, 46, [0, 60, 120, 180, 240, 300], { 5: 'O' }, 0.22); }
+  function hv(h, a, dir, label, len, dx) {
     var A = h.m.atoms[a], d = len || 34;
     if (A.rc) { var off = dir > 0 ? A.y - A.rc[1] : A.rc[1] - A.y; if (off > 0) d += off + 2; } /* Gruppe vor dem Ring: länger, damit sie über/unter dem Ring endet */
-    var k = h.add(A.x, A.y - dir * d, label);
+    var k = h.add(A.x + (dx || 0), A.y - dir * d, label);
     h.m.bonds.push({ i: a, j: k, o: 1, ctr: null, v: dir });
     return k;
   }
@@ -542,7 +542,7 @@
       where: 'In Obst und Honig. Mit Glucose bildet sie den Haushaltszucker Saccharose.',
       m: mol(function (h) {
         var q = hring(h, 0, 0, 46, [342, 54, 126, 198, 270], { 4: 'O' });
-        var o2 = hv(h, q[0], 1, 'OH', 66), c1 = hch(h, q[0], -1, 0), o3 = hoh(h, q[1], 1, 0), o4 = hoh(h, q[2], -1, 0), c6 = hch(h, q[3], 1, 0);
+        var o2 = hv(h, q[0], 1, 'OH', 62, 30), c1 = hch(h, q[0], -1, 0), o3 = hoh(h, q[1], 1, 0), o4 = hoh(h, q[2], -1, 0), c6 = hch(h, q[3], 1, 0);
         h.st(q[0], [q[4], o2, q[1], c1], 'R'); h.st(q[1], [o3, q[0], q[2]], 'S'); h.st(q[2], [o4, q[3], q[1]], 'S'); h.st(q[3], [q[4], q[2], c6], 'R');
       }) },
     { id: 'adenosin', cat: 'Zucker & Nucleotide', name: 'Adenosin', alt: 'Adenin + Ribose', formula: 'C₁₀H₁₃N₅O₄', groups: ['Nucleosid', 'Purinbase', 'Ribose'],

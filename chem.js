@@ -91,8 +91,9 @@
         var o2 = 3.4;
         lines += seg(x1 + nx * o2, y1 + ny * o2, x2 + nx * o2, y2 + ny * o2);
         lines += seg(x1 - nx * o2, y1 - ny * o2, x2 - nx * o2, y2 - ny * o2);
-      } else if (b.o === 'b' || b.o === 'm') {
-        lines += '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '" stroke-width="' + (b.o === 'b' ? 6 : 3.8) + '"/>';
+      } else if (b.o === 'b' || b.o === 'mi' || b.o === 'mj') {
+        var dx = x2 - x1, dy = y2 - y1, L = Math.sqrt(dx * dx + dy * dy), px = -dy / L, py = dx / L, wi = (b.o === 'b' || b.o === 'mi') ? 4 : 0.8, wj = (b.o === 'b' || b.o === 'mj') ? 4 : 0.8;
+        lines += '<polygon class="w" points="' + [x1 + px * wi, y1 + py * wi, x2 + px * wj, y2 + py * wj, x2 - px * wj, y2 - py * wj, x1 - px * wi, y1 - py * wi].map(function (v) { return v.toFixed(1); }).join(' ') + '"/>';
       } else if (b.o === 'w') {
         var hw = 4.8;
         lines += '<polygon class="w" points="' + x1.toFixed(1) + ',' + y1.toFixed(1) + ' ' + (x2 + nx * hw).toFixed(1) + ',' + (y2 + ny * hw).toFixed(1) + ' ' + (x2 - nx * hw).toFixed(1) + ',' + (y2 - ny * hw).toFixed(1) + '"/>';
