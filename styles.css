@@ -136,6 +136,7 @@ svg text { font-family: var(--font-body); font-size: 19px; font-weight: 600; }
 svg text.o { fill: var(--o); }
 svg text.n { fill: var(--n); }
 svg text.s { fill: var(--s); }
+svg text.k { fill: var(--stroke); }
 
 @media (max-width: 440px) {
   .face { padding: 16px; min-height: 420px; }

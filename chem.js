@@ -1,6 +1,6 @@
 (function () {
   var L = 46;
-  var EXT = { 'O': [7, 7], 'N': [7, 7], 'S': [7, 7], 'OH': [7, 21], 'HO': [21, 7], 'NH': [7, 21], 'HN': [21, 7], 'SH': [7, 21], 'NH₂': [7, 31], 'H₂N': [31, 7] };
+  var EXT = { 'O': [7, 7], 'N': [7, 7], 'S': [7, 7], 'C': [7, 7], 'H': [7, 7], 'P': [7, 7], 'OH': [7, 21], 'HO': [21, 7], 'NH': [7, 21], 'HN': [21, 7], 'SH': [7, 21], 'NH₂': [7, 31], 'H₂N': [31, 7] };
 
   function mol(fn) {
     var m = { atoms: [], bonds: [] };
@@ -90,12 +90,12 @@
       minX = Math.min(minX, a.x - e[0]); maxX = Math.max(maxX, a.x + e[1]);
       minY = Math.min(minY, a.y - v); maxY = Math.max(maxY, a.y + v);
       if (a.l) {
-        var cls = a.l.indexOf('N') >= 0 ? 'n' : (a.l.indexOf('S') >= 0 ? 's' : 'o');
+        var cls = (a.l === 'C' || a.l === 'H') ? 'k' : (a.l === 'P' ? 's' : (a.l.indexOf('N') >= 0 ? 'n' : (a.l.indexOf('S') >= 0 ? 's' : 'o')));
         texts += '<text x="' + (a.x - e[0]).toFixed(1) + '" y="' + (a.y + 6.5).toFixed(1) + '" class="' + cls + '">' + a.l + '</text>';
       }
     });
     var W = 420, H = 300, bw = maxX - minX, bh = maxY - minY;
-    var sc = Math.min(1, (W - 32) / bw, (H - 32) / bh);
+    var sc = Math.min(1.4, (W - 32) / bw, (H - 32) / bh);
     var tx2 = W / 2 - sc * (minX + maxX) / 2, ty2 = H / 2 - sc * (minY + maxY) / 2;
     return '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + label + '"><g transform="translate(' + tx2.toFixed(1) + ' ' + ty2.toFixed(1) + ') scale(' + sc.toFixed(3) + ')">' + lines + texts + '</g></svg>';
   }

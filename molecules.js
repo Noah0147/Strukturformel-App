@@ -8,8 +8,66 @@
   var C = window.Chem, L = C.L, mol = C.mol, ring = C.ring, KEK = C.KEK, SAT = C.SAT,
       AP = C.AP, RP = C.RP, fusedPent = C.fusedPent, aaBase = C.aaBase;
 
+  /* Hilfsfunktionen für Fünfringe, Steroide und Nucleoside */
+  function pentAt(h, cx, cy, startDeg, labels) {
+    var idx = [], k, q;
+    for (k = 0; k < 5; k++) { q = (startDeg + 72 * k) * Math.PI / 180; idx.push(h.add(cx + RP * Math.cos(q), cy - RP * Math.sin(q), labels && labels[k])); }
+    return { idx: idx, c: [cx, cy] };
+  }
+  function pentFrom(h, a, theta, labels) {
+    var A = h.m.atoms[a], t = theta * Math.PI / 180, cx = A.x + RP * Math.cos(t), cy = A.y - RP * Math.sin(t), idx = [a], k, q;
+    for (k = 1; k < 5; k++) { q = (theta + 180 + 72 * k) * Math.PI / 180; idx.push(h.add(cx + RP * Math.cos(q), cy - RP * Math.sin(q), labels && labels[k])); }
+    return { idx: idx, c: [cx, cy] };
+  }
+  function pbond(h, P) { var i = P.idx; for (var k = 0; k < 5; k++) h.bd(i[k], i[(k + 1) % 5]); }
+  function outDir(h, P, k) { var a = h.m.atoms[P.idx[k]]; return Math.atan2(P.c[1] - a.y, a.x - P.c[0]) * 180 / Math.PI; }
+  function oh(h, a, ang) { var o = h.at(a, ang, Math.cos(ang * Math.PI / 180) >= -0.01 ? 'OH' : 'HO'); h.bd(a, o); return o; }
+  function imidazole(h, a, theta) {
+    var P = pentFrom(h, a, theta, { 2: 'NH', 4: 'N' }), i = P.idx;
+    h.bd(i[0], i[1], 2, P.c); h.bd(i[1], i[2]); h.bd(i[2], i[3]); h.bd(i[3], i[4], 2, P.c); h.bd(i[4], i[0]);
+    return P;
+  }
+  function steroid(h, dbl) {
+    var d = Math.PI / 180, S = Math.sqrt(3) * L, cxC = S * 1.5, cyC = -1.5 * L, a = {};
+    function hx(n, cx, cy, deg) { a[n] = h.add(cx + L * Math.cos(deg * d), cy - L * Math.sin(deg * d)); }
+    hx('c1', 0, 0, 90); hx('c2', 0, 0, 150); hx('c3', 0, 0, 210); hx('c4', 0, 0, 270); hx('c5', 0, 0, 330); hx('c10', 0, 0, 30);
+    hx('c6', S, 0, 270); hx('c7', S, 0, 330); hx('c8', S, 0, 30); hx('c9', S, 0, 90);
+    hx('c11', cxC, cyC, 150); hx('c12', cxC, cyC, 90); hx('c13', cxC, cyC, 30); hx('c14', cxC, cyC, 330);
+    var pcx = cxC + L * Math.cos(30 * d) + AP;
+    function px(n, deg) { a[n] = h.add(pcx + RP * Math.cos(deg * d), cyC - RP * Math.sin(deg * d)); }
+    px('c15', 288); px('c16', 0); px('c17', 72);
+    var rings = { A: [0, 0], B: [S, 0], C: [cxC, cyC], D: [pcx, cyC] };
+    [['c1', 'c2', 'A'], ['c2', 'c3', 'A'], ['c3', 'c4', 'A'], ['c4', 'c5', 'A'], ['c5', 'c10', 'A'], ['c10', 'c1', 'A'],
+     ['c5', 'c6', 'B'], ['c6', 'c7', 'B'], ['c7', 'c8', 'B'], ['c8', 'c9', 'B'], ['c9', 'c10', 'B'],
+     ['c8', 'c14', 'C'], ['c14', 'c13', 'C'], ['c13', 'c12', 'C'], ['c12', 'c11', 'C'], ['c11', 'c9', 'C'],
+     ['c14', 'c15', 'D'], ['c15', 'c16', 'D'], ['c16', 'c17', 'D'], ['c17', 'c13', 'D']].forEach(function (b) {
+      var two = dbl && (dbl.indexOf(b[0] + '-' + b[1]) >= 0 || dbl.indexOf(b[1] + '-' + b[0]) >= 0);
+      h.bd(a[b[0]], a[b[1]], two ? 2 : 1, two ? rings[b[2]] : null);
+    });
+    return a;
+  }
+  function adenosinCore(h) {
+    var r = ring(h, 0, 0, 90, [2, 1, 2, 1, 0, 1], { 1: 'N', 3: 'N' });
+    var nh = h.at(r[0], 90, 'NH₂'); h.bd(r[0], nh);
+    var p = fusedPent(h, r, 'N', 'N', '78');
+    var c1 = h.at(p.n9, -72); h.bd(p.n9, c1);
+    var S = pentFrom(h, c1, -72, { 4: 'O' }); pbond(h, S);
+    oh(h, S.idx[1], outDir(h, S, 1)); oh(h, S.idx[2], outDir(h, S, 2));
+    var c5 = h.at(S.idx[3], outDir(h, S, 3)); h.bd(S.idx[3], c5);
+    return c5;
+  }
+  function indole(h, kek) {
+    var r = ring(h, 0, 0, 90, KEK);
+    var A = h.m.atoms, p4 = A[r[4]], p5 = A[r[5]];
+    var pcx = (p4.x + p5.x) / 2 + AP, pcy = (p4.y + p5.y) / 2, ctr = [pcx, pcy];
+    function pv(deg, l) { var q = deg * Math.PI / 180; return h.add(pcx + RP * Math.cos(q), pcy - RP * Math.sin(q), l); }
+    var c3 = pv(72), c2 = pv(0), n1 = pv(-72, 'NH');
+    h.bd(r[5], c3); h.bd(c3, c2, 2, ctr); h.bd(c2, n1); h.bd(n1, r[4]);
+    return { r: r, c3: c3 };
+  }
+
   window.DATA_VERSION = '2026-11-12';
-  window.CATEGORIES = ['Alkohole & Carbonyle', 'Säuren & Ester', 'Aromaten', 'Aminosäuren', 'Nucleobasen & Purine', 'Wirkstoffe & Aromastoffe', 'Stoffwechsel & Pflanzen'];
+  window.CATEGORIES = ['Alkohole & Carbonyle', 'Säuren & Ester', 'Aromaten', 'Aminosäuren', 'Nucleobasen & Purine', 'Wirkstoffe & Aromastoffe', 'Stoffwechsel & Pflanzen', 'Zucker & Nucleotide', 'Steroide & Botenstoffe', 'Kleine Moleküle'];
 
   window.MOLECULES = [
     { id: 'essig', cat: 'Säuren & Ester', name: 'Essigsäure', alt: 'Ethansäure', formula: 'C₂H₄O₂', groups: ['Carboxygruppe'],
@@ -227,14 +285,14 @@
       where: 'Essenzielle Aminosäure und Ausgangsstoff für Tyrosin.',
       m: mol(function (h) {
         var b = aaBase(h), c3 = h.at(b.c1, -90), a = h.m.atoms[c3];
-        var r = ring(h, a.x, a.y + 2 * L, 90, KEK); h.bd(b.c1, c3); h.bd(c3, r[0]);
+        var r = ring(h, a.x + 2 * L * Math.cos(Math.PI / 6), a.y + L, 150, KEK); h.bd(b.c1, c3); h.bd(c3, r[0]);
       }) },
     { id: 'tyr', cat: 'Aminosäuren', name: 'Tyrosin', alt: '', formula: 'C₉H₁₁NO₃', groups: ['Aminogruppe', 'Carboxygruppe', 'Phenol-Seitenkette'],
       where: 'Vorstufe von Dopamin, Adrenalin und dem Pigment Melanin.',
       m: mol(function (h) {
         var b = aaBase(h), c3 = h.at(b.c1, -90), a = h.m.atoms[c3];
-        var r = ring(h, a.x, a.y + 2 * L, 90, KEK); h.bd(b.c1, c3); h.bd(c3, r[0]);
-        var oh = h.at(r[3], -90, 'OH'); h.bd(r[3], oh);
+        var r = ring(h, a.x + 2 * L * Math.cos(Math.PI / 6), a.y + L, 150, KEK); h.bd(b.c1, c3); h.bd(c3, r[0]);
+        var oh = h.at(r[3], 330, 'OH'); h.bd(r[3], oh);
       }) },
 
     { id: 'adenin', cat: 'Nucleobasen & Purine', name: 'Adenin', alt: '', formula: 'C₅H₅N₅', groups: ['Purinbase', 'Aminogruppe'],
@@ -304,6 +362,182 @@
         h.bd(r[5], c3); h.bd(c3, c2, 2, ctr); h.bd(c2, n1); h.bd(n1, r[4]);
         var ch2 = h.at(c3, 72), cb = h.at(ch2, 12), o = h.at(cb, 72, 'O'), oh = h.at(cb, -48, 'OH');
         h.bd(c3, ch2); h.bd(ch2, cb); h.bd(cb, o, 2); h.bd(cb, oh);
-      }) }
+      }) },
+
+    /* ---- Aminosäuren (Rest der 20 proteinogenen) ---- */
+    { id: 'valin', cat: 'Aminosäuren', name: 'Valin', alt: '2-Amino-3-methylbutansäure', formula: 'C₅H₁₁NO₂', groups: ['Aminogruppe', 'Carboxygruppe', 'Verzweigte Seitenkette'],
+      where: 'Essenzielle Aminosäure mit unpolarer, verzweigter Seitenkette. Bei der Sichelzellanämie ersetzt sie im Hämoglobin die Glutaminsäure an Position 6.',
+      m: mol(function (h) { var b = aaBase(h), c3 = h.at(b.c1, -90), m1 = h.at(c3, 210), m2 = h.at(c3, -30); h.bd(b.c1, c3); h.bd(c3, m1); h.bd(c3, m2); }) },
+    { id: 'leucin', cat: 'Aminosäuren', name: 'Leucin', alt: '2-Amino-4-methylpentansäure', formula: 'C₆H₁₃NO₂', groups: ['Aminogruppe', 'Carboxygruppe', 'Verzweigte Seitenkette'],
+      where: 'Essenzielle Aminosäure und besonders häufig in Proteinen. Leucin-Zipper sind Motive, mit denen sich DNA-bindende Proteine zusammenlagern.',
+      m: mol(function (h) { var b = aaBase(h), c3 = h.at(b.c1, -90), c4 = h.at(c3, -30), m1 = h.at(c4, 30), m2 = h.at(c4, -90); h.bd(b.c1, c3); h.bd(c3, c4); h.bd(c4, m1); h.bd(c4, m2); }) },
+    { id: 'isoleucin', cat: 'Aminosäuren', name: 'Isoleucin', alt: '2-Amino-3-methylpentansäure', formula: 'C₆H₁₃NO₂', groups: ['Aminogruppe', 'Carboxygruppe', 'Verzweigte Seitenkette'],
+      where: 'Essenzielle Aminosäure und Isomer des Leucins. Mit Valin und Leucin zählt sie zu den verzweigtkettigen Aminosäuren (BCAA).',
+      m: mol(function (h) { var b = aaBase(h), c3 = h.at(b.c1, -90), me = h.at(c3, 210), c4 = h.at(c3, -30), c5 = h.at(c4, 30); h.bd(b.c1, c3); h.bd(c3, me); h.bd(c3, c4); h.bd(c4, c5); }) },
+    { id: 'methionin', cat: 'Aminosäuren', name: 'Methionin', alt: '2-Amino-4-(methylthio)butansäure', formula: 'C₅H₁₁NO₂S', groups: ['Aminogruppe', 'Carboxygruppe', 'Thioether'],
+      where: 'Essenzielle, schwefelhaltige Aminosäure. Sie ist die Start-Aminosäure der Proteinbiosynthese (Startcodon AUG).',
+      m: mol(function (h) { var b = aaBase(h), c3 = h.at(b.c1, -90), c4 = h.at(c3, -30), s = h.at(c4, -90, 'S'), me = h.at(s, -30); h.bd(b.c1, c3); h.bd(c3, c4); h.bd(c4, s); h.bd(s, me); }) },
+    { id: 'prolin', cat: 'Aminosäuren', name: 'Prolin', alt: 'Pyrrolidin-2-carbonsäure', formula: 'C₅H₉NO₂', groups: ['Sekundäres Amin im Ring', 'Carboxygruppe'],
+      where: 'Die Aminogruppe ist Teil eines Rings. Prolin knickt Peptidketten ab und ist besonders häufig im Kollagen.',
+      m: mol(function (h) {
+        var P = pentAt(h, 0, 0, 0, { 1: 'NH' }); pbond(h, P);
+        var cc = h.at(P.idx[0], 0), o = h.at(cc, 60, 'O'), o2 = h.at(cc, -60, 'OH');
+        h.bd(P.idx[0], cc); h.bd(cc, o, 2); h.bd(cc, o2);
+      }) },
+    { id: 'threonin', cat: 'Aminosäuren', name: 'Threonin', alt: '2-Amino-3-hydroxybutansäure', formula: 'C₄H₉NO₃', groups: ['Aminogruppe', 'Carboxygruppe', 'Hydroxy-Seitenkette'],
+      where: 'Essenzielle Aminosäure. Wie Serin kann ihre OH-Gruppe in Proteinen phosphoryliert werden.',
+      m: mol(function (h) { var b = aaBase(h), c3 = h.at(b.c1, -90), o = h.at(c3, 210, 'HO'), me = h.at(c3, -30); h.bd(b.c1, c3); h.bd(c3, o); h.bd(c3, me); }) },
+    { id: 'asn', cat: 'Aminosäuren', name: 'Asparagin', alt: '2,4-Diamino-4-oxobutansäure', formula: 'C₄H₈N₂O₃', groups: ['Aminogruppe', 'Carboxygruppe', 'Amid-Seitenkette'],
+      where: 'Amid der Asparaginsäure. An ihrer Seitenkette werden in Proteinen Zuckerreste angehängt (N-Glykosylierung).',
+      m: mol(function (h) { var b = aaBase(h), c3 = h.at(b.c1, 270), c4 = h.at(c3, 210), o = h.at(c4, 270, 'O'), n = h.at(c4, 150, 'H₂N'); h.bd(b.c1, c3); h.bd(c3, c4); h.bd(c4, o, 2); h.bd(c4, n); }) },
+    { id: 'gln', cat: 'Aminosäuren', name: 'Glutamin', alt: '2,5-Diamino-5-oxopentansäure', formula: 'C₅H₁₀N₂O₃', groups: ['Aminogruppe', 'Carboxygruppe', 'Amid-Seitenkette'],
+      where: 'Häufigste freie Aminosäure im Blut. Als Amid der Glutaminsäure dient sie im Stoffwechsel als Stickstoffspeicher.',
+      m: mol(function (h) { var b = aaBase(h), c3 = h.at(b.c1, 270), c4 = h.at(c3, 210), c5 = h.at(c4, 150), o = h.at(c5, 90, 'O'), n = h.at(c5, 210, 'H₂N'); h.bd(b.c1, c3); h.bd(c3, c4); h.bd(c4, c5); h.bd(c5, o, 2); h.bd(c5, n); }) },
+    { id: 'lysin', cat: 'Aminosäuren', name: 'Lysin', alt: '2,6-Diaminohexansäure', formula: 'C₆H₁₄N₂O₂', groups: ['Zwei Aminogruppen', 'Carboxygruppe'],
+      where: 'Essenzielle Aminosäure mit basischer Seitenkette. In Histonen wird sie acetyliert und methyliert und steuert so die Genaktivität.',
+      m: mol(function (h) { var b = aaBase(h), c3 = h.at(b.c1, -90), c4 = h.at(c3, -30), c5 = h.at(c4, -90), c6 = h.at(c5, -30), n = h.at(c6, -90, 'NH₂'); h.bd(b.c1, c3); h.bd(c3, c4); h.bd(c4, c5); h.bd(c5, c6); h.bd(c6, n); }) },
+    { id: 'arginin', cat: 'Aminosäuren', name: 'Arginin', alt: '2-Amino-5-guanidinopentansäure', formula: 'C₆H₁₄N₄O₂', groups: ['Guanidinogruppe', 'Aminogruppe', 'Carboxygruppe'],
+      where: 'Basische Aminosäure und Teil des Harnstoffzyklus. Aus ihr entsteht das Signalmolekül Stickstoffmonoxid (NO).',
+      m: mol(function (h) {
+        var b = aaBase(h), c3 = h.at(b.c1, -90), c4 = h.at(c3, -30), c5 = h.at(c4, 30), c6 = h.at(c5, -30), n1 = h.at(c6, 30, 'HN'), cg = h.at(n1, -30), n2 = h.at(cg, -90, 'NH₂'), n3 = h.at(cg, 30, 'NH');
+        h.bd(b.c1, c3); h.bd(c3, c4); h.bd(c4, c5); h.bd(c5, c6); h.bd(c6, n1); h.bd(n1, cg); h.bd(cg, n2); h.bd(cg, n3, 2);
+      }) },
+    { id: 'histidin', cat: 'Aminosäuren', name: 'Histidin', alt: '2-Amino-3-(imidazol-4-yl)propansäure', formula: 'C₆H₉N₃O₂', groups: ['Imidazolring', 'Aminogruppe', 'Carboxygruppe'],
+      where: 'Der Imidazolring puffert nahe dem neutralen pH und sitzt in vielen aktiven Zentren von Enzymen. Aus Histidin entsteht Histamin.',
+      m: mol(function (h) { var b = aaBase(h), c3 = h.at(b.c1, -90), a = h.at(c3, -30); h.bd(b.c1, c3); h.bd(c3, a); imidazole(h, a, -30); }) },
+    { id: 'trp', cat: 'Aminosäuren', name: 'Tryptophan', alt: '2-Amino-3-(indol-3-yl)propansäure', formula: 'C₁₁H₁₂N₂O₂', groups: ['Indol-Ring', 'Aminogruppe', 'Carboxygruppe'],
+      where: 'Essenzielle Aminosäure mit der größten Seitenkette. Aus ihr entstehen Serotonin und Melatonin.',
+      m: mol(function (h) {
+        var x = indole(h), ch2 = h.at(x.c3, 72), ca = h.at(ch2, 12), nn = h.at(ca, -48, 'NH₂'), cc = h.at(ca, 72), o1 = h.at(cc, 132, 'O'), o2 = h.at(cc, 12, 'OH');
+        h.bd(x.c3, ch2); h.bd(ch2, ca); h.bd(ca, nn); h.bd(ca, cc); h.bd(cc, o1, 2); h.bd(cc, o2);
+      }) },
+
+    /* ---- Zucker & Nucleotide ---- */
+    { id: 'ribose', cat: 'Zucker & Nucleotide', name: 'Ribose', alt: 'D-Ribose (Ringform)', formula: 'C₅H₁₀O₅', groups: ['Fünfring (Furanose)', 'Hydroxygruppen'],
+      where: 'Zucker im Rückgrat der RNA und in ATP. Die Stereochemie ist hier nicht gezeigt.',
+      m: mol(function (h) {
+        var P = pentAt(h, 0, 0, 90, { 0: 'O' }), i = P.idx; pbond(h, P);
+        oh(h, i[4], 18); oh(h, i[3], 306); oh(h, i[2], 234);
+        var c5 = h.at(i[1], 162); h.bd(i[1], c5); oh(h, c5, 102);
+      }) },
+    { id: 'desoxyribose', cat: 'Zucker & Nucleotide', name: 'Desoxyribose', alt: '2-Desoxy-D-ribose', formula: 'C₅H₁₀O₄', groups: ['Fünfring (Furanose)', 'Hydroxygruppen'],
+      where: 'Zucker im Rückgrat der DNA. Im Vergleich zur Ribose fehlt die OH-Gruppe am C2. Die Stereochemie ist hier nicht gezeigt.',
+      m: mol(function (h) {
+        var P = pentAt(h, 0, 0, 90, { 0: 'O' }), i = P.idx; pbond(h, P);
+        oh(h, i[4], 18); oh(h, i[2], 234);
+        var c5 = h.at(i[1], 162); h.bd(i[1], c5); oh(h, c5, 102);
+      }) },
+    { id: 'fructose', cat: 'Zucker & Nucleotide', name: 'Fructose', alt: 'Fruchtzucker', formula: 'C₆H₁₂O₆', groups: ['Fünfring (Furanose)', 'Hydroxygruppen', 'Keto-Zucker'],
+      where: 'In Obst und Honig. Mit Glucose bildet sie den Haushaltszucker Saccharose. Die Stereochemie ist hier nicht gezeigt.',
+      m: mol(function (h) {
+        var P = pentAt(h, 0, 0, 90, { 0: 'O' }), i = P.idx; pbond(h, P);
+        var c1 = h.at(i[4], 60); h.bd(i[4], c1); oh(h, c1, 0); oh(h, i[4], -20);
+        oh(h, i[3], 306); oh(h, i[2], 234);
+        var c6 = h.at(i[1], 162); h.bd(i[1], c6); oh(h, c6, 102);
+      }) },
+    { id: 'adenosin', cat: 'Zucker & Nucleotide', name: 'Adenosin', alt: 'Adenin + Ribose', formula: 'C₁₀H₁₃N₅O₄', groups: ['Nucleosid', 'Purinbase', 'Ribose'],
+      where: 'Die Base Adenin, über N9 mit Ribose verbunden. Koffein blockiert die Adenosin-Rezeptoren im Gehirn.',
+      m: mol(function (h) { var c5 = adenosinCore(h); oh(h, c5, 24); }) },
+    { id: 'atp', cat: 'Zucker & Nucleotide', name: 'ATP', alt: 'Adenosintriphosphat', formula: 'C₁₀H₁₆N₅O₁₃P₃', groups: ['Nucleotid', 'Drei Phosphatgruppen', 'Ribose', 'Adenin'],
+      where: 'Universeller Energieträger der Zelle. Beim Abspalten der letzten Phosphatgruppe wird Energie frei. Ladungen sind hier nicht gezeigt.',
+      m: mol(function (h) {
+        var c5 = adenosinCore(h), o5 = h.at(c5, 24, 'O'), prev = o5, k, pa, ob, o1, q1;
+        h.bd(c5, o5);
+        for (k = 0; k < 3; k++) {
+          pa = h.at(prev, -30, 'P'); h.bd(prev, pa);
+          o1 = h.at(pa, 90, 'O'); h.bd(pa, o1, 2);
+          q1 = h.at(pa, 270, 'OH'); h.bd(pa, q1);
+          if (k < 2) { ob = h.at(pa, 30, 'O'); h.bd(pa, ob); prev = ob; }
+          else { var q2 = h.at(pa, 30, 'OH'); h.bd(pa, q2); }
+        }
+      }) },
+
+    /* ---- Steroide & Botenstoffe ---- */
+    { id: 'cholesterin', cat: 'Steroide & Botenstoffe', name: 'Cholesterin', alt: 'Cholesterol', formula: 'C₂₇H₄₆O', groups: ['Steroidgerüst (vier Ringe)', 'Hydroxygruppe', 'C=C-Doppelbindung'],
+      where: 'Baustein tierischer Zellmembranen und Ausgangsstoff der Steroidhormone, Gallensäuren und von Vitamin D. Die Stereochemie ist hier nicht gezeigt.',
+      m: mol(function (h) {
+        var a = steroid(h, ['c5-c6']), o = h.at(a.c3, 210, 'HO'); h.bd(a.c3, o);
+        var m19 = h.at(a.c10, 90); h.bd(a.c10, m19);
+        var m18 = h.at(a.c13, 90); h.bd(a.c13, m18);
+        var c20 = h.at(a.c17, 72); h.bd(a.c17, c20);
+        var c21 = h.at(c20, 132); h.bd(c20, c21);
+        var c22 = h.at(c20, 12); h.bd(c20, c22);
+        var c23 = h.at(c22, 72); h.bd(c22, c23);
+        var c24 = h.at(c23, 12); h.bd(c23, c24);
+        var c25 = h.at(c24, 72); h.bd(c24, c25);
+        var c26 = h.at(c25, 132); h.bd(c25, c26);
+        var c27 = h.at(c25, 12); h.bd(c25, c27);
+      }) },
+    { id: 'estradiol', cat: 'Steroide & Botenstoffe', name: 'Östradiol', alt: 'Estradiol', formula: 'C₁₈H₂₄O₂', groups: ['Steroidgerüst', 'Aromatischer A-Ring (Phenol)', 'Zwei Hydroxygruppen'],
+      where: 'Das wichtigste Östrogen und weibliches Sexualhormon. Der aromatische A-Ring unterscheidet es von Testosteron. Die Stereochemie ist hier nicht gezeigt.',
+      m: mol(function (h) {
+        var a = steroid(h, ['c1-c2', 'c3-c4', 'c5-c10']), o = h.at(a.c3, 210, 'HO'); h.bd(a.c3, o);
+        var m18 = h.at(a.c13, 90); h.bd(a.c13, m18);
+        var o17 = h.at(a.c17, 72, 'OH'); h.bd(a.c17, o17);
+      }) },
+    { id: 'testosteron', cat: 'Steroide & Botenstoffe', name: 'Testosteron', alt: '', formula: 'C₁₉H₂₈O₂', groups: ['Steroidgerüst', 'Keton (Enon)', 'Hydroxygruppe'],
+      where: 'Das wichtigste männliche Sexualhormon (Androgen). Es wird aus Cholesterin gebildet. Die Stereochemie ist hier nicht gezeigt.',
+      m: mol(function (h) {
+        var a = steroid(h, ['c4-c5']), o = h.at(a.c3, 210, 'O'); h.bd(a.c3, o, 2);
+        var m19 = h.at(a.c10, 90); h.bd(a.c10, m19);
+        var m18 = h.at(a.c13, 90); h.bd(a.c13, m18);
+        var o17 = h.at(a.c17, 72, 'OH'); h.bd(a.c17, o17);
+      }) },
+    { id: 'gaba', cat: 'Steroide & Botenstoffe', name: 'GABA', alt: 'γ-Aminobuttersäure, 4-Aminobutansäure', formula: 'C₄H₉NO₂', groups: ['Aminogruppe', 'Carboxygruppe'],
+      where: 'Wichtigster hemmender Neurotransmitter im Gehirn. Er entsteht aus Glutamat durch Abspaltung der Carboxygruppe.',
+      m: mol(function (h) {
+        var n = h.add(0, 0, 'H₂N'), ca = h.at(n, -30), cb = h.at(ca, 30), cc = h.at(cb, -30), cd = h.at(cc, 30), o = h.at(cd, 90, 'O'), o2 = h.at(cd, -30, 'OH');
+        h.bd(n, ca); h.bd(ca, cb); h.bd(cb, cc); h.bd(cc, cd); h.bd(cd, o, 2); h.bd(cd, o2);
+      }) },
+    { id: 'serotonin', cat: 'Steroide & Botenstoffe', name: 'Serotonin', alt: '5-Hydroxytryptamin (5-HT)', formula: 'C₁₀H₁₂N₂O', groups: ['Indol-Ring', 'Hydroxygruppe', 'Aminogruppe'],
+      where: 'Neurotransmitter und Gewebehormon, beeinflusst unter anderem Stimmung und Darmbewegung. Es wird aus Tryptophan gebildet.',
+      m: mol(function (h) {
+        var x = indole(h); oh(h, x.r[1], 150);
+        var ch2 = h.at(x.c3, 72), cb = h.at(ch2, 12), nn = h.at(cb, -48, 'NH₂');
+        h.bd(x.c3, ch2); h.bd(ch2, cb); h.bd(cb, nn);
+      }) },
+    { id: 'adrenalin', cat: 'Steroide & Botenstoffe', name: 'Adrenalin', alt: 'Epinephrin', formula: 'C₉H₁₃NO₃', groups: ['Catechol', 'Sekundäres Amin', 'Hydroxygruppe'],
+      where: 'Stresshormon aus dem Nebennierenmark. Es entsteht aus Tyrosin über Dopamin und Noradrenalin.',
+      m: mol(function (h) {
+        var r = ring(h, 0, 0, 90, KEK);
+        var ho = h.at(r[2], 210, 'HO'), o2 = h.at(r[3], -90, 'OH'); h.bd(r[2], ho); h.bd(r[3], o2);
+        var c1 = h.at(r[0], 90), ohc = h.at(c1, 30, 'OH'), c2 = h.at(c1, 150), n = h.at(c2, 210, 'HN'), me = h.at(n, 150);
+        h.bd(r[0], c1); h.bd(c1, ohc); h.bd(c1, c2); h.bd(c2, n); h.bd(n, me);
+      }) },
+    { id: 'histamin', cat: 'Steroide & Botenstoffe', name: 'Histamin', alt: '', formula: 'C₅H₉N₃', groups: ['Imidazolring', 'Aminogruppe'],
+      where: 'Gewebehormon bei Allergien und Entzündungen. Es entsteht aus Histidin durch Abspaltung von CO₂. Antihistaminika blockieren seine Rezeptoren.',
+      m: mol(function (h) {
+        var n = h.add(0, 0, 'H₂N'), ca = h.at(n, -30), cb = h.at(ca, 30), a = h.at(cb, -30);
+        h.bd(n, ca); h.bd(ca, cb); h.bd(cb, a); imidazole(h, a, -30);
+      }) },
+
+    /* ---- Vitamin ---- */
+    { id: 'nicotinamid', cat: 'Stoffwechsel & Pflanzen', name: 'Nicotinamid', alt: 'Niacinamid, Vitamin B3', formula: 'C₆H₆N₂O', groups: ['Pyridin-Ring', 'Amid'],
+      where: 'Vitamin B3. Es ist Baustein der Coenzyme NAD und NADP, die in Stoffwechselreaktionen Elektronen übertragen.',
+      m: mol(function (h) {
+        var r = ring(h, 0, 0, 90, KEK, { 2: 'N' });
+        var c = h.at(r[0], 90), o = h.at(c, 30, 'O'), n = h.at(c, 150, 'H₂N');
+        h.bd(r[0], c); h.bd(c, o, 2); h.bd(c, n);
+      }) },
+
+    /* ---- Kleine Moleküle ---- */
+    { id: 'wasser', cat: 'Kleine Moleküle', name: 'Wasser', alt: '', formula: 'H₂O', groups: ['Polares Molekül', 'Gewinkelt (104,5°)'],
+      where: 'Das Lösungsmittel des Lebens. Wasserstoffbrücken zwischen den Molekülen sorgen für den hohen Siedepunkt und die Oberflächenspannung.',
+      m: mol(function (h) { var o = h.add(0, 0, 'O'), a = h.at(o, 217.75, 'H'), b = h.at(o, 322.25, 'H'); h.bd(o, a); h.bd(o, b); }) },
+    { id: 'co2', cat: 'Kleine Moleküle', name: 'Kohlenstoffdioxid', alt: 'CO₂', formula: 'CO₂', groups: ['Zwei C=O-Doppelbindungen', 'Linear, unpolar'],
+      where: 'Entsteht bei der Zellatmung und steckt im Sprudelwasser. Pflanzen binden es bei der Fotosynthese im Calvin-Zyklus.',
+      m: mol(function (h) { var o1 = h.add(0, 0, 'O'), c = h.at(o1, 0, 'C'), o2 = h.at(c, 0, 'O'); h.bd(o1, c, 2); h.bd(c, o2, 2); }) },
+    { id: 'ammoniak', cat: 'Kleine Moleküle', name: 'Ammoniak', alt: '', formula: 'NH₃', groups: ['Pyramidal gebaut', 'Basisch'],
+      where: 'Zellgift, das die Leber zu Harnstoff entgiftet. Im Haushalt steckt es als Salmiakgeist in manchen Reinigern.',
+      m: mol(function (h) { var n = h.add(0, 0, 'N'), a = h.at(n, 270, 'H'), b = h.at(n, 30, 'H'), c = h.at(n, 150, 'H'); h.bd(n, a); h.bd(n, b); h.bd(n, c); }) },
+    { id: 'methan', cat: 'Kleine Moleküle', name: 'Methan', alt: '', formula: 'CH₄', groups: ['Tetraedrisch', 'Kohlenwasserstoff'],
+      where: 'Hauptbestandteil von Erdgas und ein starkes Treibhausgas. Es entsteht auch bei der Verdauung von Wiederkäuern.',
+      m: mol(function (h) { var c = h.add(0, 0, 'C'), a = h.at(c, 45, 'H'), b = h.at(c, 135, 'H'), d = h.at(c, 225, 'H'), e = h.at(c, 315, 'H'); h.bd(c, a); h.bd(c, b); h.bd(c, d); h.bd(c, e); }) },
+    { id: 'h2o2', cat: 'Kleine Moleküle', name: 'Wasserstoffperoxid', alt: 'H₂O₂', formula: 'H₂O₂', groups: ['Peroxidbindung (O–O)'],
+      where: 'Bleich- und Desinfektionsmittel. In Zellen entsteht es als Nebenprodukt und wird von der Katalase zu Wasser und Sauerstoff abgebaut.',
+      m: mol(function (h) { var a = h.add(0, 0, 'H'), o1 = h.at(a, -30, 'O'), o2 = h.at(o1, 30, 'O'), b = h.at(o2, -30, 'H'); h.bd(a, o1); h.bd(o1, o2); h.bd(o2, b); }) },
+    { id: 'phosphorsaeure', cat: 'Kleine Moleküle', name: 'Phosphorsäure', alt: 'H₃PO₄', formula: 'H₃PO₄', groups: ['Phosphatgruppe', 'Drei OH-Gruppen'],
+      where: 'In Cola als Säuerungsmittel. Ihre Derivate bilden das Rückgrat von DNA und RNA und stecken in ATP.',
+      m: mol(function (h) { var p = h.add(0, 0, 'P'), o = h.at(p, 90, 'O'), a = h.at(p, 180, 'HO'), b = h.at(p, 0, 'OH'), c = h.at(p, 270, 'OH'); h.bd(p, o, 2); h.bd(p, a); h.bd(p, b); h.bd(p, c); }) }
   ];
 })();
