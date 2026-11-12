@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Strukturformel-Karten</title>
+<meta name="description" content="Karteikarten zu Strukturformeln von Molekülen aus Alltag und Biochemie.">
+<meta name="theme-color" content="#F3F5F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1820" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Strukturen">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/favicon.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Strukturformel-Karten</h1>
+    <p class="sub" id="sub">Erst raten, dann umdrehen.</p>
+  </header>
+
+  <div class="banner" id="install" hidden>
+    <p id="install-text"></p>
+    <div class="tools">
+      <button type="button" class="tbtn" id="install-btn" hidden>Installieren</button>
+      <button type="button" class="tbtn" id="install-close">Schließen</button>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="seg" role="group" aria-label="Richtung">
+      <button type="button" id="mode-struct" aria-pressed="true">Struktur → Name</button>
+      <button type="button" id="mode-name" aria-pressed="false">Name → Struktur</button>
+    </div>
+    <select class="sel" id="cat" aria-label="Kategorie"></select>
+  </div>
+  <div class="tools">
+    <button type="button" class="tbtn" id="retry-only" aria-pressed="false">Nur „Nochmal“</button>
+    <button type="button" class="tbtn" id="shuffle">Mischen</button>
+    <button type="button" class="tbtn" id="reset">Zurücksetzen</button>
+  </div>
+
+  <div class="stats" id="stats" aria-live="polite"></div>
+  <div class="bar" id="bar" aria-hidden="true"></div>
+  <details class="ov">
+    <summary>Kartenübersicht</summary>
+    <div class="dots" id="dots"></div>
+  </details>
+
+  <div class="banner" id="done" hidden>
+    <p>Alle Karten dieser Auswahl gewusst. Starte eine neue Runde, um sie zu festigen.</p>
+    <button type="button" class="tbtn" id="again">Von vorn</button>
+  </div>
+
+  <div class="banner" id="empty" hidden>
+    <p>Keine Karte ist mit „Nochmal“ markiert.</p>
+    <button type="button" class="tbtn" id="show-all">Alle Karten zeigen</button>
+  </div>
+
+  <div id="stage" class="wrap" style="gap:16px">
+    <div class="card" id="card" role="button" tabindex="0" aria-label="Karte umdrehen">
+      <div class="inner">
+        <div class="face front" id="front"></div>
+        <div class="face back" id="back" aria-hidden="true"></div>
+      </div>
+    </div>
+
+    <div class="nav">
+      <button type="button" id="prev" aria-label="Vorherige Karte">←</button>
+      <span id="pos"></span>
+      <button type="button" id="next" aria-label="Nächste Karte">→</button>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="btn primary wide" id="flip">Umdrehen</button>
+      <button type="button" class="btn retry" id="r-retry" hidden>Nochmal</button>
+      <button type="button" class="btn primary" id="r-known" hidden>Gewusst</button>
+    </div>
+    <p class="keys">Tastatur: Leertaste dreht um, Pfeiltasten blättern, 1 = Nochmal, 2 = Gewusst</p>
+  </div>
+
+  <p class="foot" id="foot"></p>
+</div>
+
+<script src="chem.js"></script>
+<script src="molecules.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
