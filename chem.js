@@ -80,6 +80,11 @@
         var o2 = 3.4;
         lines += seg(x1 + nx * o2, y1 + ny * o2, x2 + nx * o2, y2 + ny * o2);
         lines += seg(x1 - nx * o2, y1 - ny * o2, x2 - nx * o2, y2 - ny * o2);
+      } else if (b.o === 3) {
+        var o3 = 5.2;
+        lines += seg(x1, y1, x2, y2);
+        lines += seg(x1 + nx * o3, y1 + ny * o3, x2 + nx * o3, y2 + ny * o3);
+        lines += seg(x1 - nx * o3, y1 - ny * o3, x2 - nx * o3, y2 - ny * o3);
       } else {
         lines += seg(x1, y1, x2, y2);
       }
