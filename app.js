@@ -73,7 +73,7 @@
   function faces(c, n) {
     var p = '<span>Karte ' + (st.pos + 1) + ' von ' + n + '</span>';
     var nw = isNew(c.id) ? '<span class="newchip">Neu</span>' : '';
-    var alt = c.alt ? '<p class="alt">auch: ' + c.alt + '</p>' : '';
+    var alt = (c.alt ? '<p class="alt">auch: ' + c.alt + '</p>' : '') + (c.ster ? '<p class="alt">Stereochemie: ' + c.ster + '</p>' : '');
     var info = '<div class="chips">' + c.groups.map(function (g) { return '<span class="chip">' + g + '</span>'; }).join('') + '</div>' +
                '<div class="where"><h3>Im Alltag</h3><p>' + c.where + '</p></div>';
     if (st.mode === 'struct') {

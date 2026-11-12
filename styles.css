@@ -132,6 +132,7 @@ button:focus-visible, select:focus-visible, .card:focus-visible { outline: 3px s
 .keys { text-align: center; font-size: 12px; color: var(--muted); margin: 0; }
 
 svg line { stroke: var(--stroke); stroke-width: 2.2; stroke-linecap: round; fill: none; }
+svg polygon.w { fill: var(--stroke); stroke: none; }
 svg text { font-family: var(--font-body); font-size: 19px; font-weight: 600; }
 svg text.o { fill: var(--o); }
 svg text.n { fill: var(--n); }

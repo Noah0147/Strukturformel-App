@@ -3,14 +3,24 @@
   var EXT = { 'O': [7, 7], 'N': [7, 7], 'S': [7, 7], 'C': [7, 7], 'H': [7, 7], 'P': [7, 7], 'OH': [7, 21], 'HO': [21, 7], 'NH': [7, 21], 'HN': [21, 7], 'SH': [7, 21], 'NH₂': [7, 31], 'H₂N': [31, 7] };
 
   function mol(fn) {
-    var m = { atoms: [], bonds: [] };
+    var m = { atoms: [], bonds: [], st: [] };
     function add(x, y, l) { m.atoms.push({ x: x, y: y, l: l || '' }); return m.atoms.length - 1; }
     function at(i, deg, l) {
       var a = m.atoms[i], r = deg * Math.PI / 180;
       return add(a.x + L * Math.cos(r), a.y - L * Math.sin(r), l);
     }
     function bd(i, j, o, ctr) { m.bonds.push({ i: i, j: j, o: o || 1, ctr: ctr || null }); }
-    fn({ add: add, at: at, bd: bd, m: m });
+    /* st(zentrum, [Prioritäten 1..3 (4)], 'R'|'S'): Sollwert für die Prüfung der Keil-/Strichbindungen */
+    function st(c, p, cfg) { m.st.push({ c: c, p: p, cfg: cfg }); }
+    fn({ add: add, at: at, bd: bd, st: st, m: m });
+    if (m.alpha != null) {
+      m.bonds.forEach(function (b) {
+        if (b.i === m.alpha && b.j !== m.an && b.j !== m.ac && b.o === 1 && !m.alphaDone) {
+          m.alphaDone = true; b.o = 'd';
+          st(m.alpha, m.acys ? [m.an, b.j, m.ac] : [m.an, m.ac, b.j], m.acys ? 'R' : 'S');
+        }
+      });
+    }
     return m;
   }
 
@@ -47,6 +57,7 @@
   function aaBase(h) {
     var n = h.add(0, 0, 'H₂N'), c1 = h.at(n, -30), c2 = h.at(c1, 30), o1 = h.at(c2, 90, 'O'), o2 = h.at(c2, -30, 'OH');
     h.bd(n, c1); h.bd(c1, c2); h.bd(c2, o1, 2); h.bd(c2, o2);
+    h.m.alpha = c1; h.m.an = n; h.m.ac = c2;
     return { n: n, c1: c1, c2: c2 };
   }
 
@@ -80,6 +91,15 @@
         var o2 = 3.4;
         lines += seg(x1 + nx * o2, y1 + ny * o2, x2 + nx * o2, y2 + ny * o2);
         lines += seg(x1 - nx * o2, y1 - ny * o2, x2 - nx * o2, y2 - ny * o2);
+      } else if (b.o === 'w') {
+        var hw = 4.8;
+        lines += '<polygon class="w" points="' + x1.toFixed(1) + ',' + y1.toFixed(1) + ' ' + (x2 + nx * hw).toFixed(1) + ',' + (y2 + ny * hw).toFixed(1) + ' ' + (x2 - nx * hw).toFixed(1) + ',' + (y2 - ny * hw).toFixed(1) + '"/>';
+      } else if (b.o === 'd') {
+        var nd = Math.max(4, Math.round(Math.hypot(x2 - x1, y2 - y1) / 4.6)), kd, td, w2;
+        for (kd = 1; kd <= nd; kd++) {
+          td = kd / nd; w2 = 0.8 + 4.4 * td;
+          lines += seg(x1 + (x2 - x1) * td - nx * w2, y1 + (y2 - y1) * td - ny * w2, x1 + (x2 - x1) * td + nx * w2, y1 + (y2 - y1) * td + ny * w2);
+        }
       } else if (b.o === 3) {
         var o3 = 5.2;
         lines += seg(x1, y1, x2, y2);
