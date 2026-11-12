@@ -76,14 +76,14 @@
     h.m.atoms.forEach(function (a) { a.x = 2 * x0 - a.x; });
     h.m.bonds.forEach(function (b) { if (b.ctr) b.ctr = [2 * x0 - b.ctr[0], b.ctr[1]]; });
   }
-  function haworthNuc(h, n) { /* β-D-Ribofuranose unter dem Ring-Stickstoff/N9 der Base; gibt C5' zurück */
+  function haworthNuc(h, n, deoxy) { /* β-D-Ribofuranose unter dem Ring-Stickstoff/N9 der Base; gibt C5' zurück */
     mirrorX(h, h.m.atoms[n].x);
     var N = h.m.atoms[n], R = 40, a1 = 342 * Math.PI / 180;
     var cx = N.x - R * Math.cos(a1), cy = N.y + 46 - 0.4 * R * Math.sin(a1);
     var q = hring(h, cx, cy, R, [342, 54, 126, 198, 270], { 4: 'O' });
     h.m.bonds.push({ i: q[0], j: n, o: 1, ctr: null, v: 1 });
-    var o2 = hoh(h, q[1], -1, cx), o3 = hoh(h, q[2], -1, cx), c5 = hv(h, q[3], 1, '', 36);
-    h.st(q[0], [q[4], n, q[1]], 'R'); h.st(q[1], [o2, q[0], q[2]], 'R'); h.st(q[2], [o3, q[3], q[1]], 'S'); h.st(q[3], [q[4], q[2], c5], 'R');
+    var o2 = deoxy ? -1 : hoh(h, q[1], -1, cx), o3 = hoh(h, q[2], -1, cx), c5 = hv(h, q[3], 1, '', 36);
+    h.st(q[0], [q[4], n, q[1]], 'R'); if (!deoxy) h.st(q[1], [o2, q[0], q[2]], 'R'); h.st(q[2], [o3, q[3], q[1]], 'S'); h.st(q[3], [q[4], q[2], c5], 'R');
     return c5;
   }
   function phosL(h, c5, n) { /* Phosphatkette nach links */
@@ -145,7 +145,7 @@
     return n;
   }
 
-  window.DATA_VERSION = '2026-11-12';
+  window.DATA_VERSION = '2026-11-12b';
   window.CATEGORIES = ['Alkohole & Carbonyle', 'Säuren & Ester', 'Aromaten', 'Aminosäuren', 'Nucleobasen & Purine', 'Wirkstoffe & Aromastoffe', 'Stoffwechsel & Pflanzen', 'Zucker & Nucleotide', 'Steroide & Botenstoffe', 'Kleine Moleküle'];
 
   window.MOLECULES = [
@@ -1079,6 +1079,276 @@
       m: mol(function (h) { var s = h.add(0, 0, 'S'), o1 = h.at(s, 90, 'O'), o2 = h.at(s, 270, 'O'), a = h.at(s, 180, 'HO'), b = h.at(s, 0, 'OH'); h.bd(s, o1, 2); h.bd(s, o2, 2); h.bd(s, a); h.bd(s, b); }) },
     { id: 'blausaeure', cat: 'Kleine Moleküle', name: 'Blausäure', alt: 'Cyanwasserstoff, HCN', formula: 'HCN', groups: ['C≡N-Dreifachbindung', 'Linear'],
       where: 'Riecht nach bitteren Mandeln und entsteht beim Abbau von Amygdalin in Bittermandeln und Aprikosenkernen. Sie blockiert die Cytochrom-c-Oxidase der Atmungskette und ist daher stark giftig.',
-      m: mol(function (h) { var a = h.add(0, 0, 'H'), b = h.at(a, 0, 'C'), c = h.at(b, 0, 'N'); h.bd(a, b); h.bd(b, c, 3); }) }
+      m: mol(function (h) { var a = h.add(0, 0, 'H'), b = h.at(a, 0, 'C'), c = h.at(b, 0, 'N'); h.bd(a, b); h.bd(b, c, 3); }) },
+    /* ---- Erweiterung auf 200 Karten ---- */
+    { id: 'propanol', cat: 'Alkohole & Carbonyle', name: '1-Propanol', alt: 'n-Propanol', formula: 'C₃H₈O', groups: ['Primärer Alkohol', 'Hydroxygruppe'],
+      where: 'Lösungsmittel in Lacken, Druckfarben und Desinfektionsmitteln. Im Körper wird es wie Ethanol über die Alkoholdehydrogenase abgebaut.',
+      m: mol(function (h) { var c0 = h.add(0, 0), z = zig(h, c0, 2, 30), o = h.at(z[1], 30, 'OH'); h.bd(z[1], o); }) },
+    { id: 'butanon', cat: 'Alkohole & Carbonyle', name: 'Butanon', alt: 'Methylethylketon, MEK', formula: 'C₄H₈O', groups: ['Keton (Carbonylgruppe zwischen zwei C)'],
+      where: 'Lösungsmittel in Klebstoffen und Farben. In kleinen Mengen entsteht es auch im Stoffwechsel von Ketonkörpern.',
+      m: mol(function (h) { var c0 = h.add(0, 0), c1 = h.at(c0, 30), c2 = h.at(c1, -30), o = h.at(c1, 90, 'O'), c3 = h.at(c2, 30); h.bd(c0, c1); h.bd(c1, o, 2); h.bd(c1, c2); h.bd(c2, c3); }) },
+    { id: 'diacetyl', cat: 'Alkohole & Carbonyle', name: 'Diacetyl', alt: 'Butan-2,3-dion', formula: 'C₄H₆O₂', groups: ['Zwei benachbarte Ketogruppen (1,2-Diketon)'],
+      where: 'Der Buttergeschmack in Butter, Popcorn-Aroma und manchen Bieren. Entsteht bei der Gärung als Nebenprodukt.',
+      m: mol(function (h) { var c0 = h.add(0, 0), c1 = h.at(c0, 30), c2 = h.at(c1, -30), c3 = h.at(c2, 30), c4 = h.at(c3, -30), o1 = h.at(c1, 90, 'O'), o2 = h.at(c3, 90, 'O'); h.bd(c0, c1); h.bd(c1, c2); h.bd(c2, c3); h.bd(c3, c4); h.bd(c1, o1, 2); h.bd(c3, o2, 2); }) },
+    { id: 'acrolein', cat: 'Alkohole & Carbonyle', name: 'Acrolein', alt: 'Propenal', formula: 'C₃H₄O', groups: ['Aldehyd', 'C=C-Doppelbindung (α,β-ungesättigt)'],
+      where: 'Entsteht, wenn Fett stark überhitzt wird (Rauchpunkt) und riecht dann stechend. Es ist ein reaktives Reizgas, das Proteine verändert.',
+      m: mol(function (h) { var c0 = h.add(0, 0), c1 = h.at(c0, 30), c2 = h.at(c1, -30), o = h.at(c2, 30, 'O'); h.bd(c0, c1, 2); h.bd(c1, c2); h.bd(c2, o, 2); }) },
+    { id: 'cyclohexanol', cat: 'Alkohole & Carbonyle', name: 'Cyclohexanol', alt: '', formula: 'C₆H₁₂O', groups: ['Sekundärer Alkohol', 'Gesättigter Sechsring'],
+      where: 'Zwischenprodukt für die Herstellung von Nylon (über Adipinsäure) und Lösungsmittel für Lacke.',
+      m: mol(function (h) { var r = ring(h, 0, 0, 90, SAT), o = h.at(r[0], 90, 'OH'); h.bd(r[0], o); }) },
+
+    { id: 'acrylsaeure', cat: 'Säuren & Ester', name: 'Acrylsäure', alt: 'Propensäure', formula: 'C₃H₄O₂', groups: ['Carboxygruppe', 'C=C-Doppelbindung'],
+      where: 'Grundbaustein der Polyacrylate. Diese Polymere sind in Superabsorbern, etwa in Windeln, enthalten.',
+      m: mol(function (h) { var c0 = h.add(0, 0), c1 = h.at(c0, 30), c2 = h.at(c1, -30); h.bd(c0, c1, 2); h.bd(c1, c2); cooh(h, c2, -30); }) },
+    { id: 'acetessigsaeure', cat: 'Säuren & Ester', name: 'Acetessigsäure', alt: '3-Oxobutansäure', formula: 'C₄H₆O₃', groups: ['Ketogruppe', 'Carboxygruppe', 'β-Ketosäure'],
+      where: 'Eines der Ketonkörper-Moleküle, die die Leber beim Hungern oder im Diabetes bildet. Sie zerfällt leicht in Aceton und CO₂.',
+      m: mol(function (h) { var c0 = h.add(0, 0), c1 = h.at(c0, 30), o = h.at(c1, 90, 'O'), c2 = h.at(c1, -30), c3 = h.at(c2, 30); h.bd(c0, c1); h.bd(c1, o, 2); h.bd(c1, c2); h.bd(c2, c3); cooh(h, c3, 30); }) },
+    { id: 'adipinsaeure', cat: 'Säuren & Ester', name: 'Adipinsäure', alt: 'Hexandisäure', formula: 'C₆H₁₀O₄', groups: ['Zwei Carboxygruppen (Dicarbonsäure)'],
+      where: 'Mit Hexamethylendiamin bildet sie Nylon 6,6. Sie wird auch als Säuerungsmittel (E 355) in Lebensmitteln benutzt.',
+      m: mol(function (h) { var c0 = h.add(0, 0), z = zig(h, c0, 5, 30); cooStart(h, c0, 30); cooh(h, z[4], 30); }) },
+    { id: 'sorbinsaeure', cat: 'Säuren & Ester', name: 'Sorbinsäure', alt: 'Hexa-2,4-diensäure', formula: 'C₆H₈O₂', groups: ['Carboxygruppe', 'Zwei konjugierte C=C-Bindungen'],
+      where: 'Das Konservierungsmittel E 200 in Käse, Margarine und Getränken. Sie hemmt Schimmelpilze und Hefen.',
+      m: mol(function (h) { var c0 = h.add(0, 0), z = zig(h, c0, 5, 30, [1, 2, 1, 2, 1]); cooh(h, z[4], 30); }) },
+    { id: 'glykolsaeure', cat: 'Säuren & Ester', name: 'Glykolsäure', alt: 'Hydroxyessigsäure', formula: 'C₂H₄O₃', groups: ['Hydroxygruppe', 'Carboxygruppe'],
+      where: 'Die kleinste α-Hydroxysäure. In Peelings und Hautpflege löst sie abgestorbene Hautzellen. Pflanzen bilden sie bei der Photorespiration.',
+      m: mol(function (h) { var o = h.add(0, 0, 'HO'), c1 = h.at(o, -30), c2 = h.at(c1, 30); h.bd(o, c1); h.bd(c1, c2); cooh(h, c2, 30); }) },
+    { id: 'methylacetat', cat: 'Säuren & Ester', name: 'Methylacetat', alt: 'Essigsäuremethylester', formula: 'C₃H₆O₂', groups: ['Ester'],
+      where: 'Flüchtiges Lösungsmittel mit fruchtigem Geruch, z. B. in Nagellackentfernern und Klebstoffen.',
+      m: mol(function (h) { var c0 = h.add(0, 0), c1 = h.at(c0, 30), o = h.at(c1, 90, 'O'), o2 = h.at(c1, -30, 'O'), c3 = h.at(o2, 30); h.bd(c0, c1); h.bd(c1, o, 2); h.bd(c1, o2); h.bd(o2, c3); }) },
+    { id: 'capronsaeure', cat: 'Säuren & Ester', name: 'Capronsäure', alt: 'Hexansäure', formula: 'C₆H₁₂O₂', groups: ['Carboxygruppe', 'Gesättigte Fettsäure (kurz)'],
+      where: 'Sie riecht nach Ziege und Schweiß, daher der Name (lat. caper = Ziegenbock). Sie steckt in Ziegenmilch und Käse.',
+      m: mol(function (h) { var c0 = h.add(0, 0), z = zig(h, c0, 5, 30); cooh(h, z[4], 30); }) },
+
+    { id: 'biphenyl', cat: 'Aromaten', name: 'Biphenyl', alt: '', formula: 'C₁₂H₁₀', groups: ['Zwei verknüpfte aromatische Ringe'],
+      where: 'Früher als Fungizid auf Zitrusschalen verwendet, heute Grundgerüst vieler Wirkstoffe und Flüssigkristalle.',
+      m: mol(function (h) { var r1 = ring(h, 0, 0, 0, KEK), r2 = ring(h, 3 * L, 0, 0, KEK); h.bd(r1[0], r2[3]); }) },
+    { id: 'anthracen', cat: 'Aromaten', name: 'Anthracen', alt: '', formula: 'C₁₄H₁₀', groups: ['Drei linear kondensierte aromatische Ringe'],
+      where: 'Bestandteil von Steinkohlenteer. Es fluoresziert blau und war Ausgangsstoff für den Farbstoff Alizarin.',
+      m: mol(function (h) {
+        var S = Math.sqrt(3) * L, r1 = ring(h, 0, 0, 90, KEK), r3 = ring(h, 2 * S, 0, 90, [1, 1, 1, 2, 1, 2]);
+        var mt = h.add(S, -L), mb = h.add(S, L);
+        h.bd(r1[5], mt); h.bd(mt, r3[1], 2, [S, 0]); h.bd(r3[2], mb, 2, [S, 0]); h.bd(mb, r1[4]);
+      }) },
+    { id: 'indol', cat: 'Aromaten', name: 'Indol', alt: 'Benzopyrrol', formula: 'C₈H₇N', groups: ['Benzol- und Pyrrolring kondensiert'],
+      where: 'Riecht in hoher Konzentration unangenehm (Kot), verdünnt blumig. Der Indolring steckt in Tryptophan, Serotonin und Melatonin.',
+      m: mol(function (h) { indole(h); }) },
+    { id: 'chinolin', cat: 'Aromaten', name: 'Chinolin', alt: '', formula: 'C₉H₇N', groups: ['Benzol- und Pyridinring kondensiert'],
+      where: 'Grundgerüst des Malariamittels Chinin und vieler Antibiotika (Chinolone).',
+      m: mol(function (h) {
+        var r = ring(h, 0, 0, 90, KEK), cx2 = L * Math.sqrt(3);
+        function pt(deg) { var q = deg * Math.PI / 180; return [cx2 + L * Math.cos(q), -L * Math.sin(q)]; }
+        var t = pt(90), ur = pt(30), lr = pt(-30), b = pt(-90);
+        var a1 = h.add(t[0], t[1]), a2 = h.add(ur[0], ur[1]), a3 = h.add(lr[0], lr[1]), a4 = h.add(b[0], b[1], 'N');
+        h.bd(r[5], a1); h.bd(a1, a2, 2, [cx2, 0]); h.bd(a2, a3); h.bd(a3, a4, 2, [cx2, 0]); h.bd(a4, r[4]);
+      }) },
+    { id: 'resorcin', cat: 'Aromaten', name: 'Resorcin', alt: 'Benzol-1,3-diol', formula: 'C₆H₆O₂', groups: ['Aromatischer Ring', 'Zwei Hydroxygruppen (meta)'],
+      where: 'Wird in Hautpräparaten gegen Akne und Schuppen eingesetzt und als Ausgangsstoff für Farbstoffe wie Fluorescein.',
+      m: mol(function (h) { var r = ring(h, 0, 0, 90, KEK), a = h.at(r[1], 150, 'HO'), b = h.at(r[5], 30, 'OH'); h.bd(r[1], a); h.bd(r[5], b); }) },
+    { id: 'acetophenon', cat: 'Aromaten', name: 'Acetophenon', alt: 'Methylphenylketon', formula: 'C₈H₈O', groups: ['Aromatischer Ring', 'Keton'],
+      where: 'Riecht süßlich nach Orangenblüte und Mandel und wird als Duftstoff verwendet.',
+      m: mol(function (h) { var r = ring(h, 0, 0, 90, KEK), c = h.at(r[3], 270), o = h.at(c, 210, 'O'), me = h.at(c, 330); h.bd(r[3], c); h.bd(c, o, 2); h.bd(c, me); }) },
+    { id: 'imidazol', cat: 'Aromaten', name: 'Imidazol', alt: '', formula: 'C₃H₄N₂', groups: ['Aromatischer Fünfring mit zwei Stickstoffen'],
+      where: 'Der Ring der Aminosäure Histidin. Dessen Seitenkette wirkt in Enzymen als Protonenüberträger.',
+      m: mol(function (h) { var P = pentAt(h, 0, 0, 90, { 0: 'NH', 2: 'N' }), i = P.idx; h.bd(i[0], i[1]); h.bd(i[1], i[2], 2, P.c); h.bd(i[2], i[3]); h.bd(i[3], i[4], 2, P.c); h.bd(i[4], i[0]); }) },
+    { id: 'thiophen', cat: 'Aromaten', name: 'Thiophen', alt: '', formula: 'C₄H₄S', groups: ['Aromatischer Fünfring mit Schwefel'],
+      where: 'Kommt in Rohöl und Steinkohlenteer vor. Der Thiophenring steckt im Vitamin Biotin.',
+      m: mol(function (h) { var P = pentAt(h, 0, 0, 90, { 0: 'S' }), i = P.idx; h.bd(i[0], i[1]); h.bd(i[1], i[2], 2, P.c); h.bd(i[2], i[3]); h.bd(i[3], i[4], 2, P.c); h.bd(i[4], i[0]); }) },
+
+    { id: 'amphetamin', cat: 'Wirkstoffe & Aromastoffe', name: 'Amphetamin', alt: '1-Phenylpropan-2-amin', formula: 'C₉H₁₃N', groups: ['Aromatischer Ring', 'Primäres Amin'],
+      where: 'Stimulans, das die Freisetzung von Dopamin und Noradrenalin verstärkt. Verwandte Wirkstoffe werden bei ADHS eingesetzt. Das Molekül hat ein Stereozentrum, hier ohne Stereochemie gezeichnet.',
+      m: mol(function (h) { var r = ring(h, 0, 0, 90, KEK), c1 = h.at(r[0], 90), c2 = h.at(c1, 30), n = h.at(c2, 90, 'NH₂'), me = h.at(c2, -30); h.bd(r[0], c1); h.bd(c1, c2); h.bd(c2, n); h.bd(c2, me); }) },
+    { id: 'metformin', cat: 'Wirkstoffe & Aromastoffe', name: 'Metformin', alt: '', formula: 'C₄H₁₁N₅', groups: ['Biguanid', 'Mehrere Aminogruppen'],
+      where: 'Das am häufigsten verschriebene Mittel bei Typ-2-Diabetes. Es senkt die Glucosebildung der Leber.',
+      m: mol(function (h) { var n1 = h.add(0, 0, 'N'), m1 = h.at(n1, 150), m2 = h.at(n1, 210), c1 = h.at(n1, 30), n2 = h.at(c1, 90, 'NH'), n3 = h.at(c1, -30, 'NH'), c2 = h.at(n3, 30), n4 = h.at(c2, 90, 'NH'), n5 = h.at(c2, -30, 'NH₂'); h.bd(n1, m1); h.bd(n1, m2); h.bd(n1, c1); h.bd(c1, n2, 2); h.bd(c1, n3); h.bd(n3, c2); h.bd(c2, n4, 2); h.bd(c2, n5); }) },
+    { id: 'lidocain', cat: 'Wirkstoffe & Aromastoffe', name: 'Lidocain', alt: '', formula: 'C₁₄H₂₂N₂O', groups: ['Aromatischer Ring', 'Amid', 'Tertiäres Amin'],
+      where: 'Lokalanästhetikum beim Zahnarzt. Es blockiert spannungsabhängige Natriumkanäle der Nerven und unterbricht so die Schmerzleitung.',
+      m: mol(function (h) {
+        var r = ring(h, 0, 0, 0, KEK), a = h.at(r[1], 60), b = h.at(r[5], -60); h.bd(r[1], a); h.bd(r[5], b);
+        var n = h.at(r[0], 0, 'NH'), c1 = h.at(n, 30), o = h.at(c1, 90, 'O'), c2 = h.at(c1, -30), n2 = h.at(c2, 30, 'N');
+        h.bd(r[0], n); h.bd(n, c1); h.bd(c1, o, 2); h.bd(c1, c2); h.bd(c2, n2);
+        var a1 = h.at(n2, 90), a2 = h.at(a1, 30), b1 = h.at(n2, -30), b2 = h.at(b1, 30);
+        h.bd(n2, a1); h.bd(a1, a2); h.bd(n2, b1); h.bd(b1, b2);
+      }) },
+    { id: 'saccharin', cat: 'Wirkstoffe & Aromastoffe', name: 'Saccharin', alt: '', formula: 'C₇H₅NO₃S', groups: ['Sulfonamid (cyclisch)', 'Amid-Carbonyl', 'Aromatischer Ring'],
+      where: 'Der älteste künstliche Süßstoff (E 954), etwa 300-mal süßer als Haushaltszucker. Der Körper baut ihn nicht ab.',
+      m: mol(function (h) {
+        var r = ring(h, 0, 0, 90, KEK), A = h.m.atoms, p4 = A[r[4]], p5 = A[r[5]];
+        var pcx = (p4.x + p5.x) / 2 + AP, pcy = (p4.y + p5.y) / 2;
+        function pv(deg, l) { var q = deg * Math.PI / 180; return h.add(pcx + RP * Math.cos(q), pcy - RP * Math.sin(q), l); }
+        var c = pv(72), n = pv(0, 'NH'), s = pv(-72, 'S');
+        h.bd(r[5], c); h.bd(c, n); h.bd(n, s); h.bd(s, r[4]);
+        var o1 = h.at(c, 90, 'O'); h.bd(c, o1, 2);
+        var o2 = h.at(s, 270, 'O'), o3 = h.at(s, 330, 'O'); h.bd(s, o2, 2); h.bd(s, o3, 2);
+      }) },
+    { id: 'benzocain', cat: 'Wirkstoffe & Aromastoffe', name: 'Benzocain', alt: 'Ethyl-4-aminobenzoat', formula: 'C₉H₁₁NO₂', groups: ['Aromatischer Ring', 'Ester', 'Aminogruppe'],
+      where: 'Oberflächenanästhetikum in Halsschmerztabletten und Sonnenbrand-Sprays. Es betäubt die Schleimhaut.',
+      m: mol(function (h) { var r = ring(h, 0, 0, 90, KEK), n = h.at(r[0], 90, 'H₂N'), c = h.at(r[3], 270), o = h.at(c, 210, 'O'), o2 = h.at(c, 330, 'O'), e1 = h.at(o2, 30), e2 = h.at(e1, -30); h.bd(r[0], n); h.bd(r[3], c); h.bd(c, o, 2); h.bd(c, o2); h.bd(o2, e1); h.bd(e1, e2); }) },
+    { id: 'diclofenac', cat: 'Wirkstoffe & Aromastoffe', name: 'Diclofenac', alt: '', formula: 'C₁₄H₁₁Cl₂NO₂', groups: ['Carboxygruppe', 'Sekundäres Amin', 'Zwei Chloratome'],
+      where: 'Schmerz- und Entzündungsmittel (NSAR) aus der Gruppe von Ibuprofen und ASS. Es hemmt die Cyclooxygenasen.',
+      m: mol(function (h) {
+        var r2 = ring(h, 0, 0, 0, KEK), c1 = h.at(r2[1], 60, 'Cl'), c2 = h.at(r2[5], -60, 'Cl'); h.bd(r2[1], c1); h.bd(r2[5], c2);
+        var n = h.at(r2[0], 0, 'NH'); h.bd(r2[0], n);
+        var r1 = ring(h, 4 * L, 0, 0, KEK); h.bd(n, r1[3]);
+        var a = h.at(r1[4], 270), b = h.at(a, 330); h.bd(r1[4], a); h.bd(a, b); cooh(h, b, -30);
+      }) },
+    { id: 'anethol', cat: 'Wirkstoffe & Aromastoffe', name: 'Anethol', alt: 'trans-Anethol', formula: 'C₁₀H₁₂O', groups: ['Aromatischer Ring', 'Methoxygruppe (Ether)', 'C=C-Doppelbindung'],
+      where: 'Das Aroma von Anis, Fenchel und Sternanis, in Ouzo und Pastis. Wasser macht diese Getränke milchig, weil Anethol ausfällt.',
+      m: mol(function (h) { var r = ring(h, 0, 0, 0, KEK), c1 = h.at(r[0], 0), c2 = h.at(c1, 60), c3 = h.at(c2, 0), o = h.at(r[3], 180, 'O'), me = h.at(o, 240); h.bd(r[0], c1); h.bd(c1, c2, 2); h.bd(c2, c3); h.bd(r[3], o); h.bd(o, me); }) },
+    { id: 'guajacol', cat: 'Wirkstoffe & Aromastoffe', name: 'Guajacol', alt: '2-Methoxyphenol', formula: 'C₇H₈O₂', groups: ['Phenol', 'Methoxygruppe (Ether)'],
+      where: 'Der Rauch- und Räucheraroma-Stoff. Er entsteht beim Verbrennen von Lignin und kommt in Rauch, Whisky und Kaffee vor.',
+      m: mol(function (h) { var r = ring(h, 0, 0, 90, KEK), a = h.at(r[0], 90, 'OH'), o = h.at(r[1], 150, 'O'), me = h.at(o, 90); h.bd(r[0], a); h.bd(r[1], o); h.bd(o, me); }) },
+    { id: 'cumarin', cat: 'Wirkstoffe & Aromastoffe', name: 'Cumarin', alt: 'Coumarin', formula: 'C₉H₆O₂', groups: ['Benzol-Ring kondensiert mit Lacton', 'Cyclischer Ester'],
+      where: 'Der Duft von frisch gemähtem Heu und Waldmeister. Davon abgeleitet ist das Blutgerinnungshemmer-Medikament Phenprocoumon (Marcumar).',
+      m: mol(function (h) {
+        var r = ring(h, 0, 0, 90, KEK), cx2 = L * Math.sqrt(3);
+        function pt(deg) { var q = deg * Math.PI / 180; return [cx2 + L * Math.cos(q), -L * Math.sin(q)]; }
+        var t = pt(90), ur = pt(30), lr = pt(-30), b = pt(-90);
+        var a1 = h.add(t[0], t[1]), a2 = h.add(ur[0], ur[1]), a3 = h.add(lr[0], lr[1]), a4 = h.add(b[0], b[1], 'O');
+        h.bd(r[5], a1); h.bd(a1, a2, 2, [cx2, 0]); h.bd(a2, a3); h.bd(a3, a4); h.bd(a4, r[4]);
+        var o = h.at(a3, -30, 'O'); h.bd(a3, o, 2);
+      }) },
+    { id: 'resveratrol', cat: 'Wirkstoffe & Aromastoffe', name: 'Resveratrol', alt: 'trans-3,5,4′-Trihydroxystilben', formula: 'C₁₄H₁₂O₃', groups: ['Stilben (zwei Ringe, C=C-Brücke)', 'Drei phenolische OH'],
+      where: 'Pflanzlicher Abwehrstoff in Weintrauben-Schalen und Rotwein. Ihm werden antioxidative Wirkungen zugeschrieben, ein Nutzen beim Menschen ist aber nicht belegt.',
+      m: mol(function (h) {
+        var r1 = ring(h, 0, 0, 0, KEK), a = h.at(r1[2], 120, 'HO'), b = h.at(r1[4], 240, 'HO'); h.bd(r1[2], a); h.bd(r1[4], b);
+        var c1 = h.at(r1[0], 0), c2 = h.at(c1, 60); h.bd(r1[0], c1); h.bd(c1, c2, 2);
+        var P = h.m.atoms[c2], r2 = ring(h, P.x + 2 * L, P.y, 0, KEK); h.bd(c2, r2[3]);
+        var o = h.at(r2[0], 0, 'OH'); h.bd(r2[0], o);
+      }) },
+
+    { id: 'orotsaeure', cat: 'Nucleobasen & Purine', name: 'Orotsäure', alt: 'Uracil-6-carbonsäure', formula: 'C₅H₄N₂O₄', groups: ['Pyrimidinbase', 'Carboxygruppe', 'Zwei Carbonylgruppen'],
+      where: 'Zwischenprodukt der Pyrimidin-Biosynthese: Aus ihr entsteht über UMP das Uracil. Ihre Anhäufung ist bei einigen Stoffwechselstörungen zu sehen.',
+      m: mol(function (h) {
+        var r = ring(h, 0, 0, 90, [1, 1, 1, 1, 1, 2], { 2: 'HN', 4: 'NH' });
+        var o1 = h.at(r[1], 150, 'O'); h.bd(r[1], o1, 2);
+        var o2 = h.at(r[3], -90, 'O'); h.bd(r[3], o2, 2);
+        var c = h.at(r[5], 30), o3 = h.at(c, 90, 'O'), o4 = h.at(c, -30, 'OH'); h.bd(r[5], c); h.bd(c, o3, 2); h.bd(c, o4);
+      }) },
+    { id: 'barbitursaeure', cat: 'Nucleobasen & Purine', name: 'Barbitursäure', alt: 'Malonylharnstoff', formula: 'C₄H₄N₂O₃', groups: ['Pyrimidin-Gerüst', 'Drei Carbonylgruppen', 'Zwei Amide'],
+      where: 'Muttersubstanz der Barbiturate (Beruhigungs- und Narkosemittel). Sie selbst wirkt noch nicht beruhigend.',
+      m: mol(function (h) {
+        var r = ring(h, 0, 0, 90, SAT, { 2: 'HN', 4: 'NH' });
+        var a = h.at(r[1], 150, 'O'), b = h.at(r[3], -90, 'O'), c = h.at(r[5], 30, 'O'); h.bd(r[1], a, 2); h.bd(r[3], b, 2); h.bd(r[5], c, 2);
+      }) },
+
+    { id: 'galactose', cat: 'Zucker & Nucleotide', name: 'Galactose', alt: 'Schleimzucker', formula: 'C₆H₁₂O₆', groups: ['Sechsring (Pyranose)', 'Hydroxygruppen', 'Epimer der Glucose an C4'],
+      ster: 'β-D-Galactopyranose',
+      where: 'Bestandteil des Milchzuckers Lactose. Bei Galaktosämie fehlt ein Enzym zu ihrem Abbau, dann sind Säuglinge auf galaktosefreie Nahrung angewiesen.',
+      m: mol(function (h) {
+        var q = hpyr(h, 0, 0), o1 = hoh(h, q[0], 1, 0), o2 = hoh(h, q[1], -1, 0), o3 = hoh(h, q[2], 1, 0), o4 = hv(h, q[3], 1, 'HO', 30, -22), c6 = hch(h, q[4], 1, 0);
+        h.st(q[0], [q[5], o1, q[1]], 'R'); h.st(q[1], [o2, q[0], q[2]], 'R'); h.st(q[2], [o3, q[1], q[3]], 'S'); h.st(q[3], [o4, q[4], q[2]], 'R'); h.st(q[4], [q[5], q[3], c6], 'R');
+      }) },
+    { id: 'mannose', cat: 'Zucker & Nucleotide', name: 'Mannose', alt: '', formula: 'C₆H₁₂O₆', groups: ['Sechsring (Pyranose)', 'Hydroxygruppen', 'Epimer der Glucose an C2'],
+      ster: 'β-D-Mannopyranose',
+      where: 'Kommt in Früchten wie Cranberries vor und steckt in Glykoproteinen. Viele Proteine tragen mannosereiche Zuckerketten.',
+      m: mol(function (h) {
+        var q = hpyr(h, 0, 0), o1 = hv(h, q[0], 1, 'OH', 34, 14), o2 = hv(h, q[1], 1, 'OH', 46), o3 = hoh(h, q[2], 1, 0), o4 = hoh(h, q[3], -1, 0), c6 = hch(h, q[4], 1, 0);
+        h.st(q[0], [q[5], o1, q[1]], 'R'); h.st(q[1], [o2, q[0], q[2]], 'S'); h.st(q[2], [o3, q[1], q[3]], 'S'); h.st(q[3], [o4, q[4], q[2]], 'S'); h.st(q[4], [q[5], q[3], c6], 'R');
+      }) },
+    { id: 'guanosin', cat: 'Zucker & Nucleotide', name: 'Guanosin', alt: 'Guanin + Ribose', formula: 'C₁₀H₁₃N₅O₅', groups: ['Nucleosid', 'Purinbase', 'Ribose'],
+      ster: 'β-D-Ribofuranosyl, (2R,3R,4S,5R)',
+      where: 'Nucleosid der RNA. Als GTP dient es als Energieträger und Schalter, etwa bei G-Proteinen.',
+      m: mol(function (h) {
+        var r = ring(h, 0, 0, 90, [1, 1, 2, 1, 0, 1], { 1: 'HN', 3: 'N' });
+        var o = h.at(r[0], 90, 'O'); h.bd(r[0], o, 2);
+        var nh = h.at(r[2], 210, 'H₂N'); h.bd(r[2], nh);
+        var p = fusedPent(h, r, 'N', 'N', '78');
+        var c5 = haworthNuc(h, p.n9); oh(h, c5, 150);
+      }) },
+    { id: 'thymidin', cat: 'Zucker & Nucleotide', name: 'Thymidin', alt: 'Thymin + Desoxyribose', formula: 'C₁₀H₁₄N₂O₅', groups: ['Desoxynucleosid', 'Pyrimidinbase', '2′-Desoxyribose'],
+      ster: 'β-D-2-Desoxyribofuranosyl, (2R,4S,5R)',
+      where: 'Baustein der DNA. Als Thymidin-Kinase-Substrat wird es in Zellkultur zum Markieren der DNA-Synthese benutzt.',
+      m: mol(function (h) {
+        var r = ring(h, 0, 0, 90, [1, 1, 1, 1, 1, 2], { 2: 'HN', 4: 'N' });
+        var o1 = h.at(r[1], 150, 'O'); h.bd(r[1], o1, 2);
+        var o2 = h.at(r[3], 270, 'O'); h.bd(r[3], o2, 2);
+        var me = h.at(r[0], 90); h.bd(r[0], me);
+        var c5 = haworthNuc(h, r[4], true); oh(h, c5, 150);
+      }) },
+    { id: 'glucose6p', cat: 'Zucker & Nucleotide', name: 'Glucose-6-phosphat', alt: 'G6P', formula: 'C₆H₁₃O₉P', groups: ['Sechsring (Pyranose)', 'Phosphatester', 'Hydroxygruppen'],
+      ster: 'β-D-Glucopyranose-6-phosphat',
+      where: 'Der erste Schritt der Glykolyse: Hexokinase hängt ein Phosphat an Glucose. Durch die Ladung bleibt der Zucker in der Zelle gefangen. Ladungen sind hier nicht gezeigt.',
+      m: mol(function (h) {
+        var q = hpyr(h, 0, 0), o1 = hoh(h, q[0], 1, 0), o2 = hoh(h, q[1], -1, 0), o3 = hoh(h, q[2], 1, 0), o4 = hoh(h, q[3], -1, 0), c6 = hv(h, q[4], 1, '', 60);
+        h.st(q[0], [q[5], o1, q[1]], 'R'); h.st(q[1], [o2, q[0], q[2]], 'R'); h.st(q[2], [o3, q[1], q[3]], 'S'); h.st(q[3], [o4, q[4], q[2]], 'S'); h.st(q[4], [q[5], q[3], c6], 'R');
+        phosL(h, c6, 1);
+      }) },
+
+    { id: 'cortison', cat: 'Steroide & Botenstoffe', name: 'Cortison', alt: '', formula: 'C₂₁H₂₈O₅', groups: ['Steroidgerüst', 'Drei Ketogruppen', 'Zwei Hydroxygruppen'],
+      ster: '(8S,9S,10R,13S,14S,17R)',
+      where: 'Inaktive Vorstufe: Das Enzym 11β-HSD macht in Geweben daraus das wirksame Cortisol. Das Medikament „Cortison“ ist meist Hydrocortison oder Prednisolon.',
+      m: mol(function (h) {
+        var a = steroid(h, ['c4-c5']), o = h.at(a.c3, 210, 'O'); h.bd(a.c3, o, 2);
+        var m19 = h.at(a.c10, 90); h.bd(a.c10, m19, 'w');
+        var m18 = h.at(a.c13, 90); h.bd(a.c13, m18, 'w');
+        var o11 = h.at(a.c11, 150, 'O'); h.bd(a.c11, o11, 2);
+        var o17 = oh(h, a.c17, 40, 'd');
+        var c20 = h.at(a.c17, 100), o20 = h.at(c20, 150, 'O'), c21 = h.at(c20, 40);
+        h.bd(a.c17, c20); h.bd(c20, o20, 2); h.bd(c20, c21); oh(h, c21, 90);
+        hs(h, a.c8, 90, 'w'); hs(h, a.c9, 270, 'd'); var h14 = hs(h, a.c14, 36, 'd');
+        h.st(a.c10, [a.c5, a.c9, a.c1, m19], 'R'); h.st(a.c13, [a.c17, a.c14, a.c12, m18], 'S');
+        h.st(a.c14, [a.c13, a.c8, a.c15, h14], 'S'); h.st(a.c17, [o17, c20, a.c13, a.c16], 'R');
+      }) },
+    { id: 'androstendion', cat: 'Steroide & Botenstoffe', name: 'Androstendion', alt: '', formula: 'C₁₉H₂₆O₂', groups: ['Steroidgerüst', 'Zwei Ketogruppen'],
+      ster: '(8R,9S,10R,13S,14S)',
+      where: 'Vorstufe von Testosteron und Östrogenen. In der Nebenniere und den Keimdrüsen wird es aus Cholesterin gebildet.',
+      m: mol(function (h) {
+        var a = steroid(h, ['c4-c5']), o = h.at(a.c3, 210, 'O'); h.bd(a.c3, o, 2);
+        var m19 = h.at(a.c10, 90); h.bd(a.c10, m19, 'w');
+        var m18 = h.at(a.c13, 90); h.bd(a.c13, m18, 'w');
+        var o17 = h.at(a.c17, 72, 'O'); h.bd(a.c17, o17, 2);
+        hs(h, a.c8, 90, 'w'); hs(h, a.c9, 270, 'd'); var h14 = hs(h, a.c14, 36, 'd');
+        h.st(a.c10, [a.c5, a.c9, a.c1, m19], 'R'); h.st(a.c13, [a.c17, a.c14, a.c12, m18], 'S');
+        h.st(a.c14, [a.c13, a.c8, a.c15, h14], 'S');
+      }) },
+    { id: 'estron', cat: 'Steroide & Botenstoffe', name: 'Estron', alt: 'Östron', formula: 'C₁₈H₂₂O₂', groups: ['Steroidgerüst', 'Aromatischer A-Ring (Phenol)', 'Ketogruppe'],
+      ster: '(8R,9S,13S,14S)',
+      where: 'Ein Östrogen, das nach den Wechseljahren im Fettgewebe die wichtigste Form bleibt. Es ist die 17-Keto-Form von Östradiol.',
+      m: mol(function (h) {
+        var a = steroid(h, ['c1-c2', 'c3-c4', 'c5-c10']), o = h.at(a.c3, 210, 'HO'); h.bd(a.c3, o);
+        var m18 = h.at(a.c13, 90); h.bd(a.c13, m18, 'w');
+        var o17 = h.at(a.c17, 72, 'O'); h.bd(a.c17, o17, 2);
+        hs(h, a.c8, 90, 'w'); hs(h, a.c9, 270, 'd'); var h14 = hs(h, a.c14, 36, 'd');
+        h.st(a.c13, [a.c17, a.c14, a.c12, m18], 'S'); h.st(a.c14, [a.c13, a.c8, a.c15, h14], 'S');
+      }) },
+    { id: 'phenylethylamin', cat: 'Steroide & Botenstoffe', name: 'Phenylethylamin', alt: '2-Phenylethan-1-amin, PEA', formula: 'C₈H₁₁N', groups: ['Aromatischer Ring', 'Primäres Amin'],
+      where: 'Grundgerüst von Dopamin, Adrenalin und vielen Wirkstoffen. Es kommt in Spuren im Gehirn und in Schokolade vor.',
+      m: mol(function (h) { var r = ring(h, 0, 0, 90, KEK), c1 = h.at(r[0], 90), c2 = h.at(c1, 150), n = h.at(c2, 210, 'H₂N'); h.bd(r[0], c1); h.bd(c1, c2); h.bd(c2, n); }) },
+
+    { id: 'niacin', cat: 'Stoffwechsel & Pflanzen', name: 'Nicotinsäure', alt: 'Niacin, Vitamin B3', formula: 'C₆H₅NO₂', groups: ['Pyridin-Ring', 'Carboxygruppe'],
+      where: 'Die Säureform von Vitamin B3. Der Körper macht daraus NAD. Ein Mangel führt zur Mangelkrankheit Pellagra.',
+      m: mol(function (h) { var r = ring(h, 0, 0, 90, KEK, { 2: 'N' }), c = h.at(r[0], 90), o = h.at(c, 30, 'O'), q = h.at(c, 150, 'HO'); h.bd(r[0], c); h.bd(c, o, 2); h.bd(c, q); }) },
+    { id: 'betain', cat: 'Stoffwechsel & Pflanzen', name: 'Betain', alt: 'Trimethylglycin', formula: 'C₅H₁₁NO₂', groups: ['Quartäres Ammonium', 'Carboxylat'],
+      where: 'Kommt in Zuckerrüben (lat. Beta) vor. Es schützt Zellen vor Wasserverlust und gibt im Stoffwechsel Methylgruppen ab.',
+      m: mol(function (h) {
+        var n = h.add(0, 0, 'N⁺'); h.bd(n, h.at(n, 90)); h.bd(n, h.at(n, 180)); h.bd(n, h.at(n, 270));
+        var c1 = h.at(n, 0), c2 = h.at(c1, -30), o = h.at(c2, -90, 'O'), q = h.at(c2, 30, 'O⁻');
+        h.bd(n, c1); h.bd(c1, c2); h.bd(c2, o, 2); h.bd(c2, q);
+      }) },
+    { id: 'putrescin', cat: 'Stoffwechsel & Pflanzen', name: 'Putrescin', alt: 'Butan-1,4-diamin', formula: 'C₄H₁₂N₂', groups: ['Zwei primäre Aminogruppen', 'Biogenes Amin'],
+      where: 'Entsteht beim Verwesen von Eiweiß aus Ornithin und riecht entsprechend. Zellen brauchen es als Vorstufe von Spermidin und Spermin.',
+      m: mol(function (h) { var n1 = h.add(0, 0, 'H₂N'), z = zig(h, n1, 4, -30), n2 = h.at(z[3], -30, 'NH₂'); h.bd(z[3], n2); }) },
+    { id: 'spermidin', cat: 'Stoffwechsel & Pflanzen', name: 'Spermidin', alt: '', formula: 'C₇H₁₉N₃', groups: ['Polyamin', 'Primäre und sekundäre Aminogruppen'],
+      where: 'Polyamin, das an Zellwachstum und DNA-Verpackung beteiligt ist. Es steckt in Weizenkeimen, Sojabohnen und Käse.',
+      m: mol(function (h) {
+        var lab = ['H₂N', null, null, null, 'NH', null, null, null, null, 'NH₂'], prev = h.add(0, 0, lab[0]), a = -30, k, i;
+        for (k = 1; k < lab.length; k++) { i = h.at(prev, a, lab[k]); h.bd(prev, i); prev = i; a = -a; }
+      }) },
+
+    { id: 'ozon', cat: 'Kleine Moleküle', name: 'Ozon', alt: 'O₃', formula: 'O₃', groups: ['Gewinkelt', 'Starkes Oxidationsmittel'],
+      where: 'In der Stratosphäre schirmt die Ozonschicht UV-Strahlung ab. Am Boden ist es ein Reizgas im Sommersmog. Die Bindungen sind in Wirklichkeit gleich lang (Mesomerie).',
+      m: mol(function (h) { var a = h.add(0, 0, 'O'), b = h.at(a, 30, 'O'), c = h.at(b, -30, 'O'); h.bd(a, b, 2); h.bd(b, c); }) },
+    { id: 'kohlenmonoxid', cat: 'Kleine Moleküle', name: 'Kohlenmonoxid', alt: 'CO', formula: 'CO', groups: ['C≡O-Dreifachbindung', 'Giftig'],
+      where: 'Entsteht bei unvollständiger Verbrennung und bindet an Hämoglobin rund 200-mal stärker als Sauerstoff. Zugleich bildet der Körper winzige Mengen als Signalstoff.',
+      m: mol(function (h) { var a = h.add(0, 0, 'C'), b = h.at(a, 0, 'O'); h.bd(a, b, 3); }) },
+    { id: 'schwefeldioxid', cat: 'Kleine Moleküle', name: 'Schwefeldioxid', alt: 'SO₂', formula: 'SO₂', groups: ['Gewinkelt', 'Zwei S=O-Bindungen'],
+      where: 'Entsteht beim Verbrennen schwefelhaltiger Kohle und Öle und ist ein Auslöser des sauren Regens. Als E 220 konserviert es Wein und Trockenobst.',
+      m: mol(function (h) { var s = h.add(0, 0, 'S'), a = h.at(s, 210, 'O'), b = h.at(s, 330, 'O'); h.bd(s, a, 2); h.bd(s, b, 2); }) },
+    { id: 'salpetersaeure', cat: 'Kleine Moleküle', name: 'Salpetersäure', alt: 'HNO₃', formula: 'HNO₃', groups: ['Nitratgruppe', 'Starke Säure'],
+      where: 'Wichtige Industriesäure für Dünger (Nitrate) und Sprengstoffe. Ihre Salze, die Nitrate, sind die Stickstoffquelle der Pflanzen.',
+      m: mol(function (h) { var n = h.add(0, 0, 'N⁺'), a = h.at(n, 150, 'O'), b = h.at(n, 30, 'O⁻'), c = h.at(n, 270, 'OH'); h.bd(n, a, 2); h.bd(n, b); h.bd(n, c); }) },
+    { id: 'schwefelwasserstoff', cat: 'Kleine Moleküle', name: 'Schwefelwasserstoff', alt: 'H₂S', formula: 'H₂S', groups: ['Gewinkelt', 'Giftiges Gas'],
+      where: 'Riecht nach faulen Eiern und entsteht beim Abbau von Eiweiß. In winzigen Mengen ist es auch ein Signalmolekül der Zellen.',
+      m: mol(function (h) { var a = h.add(0, 0, 'H'), s = h.at(a, -30, 'S'), b = h.at(s, 30, 'H'); h.bd(a, s); h.bd(s, b); }) }
   ];
 })();
