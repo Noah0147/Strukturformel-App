@@ -1,7 +1,7 @@
 /* Service Worker: Netz zuerst, damit neue Karten sofort erscheinen. Ohne Netz kommt die letzte Kopie aus dem Cache. */
 var CACHE = 'strukturformel-karten-v1';
 var ASSETS = ['./', 'index.html', 'styles.css', 'chem.js', 'molecules.js', 'app.js', 'manifest.webmanifest',
-  'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png', 'icons/favicon.png'];
+  'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png', 'favicon.png'];
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(ASSETS); }).then(function () { return self.skipWaiting(); }));
