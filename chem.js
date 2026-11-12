@@ -1,6 +1,6 @@
 (function () {
   var L = 46;
-  var EXT = { 'O': [7, 7], 'N': [7, 7], 'S': [7, 7], 'C': [7, 7], 'H': [7, 7], 'P': [7, 7], 'OH': [7, 21], 'HO': [21, 7], 'NH': [7, 21], 'HN': [21, 7], 'SH': [7, 21], 'NH₂': [7, 31], 'H₂N': [31, 7] };
+  var EXT = { 'O': [7, 7], 'N': [7, 7], 'S': [7, 7], 'C': [7, 7], 'H': [7, 7], 'P': [7, 7], 'OH': [7, 21], 'HO': [21, 7], 'NH': [7, 21], 'HN': [21, 7], 'SH': [7, 21], 'NH₂': [7, 31], 'H₂N': [31, 7], 'CH₂OH': [7, 54], 'HOH₂C': [54, 7] };
 
   function mol(fn) {
     var m = { atoms: [], bonds: [], st: [] };
@@ -91,6 +91,8 @@
         var o2 = 3.4;
         lines += seg(x1 + nx * o2, y1 + ny * o2, x2 + nx * o2, y2 + ny * o2);
         lines += seg(x1 - nx * o2, y1 - ny * o2, x2 - nx * o2, y2 - ny * o2);
+      } else if (b.o === 'b' || b.o === 'm') {
+        lines += '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '" stroke-width="' + (b.o === 'b' ? 6 : 3.8) + '"/>';
       } else if (b.o === 'w') {
         var hw = 4.8;
         lines += '<polygon class="w" points="' + x1.toFixed(1) + ',' + y1.toFixed(1) + ' ' + (x2 + nx * hw).toFixed(1) + ',' + (y2 + ny * hw).toFixed(1) + ' ' + (x2 - nx * hw).toFixed(1) + ',' + (y2 - ny * hw).toFixed(1) + '"/>';

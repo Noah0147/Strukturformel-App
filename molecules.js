@@ -50,13 +50,52 @@
     var r = ring(h, 0, 0, 90, [2, 1, 2, 1, 0, 1], { 1: 'N', 3: 'N' });
     var nh = h.at(r[0], 90, 'NH₂'); h.bd(r[0], nh);
     var p = fusedPent(h, r, 'N', 'N', '78');
-    var c1 = h.at(p.n9, -72); h.bd(c1, p.n9, 'd');
-    var S = pentFrom(h, c1, -72, { 4: 'O' }); pbond(h, S);
-    var o2 = oh(h, S.idx[1], outDir(h, S, 1), 'w'), o3 = oh(h, S.idx[2], outDir(h, S, 2), 'w');
-    var c5 = h.at(S.idx[3], outDir(h, S, 3)); h.bd(S.idx[3], c5, 'd');
-    h.st(c1, [S.idx[4], p.n9, S.idx[1]], 'R'); h.st(S.idx[1], [o2, c1, S.idx[2]], 'R');
-    h.st(S.idx[2], [o3, S.idx[3], S.idx[1]], 'S'); h.st(S.idx[3], [S.idx[4], S.idx[2], c5], 'R');
+    return haworthNuc(h, p.n9);
+  }
+
+  /* Haworth-Projektion: Ring in Perspektive (vorne fett), Gruppen senkrecht nach oben (+1) oder unten (-1) */
+  function hring(h, cx, cy, R, angles, labels) {
+    var idx = [], n = angles.length, k, q, f = 0, best = -1e9, ys = [];
+    for (k = 0; k < n; k++) { q = angles[k] * Math.PI / 180; idx.push(h.add(cx + R * Math.cos(q), cy + 0.4 * R * Math.sin(q), labels && labels[k])); h.m.atoms[idx[k]].rc = [cx, cy]; }
+    for (k = 0; k < n; k++) { ys[k] = (h.m.atoms[idx[k]].y + h.m.atoms[idx[(k + 1) % n]].y) / 2; if (ys[k] > best) { best = ys[k]; f = k; } }
+    for (k = 0; k < n; k++) h.bd(idx[k], idx[(k + 1) % n], k === f ? 'b' : ((k === (f + 1) % n || k === (f + n - 1) % n) ? 'm' : 1));
+    h.m.haworth = true;
+    return idx;
+  }
+  function hpyr(h, cx, cy) { return hring(h, cx, cy, 46, [0, 60, 120, 180, 240, 300], { 5: 'O' }); }
+  function hv(h, a, dir, label, len) {
+    var A = h.m.atoms[a], d = len || 34;
+    if (A.rc) { var off = dir > 0 ? A.y - A.rc[1] : A.rc[1] - A.y; if (off > 0) d += off + 2; } /* Gruppe vor dem Ring: länger, damit sie über/unter dem Ring endet */
+    var k = h.add(A.x, A.y - dir * d, label);
+    h.m.bonds.push({ i: a, j: k, o: 1, ctr: null, v: dir });
+    return k;
+  }
+  function hoh(h, a, dir, cx) { return hv(h, a, dir, h.m.atoms[a].x < cx - 2 ? 'HO' : 'OH'); }
+  function hch(h, a, dir, cx) { return hv(h, a, dir, h.m.atoms[a].x < cx - 2 ? 'HOH₂C' : 'CH₂OH', 60); }
+  function mirrorX(h, x0) {
+    h.m.atoms.forEach(function (a) { a.x = 2 * x0 - a.x; });
+    h.m.bonds.forEach(function (b) { if (b.ctr) b.ctr = [2 * x0 - b.ctr[0], b.ctr[1]]; });
+  }
+  function haworthNuc(h, n) { /* β-D-Ribofuranose unter dem Ring-Stickstoff/N9 der Base; gibt C5' zurück */
+    mirrorX(h, h.m.atoms[n].x);
+    var N = h.m.atoms[n], R = 40, a1 = 342 * Math.PI / 180;
+    var cx = N.x - R * Math.cos(a1), cy = N.y + 46 - 0.4 * R * Math.sin(a1);
+    var q = hring(h, cx, cy, R, [342, 54, 126, 198, 270], { 4: 'O' });
+    h.m.bonds.push({ i: q[0], j: n, o: 1, ctr: null, v: 1 });
+    var o2 = hoh(h, q[1], -1, cx), o3 = hoh(h, q[2], -1, cx), c5 = hv(h, q[3], 1, '', 36);
+    h.st(q[0], [q[4], n, q[1]], 'R'); h.st(q[1], [o2, q[0], q[2]], 'R'); h.st(q[2], [o3, q[3], q[1]], 'S'); h.st(q[3], [q[4], q[2], c5], 'R');
     return c5;
+  }
+  function phosL(h, c5, n) { /* Phosphatkette nach links */
+    var prev = h.at(c5, 150, 'O'), k, pa, o1, q1, ob;
+    h.bd(c5, prev);
+    for (k = 0; k < n; k++) {
+      pa = h.at(prev, 210, 'P'); h.bd(prev, pa);
+      o1 = h.at(pa, 90, 'O'); h.bd(pa, o1, 2);
+      q1 = h.at(pa, 270, 'OH'); h.bd(pa, q1);
+      if (k < n - 1) { ob = h.at(pa, 150, 'O'); h.bd(pa, ob); prev = ob; }
+      else { h.bd(pa, h.at(pa, 150, 'HO')); }
+    }
   }
   function hs(h, idx, deg, ord) { /* explizites H am Steroid-Ringschluss (kurze Bindung ins Ringinnere) */
     var A = h.m.atoms[idx], r = deg * Math.PI / 180, k = h.add(A.x + 0.55 * L * Math.cos(r), A.y - 0.55 * L * Math.sin(r), 'H');
@@ -98,14 +137,8 @@
       else { h.bd(pa, h.at(pa, 30, 'OH')); }
     }
   }
-  function nucleoside(h, nIdx) { /* Ribose am Ring-Stickstoff nIdx (Pyrimidin) */
-    var c1 = h.at(nIdx, 330); h.bd(c1, nIdx, 'd');
-    var S = pentFrom(h, c1, 330, { 4: 'O' }); pbond(h, S);
-    var o2 = oh(h, S.idx[1], outDir(h, S, 1), 'w'), o3 = oh(h, S.idx[2], outDir(h, S, 2), 'w');
-    var c5 = h.at(S.idx[3], outDir(h, S, 3)); h.bd(S.idx[3], c5, 'd'); oh(h, c5, 300);
-    h.st(c1, [S.idx[4], nIdx, S.idx[1]], 'R'); h.st(S.idx[1], [o2, c1, S.idx[2]], 'R');
-    h.st(S.idx[2], [o3, S.idx[3], S.idx[1]], 'S'); h.st(S.idx[3], [S.idx[4], S.idx[2], c5], 'R');
-  }
+  function nucleoside(h, nIdx) { var c5 = haworthNuc(h, nIdx); oh(h, c5, 150); }
+
   function quatN(h) { /* N mit drei Methylgruppen (Ladung nicht gezeigt) */
     var n = h.add(0, 0, 'N');
     h.bd(n, h.at(n, 90)); h.bd(n, h.at(n, 180)); h.bd(n, h.at(n, 270));
@@ -309,12 +342,10 @@
       ster: 'β-D-Glucopyranose (häufigste Form in Lösung)',
       where: 'Zentraler Energieträger der Zellen und Baustein von Stärke und Cellulose.',
       m: mol(function (h) {
-        var r = ring(h, 0, 0, 90, SAT, { 0: 'O' });
-        var c6 = h.at(r[1], 150), o6 = h.at(c6, 90, 'OH'); h.bd(r[1], c6, 'w'); h.bd(c6, o6);
-        var a = h.at(r[2], 210, 'HO'), b = h.at(r[3], -90, 'OH'), c = h.at(r[4], -30, 'OH'), d = h.at(r[5], 30, 'OH');
-        h.bd(r[2], a, 'd'); h.bd(r[3], b, 'w'); h.bd(r[4], c, 'd'); h.bd(r[5], d, 'w');
-        h.st(r[5], [r[0], d, r[4]], 'R'); h.st(r[4], [c, r[5], r[3]], 'R'); h.st(r[3], [b, r[4], r[2]], 'S');
-        h.st(r[2], [a, r[1], r[3]], 'S'); h.st(r[1], [r[0], r[2], c6], 'R');
+        var q = hpyr(h, 0, 0);
+        var o1 = hoh(h, q[0], 1, 0), o2 = hoh(h, q[1], -1, 0), o3 = hoh(h, q[2], 1, 0), o4 = hoh(h, q[3], -1, 0), c6 = hch(h, q[4], 1, 0);
+        h.st(q[0], [q[5], o1, q[1]], 'R'); h.st(q[1], [o2, q[0], q[2]], 'R'); h.st(q[2], [o3, q[1], q[3]], 'S');
+        h.st(q[3], [o4, q[4], q[2]], 'S'); h.st(q[4], [q[5], q[3], c6], 'R');
       }) },
 
     { id: 'alanin', cat: 'Aminosäuren', name: 'Alanin', alt: '2-Aminopropansäure', formula: 'C₃H₇NO₂', groups: ['Aminogruppe', 'Carboxygruppe', 'Methyl-Seitenkette'],
@@ -494,48 +525,34 @@
       ster: 'β-D-Ribofuranose',
       where: 'Zucker im Rückgrat der RNA und in ATP.',
       m: mol(function (h) {
-        var P = pentAt(h, 0, 0, 90, { 0: 'O' }), i = P.idx; pbond(h, P);
-        var o1 = oh(h, i[4], 18, 'w'), o2 = oh(h, i[3], 306, 'd'), o3 = oh(h, i[2], 234, 'd');
-        var c5 = h.at(i[1], 162); h.bd(i[1], c5, 'w'); oh(h, c5, 102);
-        h.st(i[4], [i[0], o1, i[3]], 'R'); h.st(i[3], [o2, i[4], i[2]], 'R'); h.st(i[2], [o3, i[1], i[3]], 'S'); h.st(i[1], [i[0], i[2], c5], 'R');
+        var q = hring(h, 0, 0, 46, [342, 54, 126, 198, 270], { 4: 'O' });
+        var o1 = hoh(h, q[0], 1, 0), o2 = hoh(h, q[1], -1, 0), o3 = hoh(h, q[2], -1, 0), c5 = hch(h, q[3], 1, 0);
+        h.st(q[0], [q[4], o1, q[1]], 'R'); h.st(q[1], [o2, q[0], q[2]], 'R'); h.st(q[2], [o3, q[3], q[1]], 'S'); h.st(q[3], [q[4], q[2], c5], 'R');
       }) },
     { id: 'desoxyribose', cat: 'Zucker & Nucleotide', name: 'Desoxyribose', alt: '2-Desoxy-D-ribose', formula: 'C₅H₁₀O₄', groups: ['Fünfring (Furanose)', 'Hydroxygruppen'],
       ster: '2-Desoxy-β-D-ribofuranose',
       where: 'Zucker im Rückgrat der DNA. Im Vergleich zur Ribose fehlt die OH-Gruppe am C2.',
       m: mol(function (h) {
-        var P = pentAt(h, 0, 0, 90, { 0: 'O' }), i = P.idx; pbond(h, P);
-        var o1 = oh(h, i[4], 18, 'w'), o3 = oh(h, i[2], 234, 'd');
-        var c5 = h.at(i[1], 162); h.bd(i[1], c5, 'w'); oh(h, c5, 102);
-        h.st(i[4], [i[0], o1, i[3]], 'R'); h.st(i[2], [o3, i[1], i[3]], 'S'); h.st(i[1], [i[0], i[2], c5], 'R');
+        var q = hring(h, 0, 0, 46, [342, 54, 126, 198, 270], { 4: 'O' });
+        var o1 = hoh(h, q[0], 1, 0), o3 = hoh(h, q[2], -1, 0), c5 = hch(h, q[3], 1, 0);
+        h.st(q[0], [q[4], o1, q[1]], 'R'); h.st(q[2], [o3, q[3], q[1]], 'S'); h.st(q[3], [q[4], q[2], c5], 'R');
       }) },
     { id: 'fructose', cat: 'Zucker & Nucleotide', name: 'Fructose', alt: 'Fruchtzucker', formula: 'C₆H₁₂O₆', groups: ['Fünfring (Furanose)', 'Hydroxygruppen', 'Keto-Zucker'],
       ster: 'β-D-Fructofuranose',
       where: 'In Obst und Honig. Mit Glucose bildet sie den Haushaltszucker Saccharose.',
       m: mol(function (h) {
-        var P = pentAt(h, 0, 0, 90, { 0: 'O' }), i = P.idx; pbond(h, P);
-        var c1 = h.at(i[4], 60); h.bd(i[4], c1, 'd'); oh(h, c1, 0); var o2 = oh(h, i[4], -20, 'w');
-        var o3 = oh(h, i[3], 306, 'w'), o4 = oh(h, i[2], 234, 'd');
-        var c6 = h.at(i[1], 162); h.bd(i[1], c6, 'w'); oh(h, c6, 102);
-        h.st(i[4], [i[0], o2, i[3], c1], 'R'); h.st(i[3], [o3, i[4], i[2]], 'S'); h.st(i[2], [o4, i[1], i[3]], 'S'); h.st(i[1], [i[0], i[2], c6], 'R');
+        var q = hring(h, 0, 0, 46, [342, 54, 126, 198, 270], { 4: 'O' });
+        var o2 = hv(h, q[0], 1, 'OH', 66), c1 = hch(h, q[0], -1, 0), o3 = hoh(h, q[1], 1, 0), o4 = hoh(h, q[2], -1, 0), c6 = hch(h, q[3], 1, 0);
+        h.st(q[0], [q[4], o2, q[1], c1], 'R'); h.st(q[1], [o3, q[0], q[2]], 'S'); h.st(q[2], [o4, q[3], q[1]], 'S'); h.st(q[3], [q[4], q[2], c6], 'R');
       }) },
     { id: 'adenosin', cat: 'Zucker & Nucleotide', name: 'Adenosin', alt: 'Adenin + Ribose', formula: 'C₁₀H₁₃N₅O₄', groups: ['Nucleosid', 'Purinbase', 'Ribose'],
       ster: 'β-D-Ribofuranosyl, (2R,3R,4S,5R)',
       where: 'Die Base Adenin, über N9 mit Ribose verbunden. Koffein blockiert die Adenosin-Rezeptoren im Gehirn.',
-      m: mol(function (h) { var c5 = adenosinCore(h); oh(h, c5, 24); }) },
+      m: mol(function (h) { var c5 = adenosinCore(h); oh(h, c5, 150); }) },
     { id: 'atp', cat: 'Zucker & Nucleotide', name: 'ATP', alt: 'Adenosintriphosphat', formula: 'C₁₀H₁₆N₅O₁₃P₃', groups: ['Nucleotid', 'Drei Phosphatgruppen', 'Ribose', 'Adenin'],
       ster: 'β-D-Ribofuranose-Rest',
       where: 'Universeller Energieträger der Zelle. Beim Abspalten der letzten Phosphatgruppe wird Energie frei. Ladungen sind hier nicht gezeigt.',
-      m: mol(function (h) {
-        var c5 = adenosinCore(h), o5 = h.at(c5, 24, 'O'), prev = o5, k, pa, ob, o1, q1;
-        h.bd(c5, o5);
-        for (k = 0; k < 3; k++) {
-          pa = h.at(prev, -30, 'P'); h.bd(prev, pa);
-          o1 = h.at(pa, 90, 'O'); h.bd(pa, o1, 2);
-          q1 = h.at(pa, 270, 'OH'); h.bd(pa, q1);
-          if (k < 2) { ob = h.at(pa, 30, 'O'); h.bd(pa, ob); prev = ob; }
-          else { var q2 = h.at(pa, 30, 'OH'); h.bd(pa, q2); }
-        }
-      }) },
+      m: mol(function (h) { var c5 = adenosinCore(h); phosL(h, c5, 3); }) },
 
     /* ---- Steroide & Botenstoffe ---- */
     { id: 'cholesterin', cat: 'Steroide & Botenstoffe', name: 'Cholesterin', alt: 'Cholesterol', formula: 'C₂₇H₄₆O', groups: ['Steroidgerüst (vier Ringe)', 'Hydroxygruppe', 'C=C-Doppelbindung'],
@@ -922,21 +939,19 @@
       ster: 'β-D-Glucosamin',
       where: 'Baustein von Chitin in Insektenpanzern und Pilzzellwänden und von Knorpelbestandteilen. Es ist auch ein beliebtes Nahrungsergänzungsmittel für die Gelenke.',
       m: mol(function (h) {
-        var r = ring(h, 0, 0, 90, SAT, { 0: 'O' });
-        var c6 = h.at(r[1], 150), o6 = h.at(c6, 90, 'OH'); h.bd(r[1], c6, 'w'); h.bd(c6, o6);
-        var a = h.at(r[2], 210, 'HO'), b = h.at(r[3], -90, 'OH'), c = h.at(r[4], -30, 'NH₂'), d = h.at(r[5], 30, 'OH');
-        h.bd(r[2], a, 'd'); h.bd(r[3], b, 'w'); h.bd(r[4], c, 'd'); h.bd(r[5], d, 'w');
-        h.st(r[5], [r[0], d, r[4]], 'R'); h.st(r[4], [c, r[5], r[3]], 'R'); h.st(r[3], [b, r[2], r[4]], 'R');
-        h.st(r[2], [a, r[1], r[3]], 'S'); h.st(r[1], [r[0], r[2], c6], 'R');
+        var q = hpyr(h, 0, 0);
+        var o1 = hoh(h, q[0], 1, 0), n2 = hv(h, q[1], -1, 'NH₂'), o3 = hoh(h, q[2], 1, 0), o4 = hoh(h, q[3], -1, 0), c6 = hch(h, q[4], 1, 0);
+        h.st(q[0], [q[5], o1, q[1]], 'R'); h.st(q[1], [n2, q[0], q[2]], 'R'); h.st(q[2], [o3, q[3], q[1]], 'R');
+        h.st(q[3], [o4, q[4], q[2]], 'S'); h.st(q[4], [q[5], q[3], c6], 'R');
       }) },
     { id: 'amp', cat: 'Zucker & Nucleotide', name: 'AMP', alt: 'Adenosinmonophosphat', formula: 'C₁₀H₁₄N₅O₇P', groups: ['Nucleotid', 'Eine Phosphatgruppe', 'Ribose', 'Adenin'],
       ster: 'β-D-Ribofuranose-Rest',
       where: 'Baustein der RNA und Abbauprodukt von ATP. Ein hoher AMP-Spiegel zeigt Energiemangel an und aktiviert die AMP-Kinase. Ladungen sind hier nicht gezeigt.',
-      m: mol(function (h) { var c5 = adenosinCore(h); phos(h, c5, 1); }) },
+      m: mol(function (h) { var c5 = adenosinCore(h); phosL(h, c5, 1); }) },
     { id: 'adp', cat: 'Zucker & Nucleotide', name: 'ADP', alt: 'Adenosindiphosphat', formula: 'C₁₀H₁₅N₅O₁₀P₂', groups: ['Nucleotid', 'Zwei Phosphatgruppen', 'Ribose', 'Adenin'],
       ster: 'β-D-Ribofuranose-Rest',
       where: 'Entsteht, wenn ATP eine Phosphatgruppe abgibt. In den Mitochondrien wird es durch die ATP-Synthase wieder zu ATP aufgeladen. Ladungen sind hier nicht gezeigt.',
-      m: mol(function (h) { var c5 = adenosinCore(h); phos(h, c5, 2); }) },
+      m: mol(function (h) { var c5 = adenosinCore(h); phosL(h, c5, 2); }) },
     { id: 'uridin', cat: 'Zucker & Nucleotide', name: 'Uridin', alt: 'Uracil + Ribose', formula: 'C₉H₁₂N₂O₆', groups: ['Nucleosid', 'Pyrimidinbase', 'Ribose'],
       ster: 'β-D-Ribofuranosyl, (2R,3R,4S,5R)',
       where: 'Nucleosid der RNA. Als UDP-Glucose liefert es aktivierte Glucose für den Aufbau von Glykogen.',
@@ -959,18 +974,15 @@
       ster: 'α-D-Glucopyranosyl-(1→2)-β-D-fructofuranosid',
       where: 'Der normale Haushaltszucker aus Zuckerrübe und Zuckerrohr. Pflanzen transportieren ihre Fotosyntheseprodukte als Saccharose durch das Phloem.',
       m: mol(function (h) {
-        var r = ring(h, 0, 0, 90, SAT, { 0: 'O' });
-        var c6 = h.at(r[1], 150), o6 = h.at(c6, 90, 'OH'); h.bd(r[1], c6, 'w'); h.bd(c6, o6);
-        var a = h.at(r[2], 210, 'HO'), b = h.at(r[3], -90, 'OH'), c = h.at(r[4], -30, 'OH');
-        h.bd(r[2], a, 'd'); h.bd(r[3], b, 'w'); h.bd(r[4], c, 'd');
-        var og = h.at(r[5], 30, 'O'); h.bd(r[5], og, 'd');
-        var c2 = h.at(og, -30); h.bd(c2, og, 'd');
-        var F = pentFrom(h, c2, 0, { 4: 'O' }); pbond(h, F);
-        var c1f = h.at(c2, 100); h.bd(c2, c1f, 'w'); oh(h, c1f, 90);
-        var o3 = oh(h, F.idx[1], outDir(h, F, 1), 'd'), o4 = oh(h, F.idx[2], outDir(h, F, 2), 'w');
-        var f6 = h.at(F.idx[3], outDir(h, F, 3)); h.bd(F.idx[3], f6, 'd'); oh(h, f6, 330);
-        h.st(r[5], [og, r[0], r[4]], 'R'); h.st(r[4], [c, r[5], r[3]], 'R'); h.st(r[3], [b, r[4], r[2]], 'S'); h.st(r[2], [a, r[1], r[3]], 'S'); h.st(r[1], [r[0], r[2], c6], 'R');
-        h.st(c2, [og, F.idx[4], F.idx[1], c1f], 'S'); h.st(F.idx[1], [o3, c2, F.idx[2]], 'S'); h.st(F.idx[2], [o4, F.idx[3], F.idx[1]], 'S'); h.st(F.idx[3], [F.idx[4], F.idx[2], f6], 'R');
+        var g = hpyr(h, 0, 0), og = h.add(70, 34, 'O');
+        h.m.bonds.push({ i: g[0], j: og, o: 1, ctr: null, v: -1 });
+        var o2 = hoh(h, g[1], -1, 0), o3 = hoh(h, g[2], 1, 0), o4 = hoh(h, g[3], -1, 0), c6 = hch(h, g[4], 1, 0);
+        var R2 = 40, cx2 = 94 + 0.951 * R2, cy2 = 0.1236 * R2;
+        var f = hring(h, cx2, cy2, R2, [198, 126, 54, 342, 270], { 4: 'O' });
+        h.m.bonds.push({ i: f[0], j: og, o: 1, ctr: null, v: -1 });
+        var c1f = hch(h, f[0], 1, cx2), p3 = hoh(h, f[1], -1, cx2), p4 = hoh(h, f[2], 1, cx2), c6f = hch(h, f[3], -1, cx2);
+        h.st(g[0], [og, g[5], g[1]], 'R'); h.st(g[1], [o2, g[0], g[2]], 'R'); h.st(g[2], [o3, g[1], g[3]], 'S'); h.st(g[3], [o4, g[4], g[2]], 'S'); h.st(g[4], [g[5], g[3], c6], 'R');
+        h.st(f[0], [og, f[4], f[1], c1f], 'S'); h.st(f[1], [p3, f[0], f[2]], 'S'); h.st(f[2], [p4, f[3], f[1]], 'S'); h.st(f[3], [f[4], f[2], c6f], 'R');
       }) },
 
     /* ---- Steroide & Botenstoffe ---- */
