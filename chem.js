@@ -64,7 +64,7 @@
 
   function render(m, label) {
     var lines = '', texts = '';
-    m.atoms.forEach(function (a) { /* Ladung vom Elementsymbol trennen: Bindungen enden am Buchstaben, die Ladung steht als Hochzeichen daneben */
+    m.atoms.forEach(function (a, ix) { a.idx = ix; /* Ladung vom Elementsymbol trennen: Bindungen enden am Buchstaben, die Ladung steht als Hochzeichen daneben */
       if (a.pp || !a.l) return;
       a.pp = true;
       var f = a.l.charAt(0), z = a.l.charAt(a.l.length - 1);
@@ -127,10 +127,26 @@
       minY = Math.min(minY, a.y - v); maxY = Math.max(maxY, a.y + v);
       if (a.l) {
         var cls = (a.l === 'C' || a.l === 'H' || a.l === 'Cl' || a.l === 'C⁻') ? 'k' : (a.l === 'P' ? 's' : (a.l.indexOf('N') >= 0 ? 'n' : (a.l.indexOf('S') >= 0 ? 's' : 'o')));
-        texts += '<text x="' + (a.x - e[0]).toFixed(1) + '" y="' + (a.y + 6.5).toFixed(1) + '" class="' + cls + '">' + a.l + '</text>';
-        if (a.chg) {
-          texts += '<text x="' + (a.cs > 0 ? a.x + 7 : a.x - 15).toFixed(1) + '" y="' + (a.y - 3).toFixed(1) + '" class="' + cls + '" style="font-size:14px">' + a.chg + '</text>';
-          if (a.cs > 0) maxX = Math.max(maxX, a.x + 17); else minX = Math.min(minX, a.x - 17);
+        var ty = (a.y + 6.5).toFixed(1), ax = a.x.toFixed(1), n = a.l.length;
+        function tx(x, anchor, s) { return '<text x="' + x.toFixed(1) + '" y="' + ty + '" text-anchor="' + anchor + '" class="' + cls + '">' + s + '</text>'; }
+        if (n === 1 || e[0] === e[1]) texts += tx(a.x, 'middle', a.l);
+        else if (e[0] < e[1]) texts += tx(a.x, 'middle', a.l.charAt(0)) + tx(a.x + 7.2, 'start', a.l.slice(1)); /* OH, NH, NH₂: Bindungsatom vorn */
+        else texts += tx(a.x, 'middle', a.l.charAt(n - 1)) + tx(a.x - 7.2, 'end', a.l.slice(0, -1)); /* HO, H₂N, HOH₂C: Bindungsatom hinten */
+        if (a.chg) { /* Ladung dorthin, wo am wenigsten Bindungen liegen (bevorzugt rechts oben) */
+          var dirs = [], best = 45, bestS = -1, d, s2, k2, diff;
+          m.bonds.forEach(function (b) {
+            var o = b.i === a.idx ? m.atoms[b.j] : (b.j === a.idx ? m.atoms[b.i] : null);
+            if (o) dirs.push(Math.atan2(-(o.y - a.y), o.x - a.x) * 180 / Math.PI);
+          });
+          for (d = 0; d < 360; d += 15) {
+            s2 = 360;
+            for (k2 = 0; k2 < dirs.length; k2++) { diff = Math.abs(((d - dirs[k2]) % 360 + 540) % 360 - 180); if (diff < s2) s2 = diff; }
+            s2 -= Math.min(Math.abs(d - 45), 360 - Math.abs(d - 45)) / 40; /* leichte Vorliebe für oben rechts */
+            if (s2 > bestS) { bestS = s2; best = d; }
+          }
+          var cxx = a.x + 13 * Math.cos(best * Math.PI / 180), cyy = a.y - 13 * Math.sin(best * Math.PI / 180);
+          texts += '<text x="' + cxx.toFixed(1) + '" y="' + (cyy + 5).toFixed(1) + '" text-anchor="middle" class="' + cls + '" style="font-size:15px">' + a.chg + '</text>';
+          minX = Math.min(minX, cxx - 6); maxX = Math.max(maxX, cxx + 6); minY = Math.min(minY, cyy - 8); maxY = Math.max(maxY, cyy + 8);
         }
       }
     });
