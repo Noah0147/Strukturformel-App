@@ -1,6 +1,6 @@
 (function () {
   var L = 46;
-  var EXT = { 'O': [7, 7], 'N': [7, 7], 'S': [7, 7], 'C': [7, 7], 'H': [7, 7], 'P': [7, 7], 'OH': [7, 21], 'HO': [21, 7], 'NH': [7, 21], 'HN': [21, 7], 'SH': [7, 21], 'HS': [21, 7], 'NH₂': [7, 31], 'H₂N': [31, 7], 'CH₂OH': [7, 54], 'HOH₂C': [54, 7], 'Cl': [10, 10], 'O⁻': [7, 19], 'N⁺': [7, 19], 'O⁺': [7, 19], 'C⁻': [7, 19], '⁻O': [19, 7] };
+  var EXT = { 'O': [7, 7], 'N': [7, 7], 'S': [7, 7], 'C': [7, 7], 'H': [7, 7], 'P': [7, 7], 'OH': [7, 21], 'HO': [21, 7], 'NH': [7, 21], 'HN': [21, 7], 'SH': [7, 21], 'HS': [21, 7], 'NH₂': [7, 31], 'H₂N': [31, 7], 'CH₂OH': [7, 54], 'HOH₂C': [54, 7], 'Cl': [10, 10], 'O⁻': [7, 19], 'N⁺': [7, 19], 'O⁺': [7, 19], 'C⁻': [7, 19], '⁻O': [19, 7], 'F': [6, 6], 'I': [3, 3] };
 
   function mol(fn) {
     var m = { atoms: [], bonds: [], st: [] };
@@ -126,7 +126,7 @@
       minX = Math.min(minX, a.x - e[0]); maxX = Math.max(maxX, a.x + e[1]);
       minY = Math.min(minY, a.y - v); maxY = Math.max(maxY, a.y + v);
       if (a.l) {
-        var cls = (a.l === 'C' || a.l === 'H' || a.l === 'Cl' || a.l === 'C⁻') ? 'k' : (a.l === 'P' ? 's' : (a.l.indexOf('N') >= 0 ? 'n' : (a.l.indexOf('S') >= 0 ? 's' : 'o')));
+        var cls = (a.l === 'C' || a.l === 'H' || a.l === 'Cl' || a.l === 'F' || a.l === 'I' || a.l === 'C⁻') ? 'k' : (a.l === 'P' ? 's' : (a.l.indexOf('N') >= 0 ? 'n' : (a.l.indexOf('S') >= 0 ? 's' : 'o')));
         var ty = (a.y + 6.5).toFixed(1), ax = a.x.toFixed(1), n = a.l.length;
         function tx(x, anchor, s) { return '<text x="' + x.toFixed(1) + '" y="' + ty + '" text-anchor="' + anchor + '" class="' + cls + '">' + s + '</text>'; }
         if (n === 1 || e[0] === e[1]) texts += tx(a.x, 'middle', a.l);
