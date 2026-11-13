@@ -1,6 +1,6 @@
 (function () {
   var L = 46;
-  var EXT = { 'O': [7, 7], 'N': [7, 7], 'S': [7, 7], 'C': [7, 7], 'H': [7, 7], 'P': [7, 7], 'OH': [7, 21], 'HO': [21, 7], 'NH': [7, 21], 'HN': [21, 7], 'SH': [7, 21], 'NH₂': [7, 31], 'H₂N': [31, 7], 'CH₂OH': [7, 54], 'HOH₂C': [54, 7], 'Cl': [10, 10], 'O⁻': [7, 19], 'N⁺': [7, 19] };
+  var EXT = { 'O': [7, 7], 'N': [7, 7], 'S': [7, 7], 'C': [7, 7], 'H': [7, 7], 'P': [7, 7], 'OH': [7, 21], 'HO': [21, 7], 'NH': [7, 21], 'HN': [21, 7], 'SH': [7, 21], 'NH₂': [7, 31], 'H₂N': [31, 7], 'CH₂OH': [7, 54], 'HOH₂C': [54, 7], 'Cl': [10, 10], 'O⁻': [7, 19], 'N⁺': [7, 19], 'O⁺': [7, 19], 'C⁻': [7, 19], '⁻O': [19, 7] };
 
   function mol(fn) {
     var m = { atoms: [], bonds: [], st: [] };
@@ -14,12 +14,19 @@
     function st(c, p, cfg) { m.st.push({ c: c, p: p, cfg: cfg }); }
     fn({ add: add, at: at, bd: bd, st: st, m: m });
     if (m.alpha != null) {
-      m.bonds.forEach(function (b) {
-        if (b.i === m.alpha && b.j !== m.an && b.j !== m.ac && b.o === 1 && !m.alphaDone) {
-          m.alphaDone = true; b.o = 'd';
-          st(m.alpha, m.acys ? [m.an, b.j, m.ac] : [m.an, m.ac, b.j], m.acys ? 'R' : 'S');
-        }
-      });
+      /* Übliche Darstellung: Aminogruppe als Keil, Seitenkette in der Ebene.
+         Dazu wird die Zeichnung um die x-Achse gedreht (y und z gespiegelt, Konfiguration bleibt gleich)
+         und der Keil von der Seitenkette auf die Aminogruppe verlegt. */
+      var side = null;
+      m.bonds.forEach(function (b) { if (!side && b.i === m.alpha && b.j !== m.an && b.j !== m.ac && b.o === 1) side = b; });
+      m.bonds.forEach(function (b) { if (b.o === 'w') b.o = 'd'; else if (b.o === 'd') b.o = 'w'; if (b.ctr) b.ctr = [b.ctr[0], -b.ctr[1]]; });
+      m.atoms.forEach(function (a) { a.y = -a.y; });
+      if (side) {
+        m.bonds.forEach(function (b) {
+          if ((b.i === m.an && b.j === m.alpha) || (b.i === m.alpha && b.j === m.an)) { b.i = m.alpha; b.j = m.an; b.o = 'w'; }
+        });
+        st(m.alpha, m.acys ? [m.an, side.j, m.ac] : [m.an, m.ac, side.j], m.acys ? 'R' : 'S');
+      }
     }
     return m;
   }
@@ -118,7 +125,7 @@
       minX = Math.min(minX, a.x - e[0]); maxX = Math.max(maxX, a.x + e[1]);
       minY = Math.min(minY, a.y - v); maxY = Math.max(maxY, a.y + v);
       if (a.l) {
-        var cls = (a.l === 'C' || a.l === 'H' || a.l === 'Cl') ? 'k' : (a.l === 'P' ? 's' : (a.l.indexOf('N') >= 0 ? 'n' : (a.l.indexOf('S') >= 0 ? 's' : 'o')));
+        var cls = (a.l === 'C' || a.l === 'H' || a.l === 'Cl' || a.l === 'C⁻') ? 'k' : (a.l === 'P' ? 's' : (a.l.indexOf('N') >= 0 ? 'n' : (a.l.indexOf('S') >= 0 ? 's' : 'o')));
         texts += '<text x="' + (a.x - e[0]).toFixed(1) + '" y="' + (a.y + 6.5).toFixed(1) + '" class="' + cls + '">' + a.l + '</text>';
       }
     });

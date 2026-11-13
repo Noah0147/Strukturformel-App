@@ -92,9 +92,9 @@
     for (k = 0; k < n; k++) {
       pa = h.at(prev, 210, 'P'); h.bd(prev, pa);
       o1 = h.at(pa, 90, 'O'); h.bd(pa, o1, 2);
-      q1 = h.at(pa, 270, 'OH'); h.bd(pa, q1);
+      q1 = h.at(pa, 270, 'O⁻'); h.bd(pa, q1);
       if (k < n - 1) { ob = h.at(pa, 150, 'O'); h.bd(pa, ob); prev = ob; }
-      else { h.bd(pa, h.at(pa, 150, 'HO')); }
+      else { h.bd(pa, h.at(pa, 150, '⁻O')); }
     }
   }
   function hs(h, idx, deg, ord) { /* explizites H am Steroid-Ringschluss (kurze Bindung ins Ringinnere) */
@@ -139,13 +139,13 @@
   }
   function nucleoside(h, nIdx) { var c5 = haworthNuc(h, nIdx); oh(h, c5, 150); }
 
-  function quatN(h) { /* N mit drei Methylgruppen (Ladung nicht gezeigt) */
-    var n = h.add(0, 0, 'N');
+  function quatN(h) { /* N mit drei Methylgruppen (mit positiver Ladung) */
+    var n = h.add(0, 0, 'N⁺');
     h.bd(n, h.at(n, 90)); h.bd(n, h.at(n, 180)); h.bd(n, h.at(n, 270));
     return n;
   }
 
-  window.DATA_VERSION = '2026-11-12b';
+  window.DATA_VERSION = '2026-11-13';
   window.CATEGORIES = ['Alkohole & Carbonyle', 'Säuren & Ester', 'Aromaten', 'Aminosäuren', 'Nucleobasen & Purine', 'Wirkstoffe & Aromastoffe', 'Stoffwechsel & Pflanzen', 'Zucker & Nucleotide', 'Steroide & Botenstoffe', 'Kleine Moleküle'];
 
   window.MOLECULES = [
@@ -551,7 +551,7 @@
       m: mol(function (h) { var c5 = adenosinCore(h); oh(h, c5, 150); }) },
     { id: 'atp', cat: 'Zucker & Nucleotide', name: 'ATP', alt: 'Adenosintriphosphat', formula: 'C₁₀H₁₆N₅O₁₃P₃', groups: ['Nucleotid', 'Drei Phosphatgruppen', 'Ribose', 'Adenin'],
       ster: 'β-D-Ribofuranose-Rest',
-      where: 'Universeller Energieträger der Zelle. Beim Abspalten der letzten Phosphatgruppe wird Energie frei. Ladungen sind hier nicht gezeigt.',
+      where: 'Universeller Energieträger der Zelle. Beim Abspalten der letzten Phosphatgruppe wird Energie frei. Bei pH 7 sind die Phosphatgruppen deprotoniert, daher die negativen Ladungen (die Summenformel gilt für die ungeladene Säure).',
       m: mol(function (h) { var c5 = adenosinCore(h); phosL(h, c5, 3); }) },
 
     /* ---- Steroide & Botenstoffe ---- */
@@ -881,11 +881,11 @@
       }) },
     { id: 'carnitin', cat: 'Stoffwechsel & Pflanzen', name: 'Carnitin', alt: '3-Hydroxy-4-trimethylammoniobutanoat', formula: 'C₇H₁₅NO₃', groups: ['Quartäres Ammonium', 'Hydroxygruppe', 'Carboxygruppe'],
       ster: 'L-Carnitin, (R)',
-      where: 'Transportiert Fettsäuren in die Mitochondrien, wo sie abgebaut werden. Es kommt vor allem in Fleisch vor. Ladungen sind hier nicht gezeigt.',
+      where: 'Transportiert Fettsäuren in die Mitochondrien, wo sie abgebaut werden. Es kommt vor allem in Fleisch vor. Es liegt als Zwitterion vor (N⁺ und Carboxylat).',
       m: mol(function (h) {
         var n = quatN(h), c1 = h.at(n, 0), c2 = h.at(c1, -30);
         h.bd(n, c1); h.bd(c1, c2); var o2 = oh(h, c2, 270, 'w');
-        var c3 = h.at(c2, 30), c4 = h.at(c3, -30); h.bd(c2, c3); h.bd(c3, c4); cooh(h, c4, -30); h.st(c2, [o2, c1, c3], 'R');
+        var c3 = h.at(c2, 30), c4 = h.at(c3, -30); h.bd(c2, c3); h.bd(c3, c4); var ca = h.at(c4, -90, 'O'), cb = h.at(c4, 30, 'O⁻'); h.bd(c4, ca, 2); h.bd(c4, cb); h.st(c2, [o2, c1, c3], 'R');
       }) },
     { id: 'retinol', cat: 'Stoffwechsel & Pflanzen', name: 'Retinol', alt: 'Vitamin A', formula: 'C₂₀H₃₀O', groups: ['Ring mit Doppelbindung', 'Konjugierte Polyenkette', 'Hydroxygruppe'],
       ster: 'all-E (alle Doppelbindungen trans)',
@@ -946,11 +946,11 @@
       }) },
     { id: 'amp', cat: 'Zucker & Nucleotide', name: 'AMP', alt: 'Adenosinmonophosphat', formula: 'C₁₀H₁₄N₅O₇P', groups: ['Nucleotid', 'Eine Phosphatgruppe', 'Ribose', 'Adenin'],
       ster: 'β-D-Ribofuranose-Rest',
-      where: 'Baustein der RNA und Abbauprodukt von ATP. Ein hoher AMP-Spiegel zeigt Energiemangel an und aktiviert die AMP-Kinase. Ladungen sind hier nicht gezeigt.',
+      where: 'Baustein der RNA und Abbauprodukt von ATP. Ein hoher AMP-Spiegel zeigt Energiemangel an und aktiviert die AMP-Kinase. Bei pH 7 sind die Phosphatgruppen deprotoniert, daher die negativen Ladungen (die Summenformel gilt für die ungeladene Säure).',
       m: mol(function (h) { var c5 = adenosinCore(h); phosL(h, c5, 1); }) },
     { id: 'adp', cat: 'Zucker & Nucleotide', name: 'ADP', alt: 'Adenosindiphosphat', formula: 'C₁₀H₁₅N₅O₁₀P₂', groups: ['Nucleotid', 'Zwei Phosphatgruppen', 'Ribose', 'Adenin'],
       ster: 'β-D-Ribofuranose-Rest',
-      where: 'Entsteht, wenn ATP eine Phosphatgruppe abgibt. In den Mitochondrien wird es durch die ATP-Synthase wieder zu ATP aufgeladen. Ladungen sind hier nicht gezeigt.',
+      where: 'Entsteht, wenn ATP eine Phosphatgruppe abgibt. In den Mitochondrien wird es durch die ATP-Synthase wieder zu ATP aufgeladen. Bei pH 7 sind die Phosphatgruppen deprotoniert, daher die negativen Ladungen (die Summenformel gilt für die ungeladene Säure).',
       m: mol(function (h) { var c5 = adenosinCore(h); phosL(h, c5, 2); }) },
     { id: 'uridin', cat: 'Zucker & Nucleotide', name: 'Uridin', alt: 'Uracil + Ribose', formula: 'C₉H₁₂N₂O₆', groups: ['Nucleosid', 'Pyrimidinbase', 'Ribose'],
       ster: 'β-D-Ribofuranosyl, (2R,3R,4S,5R)',
@@ -1016,13 +1016,13 @@
         h.st(a.c11, [o11, a.c9, a.c12], 'S');
       }) },
     { id: 'acetylcholin', cat: 'Steroide & Botenstoffe', name: 'Acetylcholin', alt: '', formula: 'C₇H₁₆NO₂⁺', groups: ['Quartäres Ammonium', 'Ester'],
-      where: 'Neurotransmitter an der Verbindung von Nerv und Muskel. Botulinumtoxin (Botox) verhindert seine Freisetzung und lähmt dadurch den Muskel. Die Ladung ist hier nicht gezeigt.',
+      where: 'Neurotransmitter an der Verbindung von Nerv und Muskel. Botulinumtoxin (Botox) verhindert seine Freisetzung und lähmt dadurch den Muskel.',
       m: mol(function (h) {
         var n = quatN(h), c1 = h.at(n, 0), c2 = h.at(c1, -30), o = h.at(c2, 30, 'O'), c3 = h.at(o, -30), oc = h.at(c3, 270, 'O'), me = h.at(c3, 30);
         h.bd(n, c1); h.bd(c1, c2); h.bd(c2, o); h.bd(o, c3); h.bd(c3, oc, 2); h.bd(c3, me);
       }) },
     { id: 'cholin', cat: 'Steroide & Botenstoffe', name: 'Cholin', alt: '', formula: 'C₅H₁₄NO⁺', groups: ['Quartäres Ammonium', 'Hydroxygruppe'],
-      where: 'In Eigelb und Leber enthalten. Baustein von Lecithin (Phosphatidylcholin) in Zellmembranen und von Acetylcholin. Die Ladung ist hier nicht gezeigt.',
+      where: 'In Eigelb und Leber enthalten. Baustein von Lecithin (Phosphatidylcholin) in Zellmembranen und von Acetylcholin.',
       m: mol(function (h) { var n = quatN(h), c1 = h.at(n, 0), c2 = h.at(c1, -30); h.bd(n, c1); h.bd(c1, c2); oh(h, c2, 30); }) },
     { id: 'noradrenalin', cat: 'Steroide & Botenstoffe', name: 'Noradrenalin', alt: 'Norepinephrin', formula: 'C₈H₁₁NO₃', groups: ['Catechol', 'Primäres Amin', 'Hydroxygruppe'],
       ster: '(R)-(−)-Noradrenalin',
@@ -1267,7 +1267,7 @@
       }) },
     { id: 'glucose6p', cat: 'Zucker & Nucleotide', name: 'Glucose-6-phosphat', alt: 'G6P', formula: 'C₆H₁₃O₉P', groups: ['Sechsring (Pyranose)', 'Phosphatester', 'Hydroxygruppen'],
       ster: 'β-D-Glucopyranose-6-phosphat',
-      where: 'Der erste Schritt der Glykolyse: Hexokinase hängt ein Phosphat an Glucose. Durch die Ladung bleibt der Zucker in der Zelle gefangen. Ladungen sind hier nicht gezeigt.',
+      where: 'Der erste Schritt der Glykolyse: Hexokinase hängt ein Phosphat an Glucose. Die Phosphatgruppe ist bei pH 7 zweifach negativ geladen, so bleibt der Zucker in der Zelle gefangen. Die Summenformel gilt für die ungeladene Säure.',
       m: mol(function (h) {
         var q = hpyr(h, 0, 0), o1 = hoh(h, q[0], 1, 0), o2 = hoh(h, q[1], -1, 0), o3 = hoh(h, q[2], 1, 0), o4 = hoh(h, q[3], -1, 0), c6 = hv(h, q[4], 1, '', 60);
         h.st(q[0], [q[5], o1, q[1]], 'R'); h.st(q[1], [o2, q[0], q[2]], 'R'); h.st(q[2], [o3, q[1], q[3]], 'S'); h.st(q[3], [o4, q[4], q[2]], 'S'); h.st(q[4], [q[5], q[3], c6], 'R');
@@ -1337,10 +1337,10 @@
 
     { id: 'ozon', cat: 'Kleine Moleküle', name: 'Ozon', alt: 'O₃', formula: 'O₃', groups: ['Gewinkelt', 'Starkes Oxidationsmittel'],
       where: 'In der Stratosphäre schirmt die Ozonschicht UV-Strahlung ab. Am Boden ist es ein Reizgas im Sommersmog. Die Bindungen sind in Wirklichkeit gleich lang (Mesomerie).',
-      m: mol(function (h) { var a = h.add(0, 0, 'O'), b = h.at(a, 30, 'O'), c = h.at(b, -30, 'O'); h.bd(a, b, 2); h.bd(b, c); }) },
+      m: mol(function (h) { var a = h.add(0, 0, 'O'), b = h.at(a, 30, 'O⁺'), c = h.at(b, -30, 'O⁻'); h.bd(a, b, 2); h.bd(b, c); }) },
     { id: 'kohlenmonoxid', cat: 'Kleine Moleküle', name: 'Kohlenmonoxid', alt: 'CO', formula: 'CO', groups: ['C≡O-Dreifachbindung', 'Giftig'],
       where: 'Entsteht bei unvollständiger Verbrennung und bindet an Hämoglobin rund 200-mal stärker als Sauerstoff. Zugleich bildet der Körper winzige Mengen als Signalstoff.',
-      m: mol(function (h) { var a = h.add(0, 0, 'C'), b = h.at(a, 0, 'O'); h.bd(a, b, 3); }) },
+      m: mol(function (h) { var a = h.add(0, 0, 'C⁻'), b = h.at(a, 0, 'O⁺'); h.bd(a, b, 3); }) },
     { id: 'schwefeldioxid', cat: 'Kleine Moleküle', name: 'Schwefeldioxid', alt: 'SO₂', formula: 'SO₂', groups: ['Gewinkelt', 'Zwei S=O-Bindungen'],
       where: 'Entsteht beim Verbrennen schwefelhaltiger Kohle und Öle und ist ein Auslöser des sauren Regens. Als E 220 konserviert es Wein und Trockenobst.',
       m: mol(function (h) { var s = h.add(0, 0, 'S'), a = h.at(s, 210, 'O'), b = h.at(s, 330, 'O'); h.bd(s, a, 2); h.bd(s, b, 2); }) },
