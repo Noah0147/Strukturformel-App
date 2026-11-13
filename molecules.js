@@ -145,7 +145,7 @@
     return n;
   }
 
-  window.DATA_VERSION = '2026-11-13';
+  window.DATA_VERSION = '2026-11-13b';
   window.CATEGORIES = ['Alkohole & Carbonyle', 'Säuren & Ester', 'Aromaten', 'Aminosäuren', 'Nucleobasen & Purine', 'Wirkstoffe & Aromastoffe', 'Stoffwechsel & Pflanzen', 'Zucker & Nucleotide', 'Steroide & Botenstoffe', 'Kleine Moleküle'];
 
   window.MOLECULES = [
@@ -351,43 +351,43 @@
     { id: 'alanin', cat: 'Aminosäuren', name: 'Alanin', alt: '2-Aminopropansäure', formula: 'C₃H₇NO₂', groups: ['Aminogruppe', 'Carboxygruppe', 'Methyl-Seitenkette'],
       ster: 'L-Alanin, (S)',
       where: 'Proteinbaustein. Wichtig im Glucose-Alanin-Zyklus zwischen Muskel und Leber.',
-      m: mol(function (h) { var b = aaBase(h), me = h.at(b.c1, -90); h.bd(b.c1, me); }) },
+      m: mol(function (h) { var b = aaBase(h), me = h.at(b.c1, 150); h.bd(b.c1, me); }) },
     { id: 'serin', cat: 'Aminosäuren', name: 'Serin', alt: '2-Amino-3-hydroxypropansäure', formula: 'C₃H₇NO₃', groups: ['Aminogruppe', 'Carboxygruppe', 'Hydroxy-Seitenkette'],
       ster: 'L-Serin, (S)',
       where: 'Proteinbaustein. Seine OH-Gruppe wird in Proteinen oft phosphoryliert.',
-      m: mol(function (h) { var b = aaBase(h), c3 = h.at(b.c1, -90), oh = h.at(c3, -90, 'OH'); h.bd(b.c1, c3); h.bd(c3, oh); }) },
+      m: mol(function (h) { var b = aaBase(h), c3 = h.at(b.c1, 150), oh = h.at(c3, 210, 'HO'); h.bd(b.c1, c3); h.bd(c3, oh); }) },
     { id: 'cystein', cat: 'Aminosäuren', name: 'Cystein', alt: '2-Amino-3-mercaptopropansäure', formula: 'C₃H₇NO₂S', groups: ['Aminogruppe', 'Carboxygruppe', 'Thiolgruppe (SH)'],
       ster: 'L-Cystein, (R) – der Schwefel ändert nur die Priorität, nicht die Raumform',
       where: 'Bildet Disulfidbrücken zwischen Proteinketten, zum Beispiel im Keratin der Haare.',
-      m: mol(function (h) { var b = aaBase(h), c3 = h.at(b.c1, -90), sh = h.at(c3, -90, 'SH'); h.m.acys = true; h.bd(b.c1, c3); h.bd(c3, sh); }) },
+      m: mol(function (h) { var b = aaBase(h), c3 = h.at(b.c1, 150), sh = h.at(c3, 210, 'HS'); h.m.acys = true; h.bd(b.c1, c3); h.bd(c3, sh); }) },
     { id: 'asp', cat: 'Aminosäuren', name: 'Asparaginsäure', alt: 'Aspartat', formula: 'C₄H₇NO₄', groups: ['Aminogruppe', 'Zwei Carboxygruppen'],
       ster: 'L-Aspartat, (S)',
       where: 'Saure Aminosäure und Proteinbaustein. Ausgangsstoff des Süßstoffs Aspartam.',
       m: mol(function (h) {
-        var b = aaBase(h), c3 = h.at(b.c1, 270), c4 = h.at(c3, 210), o = h.at(c4, 270, 'O'), ho = h.at(c4, 150, 'HO');
+        var b = aaBase(h), c3 = h.at(b.c1, 150), c4 = h.at(c3, 210), o = h.at(c4, 150, 'O'), ho = h.at(c4, 270, 'OH');
         h.bd(b.c1, c3); h.bd(c3, c4); h.bd(c4, o, 2); h.bd(c4, ho);
       }) },
     { id: 'glu', cat: 'Aminosäuren', name: 'Glutaminsäure', alt: 'Glutamat', formula: 'C₅H₉NO₄', groups: ['Aminogruppe', 'Zwei Carboxygruppen'],
       ster: 'L-Glutamat, (S)',
       where: 'Als Glutamat der wichtigste erregende Neurotransmitter. Als Würzmittel sorgt es für Umami.',
       m: mol(function (h) {
-        var b = aaBase(h), c3 = h.at(b.c1, 270), c4 = h.at(c3, 210), c5 = h.at(c4, 150), o = h.at(c5, 210, 'O'), ho = h.at(c5, 90, 'HO');
+        var b = aaBase(h), c3 = h.at(b.c1, 150), c4 = h.at(c3, 210), c5 = h.at(c4, 150), o = h.at(c5, 90, 'O'), ho = h.at(c5, 210, 'HO');
         h.bd(b.c1, c3); h.bd(c3, c4); h.bd(c4, c5); h.bd(c5, o, 2); h.bd(c5, ho);
       }) },
     { id: 'phe', cat: 'Aminosäuren', name: 'Phenylalanin', alt: '', formula: 'C₉H₁₁NO₂', groups: ['Aminogruppe', 'Carboxygruppe', 'Aromatische Seitenkette'],
       ster: 'L-Phenylalanin, (S)',
       where: 'Essenzielle Aminosäure und Ausgangsstoff für Tyrosin.',
       m: mol(function (h) {
-        var b = aaBase(h), c3 = h.at(b.c1, -90), a = h.m.atoms[c3];
-        var r = ring(h, a.x + 2 * L * Math.cos(Math.PI / 6), a.y + L, 150, KEK); h.bd(b.c1, c3); h.bd(c3, r[0]);
+        var b = aaBase(h), c3 = h.at(b.c1, 150), a = h.m.atoms[c3];
+        var r = ring(h, a.x - 2 * L * Math.cos(Math.PI / 6), a.y + L, 30, KEK); h.bd(b.c1, c3); h.bd(c3, r[0]);
       }) },
     { id: 'tyr', cat: 'Aminosäuren', name: 'Tyrosin', alt: '', formula: 'C₉H₁₁NO₃', groups: ['Aminogruppe', 'Carboxygruppe', 'Phenol-Seitenkette'],
       ster: 'L-Tyrosin, (S)',
       where: 'Vorstufe von Dopamin, Adrenalin und dem Pigment Melanin.',
       m: mol(function (h) {
-        var b = aaBase(h), c3 = h.at(b.c1, -90), a = h.m.atoms[c3];
-        var r = ring(h, a.x + 2 * L * Math.cos(Math.PI / 6), a.y + L, 150, KEK); h.bd(b.c1, c3); h.bd(c3, r[0]);
-        var oh = h.at(r[3], 330, 'OH'); h.bd(r[3], oh);
+        var b = aaBase(h), c3 = h.at(b.c1, 150), a = h.m.atoms[c3];
+        var r = ring(h, a.x - 2 * L * Math.cos(Math.PI / 6), a.y + L, 30, KEK); h.bd(b.c1, c3); h.bd(c3, r[0]);
+        var oh = h.at(r[3], 210, 'HO'); h.bd(r[3], oh);
       }) },
 
     { id: 'adenin', cat: 'Nucleobasen & Purine', name: 'Adenin', alt: '', formula: 'C₅H₅N₅', groups: ['Purinbase', 'Aminogruppe'],
@@ -463,19 +463,19 @@
     { id: 'valin', cat: 'Aminosäuren', name: 'Valin', alt: '2-Amino-3-methylbutansäure', formula: 'C₅H₁₁NO₂', groups: ['Aminogruppe', 'Carboxygruppe', 'Verzweigte Seitenkette'],
       ster: 'L-Valin, (S)',
       where: 'Essenzielle Aminosäure mit unpolarer, verzweigter Seitenkette. Bei der Sichelzellanämie ersetzt sie im Hämoglobin die Glutaminsäure an Position 6.',
-      m: mol(function (h) { var b = aaBase(h), c3 = h.at(b.c1, -90), m1 = h.at(c3, 210), m2 = h.at(c3, -30); h.bd(b.c1, c3); h.bd(c3, m1); h.bd(c3, m2); }) },
+      m: mol(function (h) { var b = aaBase(h), c3 = h.at(b.c1, 150), m1 = h.at(c3, 90), m2 = h.at(c3, 210); h.bd(b.c1, c3); h.bd(c3, m1); h.bd(c3, m2); }) },
     { id: 'leucin', cat: 'Aminosäuren', name: 'Leucin', alt: '2-Amino-4-methylpentansäure', formula: 'C₆H₁₃NO₂', groups: ['Aminogruppe', 'Carboxygruppe', 'Verzweigte Seitenkette'],
       ster: 'L-Leucin, (S)',
       where: 'Essenzielle Aminosäure und besonders häufig in Proteinen. Leucin-Zipper sind Motive, mit denen sich DNA-bindende Proteine zusammenlagern.',
-      m: mol(function (h) { var b = aaBase(h), c3 = h.at(b.c1, -90), c4 = h.at(c3, -30), m1 = h.at(c4, 30), m2 = h.at(c4, -90); h.bd(b.c1, c3); h.bd(c3, c4); h.bd(c4, m1); h.bd(c4, m2); }) },
+      m: mol(function (h) { var b = aaBase(h), c3 = h.at(b.c1, 150), c4 = h.at(c3, 210), m1 = h.at(c4, 150), m2 = h.at(c4, 270); h.bd(b.c1, c3); h.bd(c3, c4); h.bd(c4, m1); h.bd(c4, m2); }) },
     { id: 'isoleucin', cat: 'Aminosäuren', name: 'Isoleucin', alt: '2-Amino-3-methylpentansäure', formula: 'C₆H₁₃NO₂', groups: ['Aminogruppe', 'Carboxygruppe', 'Verzweigte Seitenkette'],
       ster: 'L-Isoleucin, (2S,3S)',
       where: 'Essenzielle Aminosäure und Isomer des Leucins. Mit Valin und Leucin zählt sie zu den verzweigtkettigen Aminosäuren (BCAA).',
-      m: mol(function (h) { var b = aaBase(h), c3 = h.at(b.c1, -90), me = h.at(c3, 210), c4 = h.at(c3, -30), c5 = h.at(c4, 30); h.bd(b.c1, c3); h.bd(c3, me, 'd'); h.bd(c3, c4); h.bd(c4, c5); h.st(c3, [b.c1, c4, me], 'S'); }) },
+      m: mol(function (h) { var b = aaBase(h), c3 = h.at(b.c1, 150), me = h.at(c3, 90), c4 = h.at(c3, 210), c5 = h.at(c4, 150); h.bd(b.c1, c3); h.bd(c3, me, 'd'); h.bd(c3, c4); h.bd(c4, c5); h.st(c3, [b.c1, c4, me], 'S'); }) },
     { id: 'methionin', cat: 'Aminosäuren', name: 'Methionin', alt: '2-Amino-4-(methylthio)butansäure', formula: 'C₅H₁₁NO₂S', groups: ['Aminogruppe', 'Carboxygruppe', 'Thioether'],
       ster: 'L-Methionin, (S)',
       where: 'Essenzielle, schwefelhaltige Aminosäure. Sie ist die Start-Aminosäure der Proteinbiosynthese (Startcodon AUG).',
-      m: mol(function (h) { var b = aaBase(h), c3 = h.at(b.c1, -90), c4 = h.at(c3, -30), s = h.at(c4, -90, 'S'), me = h.at(s, -30); h.bd(b.c1, c3); h.bd(c3, c4); h.bd(c4, s); h.bd(s, me); }) },
+      m: mol(function (h) { var b = aaBase(h), c3 = h.at(b.c1, 150), c4 = h.at(c3, 210), s = h.at(c4, 150, 'S'), me = h.at(s, 210); h.bd(b.c1, c3); h.bd(c3, c4); h.bd(c4, s); h.bd(s, me); }) },
     { id: 'prolin', cat: 'Aminosäuren', name: 'Prolin', alt: 'Pyrrolidin-2-carbonsäure', formula: 'C₅H₉NO₂', groups: ['Sekundäres Amin im Ring', 'Carboxygruppe'],
       ster: 'L-Prolin, (S)',
       where: 'Die Aminogruppe ist Teil eines Rings. Prolin knickt Peptidketten ab und ist besonders häufig im Kollagen.',
@@ -488,36 +488,40 @@
     { id: 'threonin', cat: 'Aminosäuren', name: 'Threonin', alt: '2-Amino-3-hydroxybutansäure', formula: 'C₄H₉NO₃', groups: ['Aminogruppe', 'Carboxygruppe', 'Hydroxy-Seitenkette'],
       ster: 'L-Threonin, (2S,3R)',
       where: 'Essenzielle Aminosäure. Wie Serin kann ihre OH-Gruppe in Proteinen phosphoryliert werden.',
-      m: mol(function (h) { var b = aaBase(h), c3 = h.at(b.c1, -90), o = h.at(c3, 210, 'HO'), me = h.at(c3, -30); h.bd(b.c1, c3); h.bd(c3, o); h.bd(c3, me, 'w'); h.st(c3, [o, b.c1, me], 'R'); }) },
+      m: mol(function (h) { var b = aaBase(h), c3 = h.at(b.c1, 150), o = h.at(c3, 90, 'OH'), me = h.at(c3, 210); h.bd(b.c1, c3); h.bd(c3, o); h.bd(c3, me, 'w'); h.st(c3, [o, b.c1, me], 'R'); }) },
     { id: 'asn', cat: 'Aminosäuren', name: 'Asparagin', alt: '2,4-Diamino-4-oxobutansäure', formula: 'C₄H₈N₂O₃', groups: ['Aminogruppe', 'Carboxygruppe', 'Amid-Seitenkette'],
       ster: 'L-Asparagin, (S)',
       where: 'Amid der Asparaginsäure. An ihrer Seitenkette werden in Proteinen Zuckerreste angehängt (N-Glykosylierung).',
-      m: mol(function (h) { var b = aaBase(h), c3 = h.at(b.c1, 270), c4 = h.at(c3, 210), o = h.at(c4, 270, 'O'), n = h.at(c4, 150, 'H₂N'); h.bd(b.c1, c3); h.bd(c3, c4); h.bd(c4, o, 2); h.bd(c4, n); }) },
+      m: mol(function (h) { var b = aaBase(h), c3 = h.at(b.c1, 150), c4 = h.at(c3, 210), o = h.at(c4, 150, 'O'), n = h.at(c4, 270, 'NH₂'); h.bd(b.c1, c3); h.bd(c3, c4); h.bd(c4, o, 2); h.bd(c4, n); }) },
     { id: 'gln', cat: 'Aminosäuren', name: 'Glutamin', alt: '2,5-Diamino-5-oxopentansäure', formula: 'C₅H₁₀N₂O₃', groups: ['Aminogruppe', 'Carboxygruppe', 'Amid-Seitenkette'],
       ster: 'L-Glutamin, (S)',
       where: 'Häufigste freie Aminosäure im Blut. Als Amid der Glutaminsäure dient sie im Stoffwechsel als Stickstoffspeicher.',
-      m: mol(function (h) { var b = aaBase(h), c3 = h.at(b.c1, 270), c4 = h.at(c3, 210), c5 = h.at(c4, 150), o = h.at(c5, 90, 'O'), n = h.at(c5, 210, 'H₂N'); h.bd(b.c1, c3); h.bd(c3, c4); h.bd(c4, c5); h.bd(c5, o, 2); h.bd(c5, n); }) },
+      m: mol(function (h) { var b = aaBase(h), c3 = h.at(b.c1, 150), c4 = h.at(c3, 210), c5 = h.at(c4, 150), o = h.at(c5, 90, 'O'), n = h.at(c5, 210, 'H₂N'); h.bd(b.c1, c3); h.bd(c3, c4); h.bd(c4, c5); h.bd(c5, o, 2); h.bd(c5, n); }) },
     { id: 'lysin', cat: 'Aminosäuren', name: 'Lysin', alt: '2,6-Diaminohexansäure', formula: 'C₆H₁₄N₂O₂', groups: ['Zwei Aminogruppen', 'Carboxygruppe'],
       ster: 'L-Lysin, (S)',
       where: 'Essenzielle Aminosäure mit basischer Seitenkette. In Histonen wird sie acetyliert und methyliert und steuert so die Genaktivität.',
-      m: mol(function (h) { var b = aaBase(h), c3 = h.at(b.c1, -90), c4 = h.at(c3, -30), c5 = h.at(c4, -90), c6 = h.at(c5, -30), n = h.at(c6, -90, 'NH₂'); h.bd(b.c1, c3); h.bd(c3, c4); h.bd(c4, c5); h.bd(c5, c6); h.bd(c6, n); }) },
+      m: mol(function (h) { var b = aaBase(h), c3 = h.at(b.c1, 150), c4 = h.at(c3, 210), c5 = h.at(c4, 150), c6 = h.at(c5, 210), n = h.at(c6, 150, 'H₂N'); h.bd(b.c1, c3); h.bd(c3, c4); h.bd(c4, c5); h.bd(c5, c6); h.bd(c6, n); }) },
     { id: 'arginin', cat: 'Aminosäuren', name: 'Arginin', alt: '2-Amino-5-guanidinopentansäure', formula: 'C₆H₁₄N₄O₂', groups: ['Guanidinogruppe', 'Aminogruppe', 'Carboxygruppe'],
       ster: 'L-Arginin, (S)',
       where: 'Basische Aminosäure und Teil des Harnstoffzyklus. Aus ihr entsteht das Signalmolekül Stickstoffmonoxid (NO).',
       m: mol(function (h) {
-        var b = aaBase(h), c3 = h.at(b.c1, -90), c4 = h.at(c3, -30), c5 = h.at(c4, 30), c6 = h.at(c5, -30), n1 = h.at(c6, 30, 'HN'), cg = h.at(n1, -30), n2 = h.at(cg, -90, 'NH₂'), n3 = h.at(cg, 30, 'NH');
+        var b = aaBase(h), c3 = h.at(b.c1, 150), c4 = h.at(c3, 210), c5 = h.at(c4, 150), c6 = h.at(c5, 210), n1 = h.at(c6, 150, 'HN'), cg = h.at(n1, 210), n2 = h.at(cg, 270, 'NH₂'), n3 = h.at(cg, 150, 'NH');
         h.bd(b.c1, c3); h.bd(c3, c4); h.bd(c4, c5); h.bd(c5, c6); h.bd(c6, n1); h.bd(n1, cg); h.bd(cg, n2); h.bd(cg, n3, 2);
       }) },
     { id: 'histidin', cat: 'Aminosäuren', name: 'Histidin', alt: '2-Amino-3-(imidazol-4-yl)propansäure', formula: 'C₆H₉N₃O₂', groups: ['Imidazolring', 'Aminogruppe', 'Carboxygruppe'],
       ster: 'L-Histidin, (S)',
       where: 'Der Imidazolring puffert nahe dem neutralen pH und sitzt in vielen aktiven Zentren von Enzymen. Aus Histidin entsteht Histamin.',
-      m: mol(function (h) { var b = aaBase(h), c3 = h.at(b.c1, -90), a = h.at(c3, -30); h.bd(b.c1, c3); h.bd(c3, a); imidazole(h, a, -30); }) },
+      m: mol(function (h) { var b = aaBase(h), c3 = h.at(b.c1, 150), a = h.at(c3, 210); h.bd(b.c1, c3); h.bd(c3, a); imidazole(h, a, 210); }) },
     { id: 'trp', cat: 'Aminosäuren', name: 'Tryptophan', alt: '2-Amino-3-(indol-3-yl)propansäure', formula: 'C₁₁H₁₂N₂O₂', groups: ['Indol-Ring', 'Aminogruppe', 'Carboxygruppe'],
       ster: 'L-Tryptophan, (S)',
       where: 'Essenzielle Aminosäure mit der größten Seitenkette. Aus ihr entstehen Serotonin und Melatonin.',
       m: mol(function (h) {
-        var x = indole(h), ch2 = h.at(x.c3, 72), ca = h.at(ch2, 12), nn = h.at(ca, -48, 'NH₂'), cc = h.at(ca, 72), o1 = h.at(cc, 132, 'O'), o2 = h.at(cc, 12, 'OH');
-        h.bd(x.c3, ch2); h.bd(ca, ch2, 'w'); h.bd(ca, nn); h.bd(ca, cc); h.bd(cc, o1, 2); h.bd(cc, o2); h.st(ca, [nn, cc, ch2], 'S');
+        var b = aaBase(h), cb = h.at(b.c1, 150), start = h.m.atoms.length, x = indole(h), A = h.m.atoms, P = A[x.c3], tgt = h.m.atoms[cb];
+        function rot(p, deg, qx, qy) { var r = deg * Math.PI / 180, dx = p[0] - qx, dy = -(p[1] - qy); return [qx + dx * Math.cos(r) - dy * Math.sin(r), qy - (dx * Math.sin(r) + dy * Math.cos(r))]; }
+        var px = P.x, py = P.y, tx = tgt.x - L * Math.cos(Math.PI / 6), ty = tgt.y + L / 2, k, q;
+        for (k = start; k < A.length; k++) { q = rot([A[k].x, A[k].y], -42, px, py); A[k].x = q[0] + tx - px; A[k].y = q[1] + ty - py; }
+        h.m.bonds.forEach(function (bd) { if (bd.ctr && bd.i >= start) { q = rot(bd.ctr, -42, px, py); bd.ctr = [q[0] + tx - px, q[1] + ty - py]; } });
+        h.bd(b.c1, cb); h.bd(cb, x.c3);
       }) },
 
     /* ---- Zucker & Nucleotide ---- */
