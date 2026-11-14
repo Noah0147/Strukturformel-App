@@ -46,11 +46,12 @@
     });
     return a;
   }
+  var PUR = 98; /* Abstand N9 → C1′, damit die Ribose unter dem Sechsring Platz hat */
   function adenosinCore(h, deoxy) {
     var r = ring(h, 0, 0, 90, [2, 1, 2, 1, 0, 1], { 1: 'N', 3: 'N' });
     var nh = h.at(r[0], 90, 'NH₂'); h.bd(r[0], nh);
     var p = fusedPent(h, r, 'N', 'N', '78');
-    return haworthNuc(h, p.n9, deoxy);
+    return haworthNuc(h, p.n9, deoxy, PUR);
   }
 
   /* Haworth-Projektion: Ring in Perspektive (vorne fett), Gruppen senkrecht nach oben (+1) oder unten (-1) */
@@ -76,10 +77,9 @@
     h.m.atoms.forEach(function (a) { a.x = 2 * x0 - a.x; });
     h.m.bonds.forEach(function (b) { if (b.ctr) b.ctr = [2 * x0 - b.ctr[0], b.ctr[1]]; });
   }
-  function haworthNuc(h, n, deoxy) { /* β-D-Ribofuranose unter dem Ring-Stickstoff/N9 der Base; gibt C5' zurück */
-    mirrorX(h, h.m.atoms[n].x);
-    var N = h.m.atoms[n], R = 40, a1 = 342 * Math.PI / 180;
-    var cx = N.x - R * Math.cos(a1), cy = N.y + 46 - 0.4 * R * Math.sin(a1);
+  function haworthNuc(h, n, deoxy, drop) { /* β-D-Ribofuranose unter dem Ring-Stickstoff/N9 der Base; gibt C5' zurück */
+    var N = h.m.atoms[n], R = 40, a1 = 342 * Math.PI / 180, dr = drop || 46;
+    var cx = N.x - R * Math.cos(a1), cy = N.y + dr - 0.4 * R * Math.sin(a1);
     var q = hring(h, cx, cy, R, [342, 54, 126, 198, 270], { 4: 'O' });
     h.m.bonds.push({ i: q[0], j: n, o: 1, ctr: null, v: 1 });
     var o2 = deoxy ? -1 : hoh(h, q[1], -1, cx), o3 = hoh(h, q[2], -1, cx), c5 = hv(h, q[3], 1, '', 36);
@@ -145,7 +145,7 @@
     return n;
   }
 
-  window.DATA_VERSION = '2026-11-13c';
+  window.DATA_VERSION = '2026-11-14';
   window.CATEGORIES = ['Alkohole & Carbonyle', 'Säuren & Ester', 'Aromaten', 'Aminosäuren', 'Nucleobasen & Purine', 'Wirkstoffe & Aromastoffe', 'Stoffwechsel & Pflanzen', 'Zucker & Nucleotide', 'Steroide & Botenstoffe', 'Kleine Moleküle'];
 
   window.MOLECULES = [
@@ -408,24 +408,24 @@
     { id: 'cytosin', cat: 'Nucleobasen & Purine', name: 'Cytosin', alt: '', formula: 'C₄H₅N₃O', groups: ['Pyrimidinbase', 'Aminogruppe', 'Carbonylgruppe'],
       where: 'Base in DNA und RNA. Es paart mit Guanin. Durch Desaminierung entsteht daraus Uracil.',
       m: mol(function (h) {
-        var r = ring(h, 0, 0, 90, [1, 2, 1, 1, 1, 2], { 2: 'N', 4: 'NH' });
-        var nh = h.at(r[1], 150, 'H₂N'); h.bd(r[1], nh);
-        var o = h.at(r[3], -90, 'O'); h.bd(r[3], o, 2);
+        var r = ring(h, 0, 0, 90, [1, 2, 1, 1, 1, 2], { 5: 'N', 3: 'NH' });
+        var nh = h.at(r[0], 90, 'NH₂'); h.bd(r[0], nh);
+        var o = h.at(r[4], 330, 'O'); h.bd(r[4], o, 2);
       }) },
     { id: 'uracil', cat: 'Nucleobasen & Purine', name: 'Uracil', alt: '', formula: 'C₄H₄N₂O₂', groups: ['Pyrimidinbase', 'Zwei Carbonylgruppen'],
       where: 'Base der RNA. Sie ersetzt dort das Thymin.',
       m: mol(function (h) {
-        var r = ring(h, 0, 0, 90, [1, 1, 1, 1, 1, 2], { 2: 'HN', 4: 'NH' });
-        var o1 = h.at(r[1], 150, 'O'); h.bd(r[1], o1, 2);
-        var o2 = h.at(r[3], -90, 'O'); h.bd(r[3], o2, 2);
+        var r = ring(h, 0, 0, 90, [1, 2, 1, 1, 1, 1], { 5: 'NH', 3: 'NH' });
+        var o1 = h.at(r[0], 90, 'O'); h.bd(r[0], o1, 2);
+        var o2 = h.at(r[4], 330, 'O'); h.bd(r[4], o2, 2);
       }) },
     { id: 'thymin', cat: 'Nucleobasen & Purine', name: 'Thymin', alt: '5-Methyluracil', formula: 'C₅H₆N₂O₂', groups: ['Pyrimidinbase', 'Zwei Carbonylgruppen', 'Methylgruppe'],
       where: 'Base der DNA. Sie paart mit Adenin über zwei Wasserstoffbrücken und ist Uracil mit zusätzlicher Methylgruppe.',
       m: mol(function (h) {
-        var r = ring(h, 0, 0, 90, [1, 1, 1, 1, 1, 2], { 2: 'HN', 4: 'NH' });
-        var o1 = h.at(r[1], 150, 'O'); h.bd(r[1], o1, 2);
-        var o2 = h.at(r[3], -90, 'O'); h.bd(r[3], o2, 2);
-        var me = h.at(r[0], 90); h.bd(r[0], me);
+        var r = ring(h, 0, 0, 90, [1, 2, 1, 1, 1, 1], { 5: 'NH', 3: 'NH' });
+        var o1 = h.at(r[0], 90, 'O'); h.bd(r[0], o1, 2);
+        var o2 = h.at(r[4], 330, 'O'); h.bd(r[4], o2, 2);
+        var me = h.at(r[1], 150); h.bd(r[1], me);
       }) },
     { id: 'harnsaeure', cat: 'Nucleobasen & Purine', name: 'Harnsäure', alt: '', formula: 'C₅H₄N₄O₃', groups: ['Purin-Gerüst', 'Drei Carbonylgruppen'],
       where: 'Endprodukt des Purinabbaus beim Menschen. Zu viel davon im Blut kann Gicht auslösen.',
@@ -546,7 +546,7 @@
       where: 'In Obst und Honig. Mit Glucose bildet sie den Haushaltszucker Saccharose.',
       m: mol(function (h) {
         var q = hring(h, 0, 0, 46, [342, 54, 126, 198, 270], { 4: 'O' });
-        var o2 = hv(h, q[0], 1, 'OH', 62, 30), c1 = hch(h, q[0], -1, 0), o3 = hoh(h, q[1], 1, 0), o4 = hoh(h, q[2], -1, 0), c6 = hch(h, q[3], 1, 0);
+        var o2 = hv(h, q[0], 1, 'OH', 62), c1 = hch(h, q[0], -1, 0), o3 = hv(h, q[1], 1, 'HO'), o4 = hoh(h, q[2], -1, 0), c6 = hch(h, q[3], 1, 0);
         h.st(q[0], [q[4], o2, q[1], c1], 'R'); h.st(q[1], [o3, q[0], q[2]], 'S'); h.st(q[2], [o4, q[3], q[1]], 'S'); h.st(q[3], [q[4], q[2], c6], 'R');
       }) },
     { id: 'adenosin', cat: 'Zucker & Nucleotide', name: 'Adenosin', alt: 'Adenin + Ribose', formula: 'C₁₀H₁₃N₅O₄', groups: ['Nucleosid', 'Purinbase', 'Ribose'],
@@ -566,7 +566,7 @@
         var a = steroid(h, ['c5-c6']), o = h.at(a.c3, 210, 'HO'); h.bd(a.c3, o, 'w');
         var m19 = h.at(a.c10, 90); h.bd(a.c10, m19, 'w');
         var m18 = h.at(a.c13, 90); h.bd(a.c13, m18, 'w');
-        hs(h, a.c8, 90, 'w'); hs(h, a.c9, 270, 'd'); hs(h, a.c14, 36, 'd');
+        hs(h, a.c8, 90, 'w'); hs(h, a.c9, 270, 'd'); hs(h, a.c14, 270, 'd');
         var c20 = h.at(a.c17, 72); h.bd(a.c17, c20, 'w');
         var c21 = h.at(c20, 132); h.bd(c20, c21, 'd');
         var c22 = h.at(c20, 12); h.bd(c20, c22);
@@ -584,7 +584,7 @@
         var a = steroid(h, ['c1-c2', 'c3-c4', 'c5-c10']), o = h.at(a.c3, 210, 'HO'); h.bd(a.c3, o);
         var m18 = h.at(a.c13, 90); h.bd(a.c13, m18, 'w');
         var o17 = h.at(a.c17, 72, 'OH'); h.bd(a.c17, o17, 'w');
-        hs(h, a.c8, 90, 'w'); hs(h, a.c9, 270, 'd'); var h14 = hs(h, a.c14, 36, 'd');
+        hs(h, a.c8, 90, 'w'); hs(h, a.c9, 270, 'd'); var h14 = hs(h, a.c14, 270, 'd');
         h.st(a.c13, [a.c17, a.c14, a.c12, m18], 'S'); h.st(a.c14, [a.c13, a.c8, a.c15, h14], 'S'); h.st(a.c17, [o17, a.c13, a.c16], 'S');
       }) },
     { id: 'testosteron', cat: 'Steroide & Botenstoffe', name: 'Testosteron', alt: '', formula: 'C₁₉H₂₈O₂', groups: ['Steroidgerüst', 'Keton (Enon)', 'Hydroxygruppe'],
@@ -595,7 +595,7 @@
         var m19 = h.at(a.c10, 90); h.bd(a.c10, m19, 'w');
         var m18 = h.at(a.c13, 90); h.bd(a.c13, m18, 'w');
         var o17 = h.at(a.c17, 72, 'OH'); h.bd(a.c17, o17, 'w');
-        hs(h, a.c8, 90, 'w'); hs(h, a.c9, 270, 'd'); var h14 = hs(h, a.c14, 36, 'd');
+        hs(h, a.c8, 90, 'w'); hs(h, a.c9, 270, 'd'); var h14 = hs(h, a.c14, 270, 'd');
         h.st(a.c10, [a.c5, a.c9, a.c1, m19], 'R'); h.st(a.c13, [a.c17, a.c14, a.c12, m18], 'S');
         h.st(a.c14, [a.c13, a.c8, a.c15, h14], 'S'); h.st(a.c17, [o17, a.c13, a.c16], 'S');
       }) },
@@ -895,9 +895,9 @@
       ster: 'all-E (alle Doppelbindungen trans)',
       where: 'Vitamin A aus Leber, Milch und Eigelb. Aus β-Carotin der Karotten bildet der Körper es selbst. Der Sehfarbstoff Rhodopsin enthält Retinal, das aus Retinol entsteht.',
       m: mol(function (h) {
-        var r = ring(h, 0, 0, 90, [1, 1, 1, 1, 1, 2]);
-        var me5 = h.at(r[0], 90); h.bd(r[0], me5);
-        var g1 = h.at(r[4], 300), g2 = h.at(r[4], 0); h.bd(r[4], g1); h.bd(r[4], g2);
+        var r = ring(h, 0, 0, 90, [1, 1, 1, 1, 2, 1]);
+        var g1 = h.at(r[0], 60), g2 = h.at(r[0], 120); h.bd(r[0], g1); h.bd(r[0], g2);
+        var me5 = h.at(r[4], 330); h.bd(r[4], me5);
         var c7 = h.at(r[5], 30), c8 = h.at(c7, -30), c9 = h.at(c8, 30), c10 = h.at(c9, -30), c11 = h.at(c10, 30), c12 = h.at(c11, -30), c13 = h.at(c12, 30), c14 = h.at(c13, -30), c15 = h.at(c14, 30);
         h.bd(r[5], c7); h.bd(c7, c8, 2); h.bd(c8, c9); h.bd(c9, c10, 2); h.bd(c10, c11); h.bd(c11, c12, 2); h.bd(c12, c13); h.bd(c13, c14, 2); h.bd(c14, c15);
         var m9 = h.at(c9, 90), m13 = h.at(c13, 90); h.bd(c9, m9); h.bd(c13, m13);
@@ -960,19 +960,19 @@
       ster: 'β-D-Ribofuranosyl, (2R,3R,4S,5R)',
       where: 'Nucleosid der RNA. Als UDP-Glucose liefert es aktivierte Glucose für den Aufbau von Glykogen.',
       m: mol(function (h) {
-        var r = ring(h, 0, 0, 90, [1, 1, 1, 1, 1, 2], { 2: 'HN', 4: 'N' });
-        var o1 = h.at(r[1], 150, 'O'); h.bd(r[1], o1, 2);
-        var o2 = h.at(r[3], 270, 'O'); h.bd(r[3], o2, 2);
-        nucleoside(h, r[4]);
+        var r = ring(h, 0, 0, 90, [1, 2, 1, 1, 1, 1], { 5: 'NH', 3: 'N' });
+        var o1 = h.at(r[0], 90, 'O'); h.bd(r[0], o1, 2);
+        var o2 = h.at(r[4], 330, 'O'); h.bd(r[4], o2, 2);
+        nucleoside(h, r[3]);
       }) },
     { id: 'cytidin', cat: 'Zucker & Nucleotide', name: 'Cytidin', alt: 'Cytosin + Ribose', formula: 'C₉H₁₃N₃O₅', groups: ['Nucleosid', 'Pyrimidinbase', 'Ribose'],
       ster: 'β-D-Ribofuranosyl, (2R,3R,4S,5R)',
       where: 'Nucleosid der RNA. Das Gegenstück in der DNA ist Desoxycytidin.',
       m: mol(function (h) {
-        var r = ring(h, 0, 0, 90, [1, 2, 1, 1, 1, 2], { 2: 'N', 4: 'N' });
-        var nh = h.at(r[1], 150, 'H₂N'); h.bd(r[1], nh);
-        var o = h.at(r[3], 270, 'O'); h.bd(r[3], o, 2);
-        nucleoside(h, r[4]);
+        var r = ring(h, 0, 0, 90, [1, 2, 1, 1, 1, 2], { 5: 'N', 3: 'N' });
+        var nh = h.at(r[0], 90, 'NH₂'); h.bd(r[0], nh);
+        var o = h.at(r[4], 330, 'O'); h.bd(r[4], o, 2);
+        nucleoside(h, r[3]);
       }) },
     { id: 'saccharose', cat: 'Zucker & Nucleotide', name: 'Saccharose', alt: 'Haushaltszucker, Rohrzucker', formula: 'C₁₂H₂₂O₁₁', groups: ['Disaccharid', 'Glucose + Fructose', 'Glykosidische Bindung'],
       ster: 'α-D-Glucopyranosyl-(1→2)-β-D-fructofuranosid',
@@ -999,7 +999,7 @@
         var m18 = h.at(a.c13, 90); h.bd(a.c13, m18, 'w');
         var c20 = h.at(a.c17, 72), o20 = h.at(c20, 132, 'O'), c21 = h.at(c20, 12);
         h.bd(a.c17, c20, 'w'); h.bd(c20, o20, 2); h.bd(c20, c21);
-        hs(h, a.c8, 90, 'w'); hs(h, a.c9, 270, 'd'); var h14 = hs(h, a.c14, 36, 'd');
+        hs(h, a.c8, 90, 'w'); hs(h, a.c9, 270, 'd'); var h14 = hs(h, a.c14, 270, 'd');
         h.st(a.c10, [a.c5, a.c9, a.c1, m19], 'R'); h.st(a.c13, [a.c17, a.c14, a.c12, m18], 'S');
         h.st(a.c14, [a.c13, a.c8, a.c15, h14], 'S'); h.st(a.c17, [c20, a.c13, a.c16], 'S');
       }) },
@@ -1014,7 +1014,7 @@
         var o17 = oh(h, a.c17, 40, 'd');
         var c20 = h.at(a.c17, 100), o20 = h.at(c20, 150, 'O'), c21 = h.at(c20, 40);
         h.bd(a.c17, c20); h.bd(c20, o20, 2); h.bd(c20, c21); oh(h, c21, 90);
-        hs(h, a.c8, 90, 'w'); hs(h, a.c9, 270, 'd'); var h14 = hs(h, a.c14, 36, 'd');
+        hs(h, a.c8, 90, 'w'); hs(h, a.c9, 270, 'd'); var h14 = hs(h, a.c14, 270, 'd');
         h.st(a.c10, [a.c5, a.c9, a.c1, m19], 'R'); h.st(a.c13, [a.c17, a.c14, a.c12, m18], 'S');
         h.st(a.c14, [a.c13, a.c8, a.c15, h14], 'S'); h.st(a.c17, [o17, c20, a.c13, a.c16], 'R');
         h.st(a.c11, [o11, a.c9, a.c12], 'S');
@@ -1257,17 +1257,17 @@
         var o = h.at(r[0], 90, 'O'); h.bd(r[0], o, 2);
         var nh = h.at(r[2], 210, 'H₂N'); h.bd(r[2], nh);
         var p = fusedPent(h, r, 'N', 'N', '78');
-        var c5 = haworthNuc(h, p.n9); oh(h, c5, 150);
+        var c5 = haworthNuc(h, p.n9, false, PUR); oh(h, c5, 150);
       }) },
     { id: 'thymidin', cat: 'Zucker & Nucleotide', name: 'Thymidin', alt: 'Thymin + Desoxyribose', formula: 'C₁₀H₁₄N₂O₅', groups: ['Desoxynucleosid', 'Pyrimidinbase', '2′-Desoxyribose'],
       ster: 'β-D-2-Desoxyribofuranosyl, (2R,4S,5R)',
       where: 'Baustein der DNA. Als Thymidin-Kinase-Substrat wird es in Zellkultur zum Markieren der DNA-Synthese benutzt.',
       m: mol(function (h) {
-        var r = ring(h, 0, 0, 90, [1, 1, 1, 1, 1, 2], { 2: 'HN', 4: 'N' });
-        var o1 = h.at(r[1], 150, 'O'); h.bd(r[1], o1, 2);
-        var o2 = h.at(r[3], 270, 'O'); h.bd(r[3], o2, 2);
-        var me = h.at(r[0], 90); h.bd(r[0], me);
-        var c5 = haworthNuc(h, r[4], true); oh(h, c5, 150);
+        var r = ring(h, 0, 0, 90, [1, 2, 1, 1, 1, 1], { 5: 'NH', 3: 'N' });
+        var o1 = h.at(r[0], 90, 'O'); h.bd(r[0], o1, 2);
+        var o2 = h.at(r[4], 330, 'O'); h.bd(r[4], o2, 2);
+        var me = h.at(r[1], 150); h.bd(r[1], me);
+        var c5 = haworthNuc(h, r[3], true); oh(h, c5, 150);
       }) },
     { id: 'glucose6p', cat: 'Zucker & Nucleotide', name: 'Glucose-6-phosphat', alt: 'G6P', formula: 'C₆H₁₃O₉P', groups: ['Sechsring (Pyranose)', 'Phosphatester', 'Hydroxygruppen'],
       ster: 'β-D-Glucopyranose-6-phosphat',
@@ -1289,7 +1289,7 @@
         var o17 = oh(h, a.c17, 40, 'd');
         var c20 = h.at(a.c17, 100), o20 = h.at(c20, 150, 'O'), c21 = h.at(c20, 40);
         h.bd(a.c17, c20); h.bd(c20, o20, 2); h.bd(c20, c21); oh(h, c21, 90);
-        hs(h, a.c8, 90, 'w'); hs(h, a.c9, 270, 'd'); var h14 = hs(h, a.c14, 36, 'd');
+        hs(h, a.c8, 90, 'w'); hs(h, a.c9, 270, 'd'); var h14 = hs(h, a.c14, 270, 'd');
         h.st(a.c10, [a.c5, a.c9, a.c1, m19], 'R'); h.st(a.c13, [a.c17, a.c14, a.c12, m18], 'S');
         h.st(a.c14, [a.c13, a.c8, a.c15, h14], 'S'); h.st(a.c17, [o17, c20, a.c13, a.c16], 'R');
       }) },
@@ -1301,7 +1301,7 @@
         var m19 = h.at(a.c10, 90); h.bd(a.c10, m19, 'w');
         var m18 = h.at(a.c13, 90); h.bd(a.c13, m18, 'w');
         var o17 = h.at(a.c17, 72, 'O'); h.bd(a.c17, o17, 2);
-        hs(h, a.c8, 90, 'w'); hs(h, a.c9, 270, 'd'); var h14 = hs(h, a.c14, 36, 'd');
+        hs(h, a.c8, 90, 'w'); hs(h, a.c9, 270, 'd'); var h14 = hs(h, a.c14, 270, 'd');
         h.st(a.c10, [a.c5, a.c9, a.c1, m19], 'R'); h.st(a.c13, [a.c17, a.c14, a.c12, m18], 'S');
         h.st(a.c14, [a.c13, a.c8, a.c15, h14], 'S');
       }) },
@@ -1312,7 +1312,7 @@
         var a = steroid(h, ['c1-c2', 'c3-c4', 'c5-c10']), o = h.at(a.c3, 210, 'HO'); h.bd(a.c3, o);
         var m18 = h.at(a.c13, 90); h.bd(a.c13, m18, 'w');
         var o17 = h.at(a.c17, 72, 'O'); h.bd(a.c17, o17, 2);
-        hs(h, a.c8, 90, 'w'); hs(h, a.c9, 270, 'd'); var h14 = hs(h, a.c14, 36, 'd');
+        hs(h, a.c8, 90, 'w'); hs(h, a.c9, 270, 'd'); var h14 = hs(h, a.c14, 270, 'd');
         h.st(a.c13, [a.c17, a.c14, a.c12, m18], 'S'); h.st(a.c14, [a.c13, a.c8, a.c15, h14], 'S');
       }) },
     { id: 'phenylethylamin', cat: 'Steroide & Botenstoffe', name: 'Phenylethylamin', alt: '2-Phenylethan-1-amin, PEA', formula: 'C₈H₁₁N', groups: ['Aromatischer Ring', 'Primäres Amin'],
@@ -1435,10 +1435,10 @@
 
     { id: 'fluoruracil', cat: 'Nucleobasen & Purine', name: '5-Fluoruracil', alt: '5-FU', formula: 'C₄H₃FN₂O₂', groups: ['Pyrimidinbase', 'Fluor-Substituent', 'Zwei Carbonylgruppen'],
       where: 'Krebsmedikament, das die Thymidylat-Synthase hemmt und so die DNA-Synthese blockiert. Es ahmt Uracil nach.',
-      m: mol(function (h) { var r = ring(h, 0, 0, 90, [1, 1, 1, 1, 1, 2], { 2: 'HN', 4: 'NH' }), o1 = h.at(r[1], 150, 'O'), o2 = h.at(r[3], -90, 'O'), f = h.at(r[0], 90, 'F'); h.bd(r[1], o1, 2); h.bd(r[3], o2, 2); h.bd(r[0], f); }) },
+      m: mol(function (h) { var r = ring(h, 0, 0, 90, [1, 2, 1, 1, 1, 1], { 5: 'NH', 3: 'NH' }), o1 = h.at(r[0], 90, 'O'), o2 = h.at(r[4], 330, 'O'), f = h.at(r[1], 150, 'F'); h.bd(r[0], o1, 2); h.bd(r[4], o2, 2); h.bd(r[1], f); }) },
     { id: 'methylcytosin', cat: 'Nucleobasen & Purine', name: '5-Methylcytosin', alt: '5mC', formula: 'C₅H₇N₃O', groups: ['Pyrimidinbase', 'Methylgruppe am C5', 'Aminogruppe'],
       where: 'Die „fünfte Base“ der DNA. Methylierung von Cytosin in CpG-Inseln schaltet Gene ab und ist ein zentraler epigenetischer Mechanismus.',
-      m: mol(function (h) { var r = ring(h, 0, 0, 90, [1, 2, 1, 1, 1, 2], { 2: 'N', 4: 'NH' }), nh = h.at(r[1], 150, 'H₂N'), o = h.at(r[3], -90, 'O'), me = h.at(r[0], 90); h.bd(r[1], nh); h.bd(r[3], o, 2); h.bd(r[0], me); }) },
+      m: mol(function (h) { var r = ring(h, 0, 0, 90, [1, 2, 1, 1, 1, 2], { 5: 'N', 3: 'NH' }), nh = h.at(r[0], 90, 'NH₂'), o = h.at(r[4], 330, 'O'), me = h.at(r[1], 150); h.bd(r[0], nh); h.bd(r[4], o, 2); h.bd(r[1], me); }) },
     { id: 'alloxan', cat: 'Nucleobasen & Purine', name: 'Alloxan', alt: 'Pyrimidin-2,4,5,6-tetron', formula: 'C₄H₂N₂O₄', groups: ['Pyrimidinring', 'Vier Carbonylgruppen'],
       where: 'Zerstört bei Versuchstieren die insulinproduzierenden β-Zellen der Bauchspeicheldrüse und wird zur Erzeugung von Modell-Diabetes eingesetzt.',
       m: mol(function (h) { var r = ring(h, 0, 0, 90, SAT, { 2: 'HN', 4: 'NH' }), a = h.at(r[0], 90, 'O'), b = h.at(r[1], 150, 'O'), c = h.at(r[3], 270, 'O'), d = h.at(r[5], 30, 'O'); h.bd(r[0], a, 2); h.bd(r[1], b, 2); h.bd(r[3], c, 2); h.bd(r[5], d, 2); }) },
@@ -1573,7 +1573,7 @@
       where: 'Entsteht aus Adenosin durch Desaminierung. In tRNAs steht Inosin an der Wackelposition des Anticodons und kann mit mehreren Basen paaren.',
       m: mol(function (h) {
         var r = ring(h, 0, 0, 90, [1, 1, 2, 1, 0, 1], { 1: 'HN', 3: 'N' }), o = h.at(r[0], 90, 'O'); h.bd(r[0], o, 2);
-        var p = fusedPent(h, r, 'N', 'N', '78'), c5 = haworthNuc(h, p.n9); oh(h, c5, 150);
+        var p = fusedPent(h, r, 'N', 'N', '78'), c5 = haworthNuc(h, p.n9, false, PUR); oh(h, c5, 150);
       }) },
     { id: 'xylose', cat: 'Zucker & Nucleotide', name: 'Xylose', alt: 'Holzzucker', formula: 'C₅H₁₀O₅', groups: ['Sechsring (Pyranose)', 'Hydroxygruppen', 'Pentose'],
       ster: 'β-D-Xylopyranose',
