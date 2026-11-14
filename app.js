@@ -47,7 +47,7 @@
 
   $('sub').textContent = CARDS.length + ' Moleküle aus Alltag und Biochemie. Erst raten, dann umdrehen.';
   var ver = (window.DATA_VERSION || '').split('-');
-  $('foot').textContent = CARDS.length + ' Karten' + (ver.length === 3 ? ' · Stand ' + ver[2] + '.' + ver[1] + '.' + ver[0] : '');
+  $('foot').textContent = CARDS.length + ' Karten' + (ver.length === 3 ? ' · Stand ' + parseInt(ver[2], 10) + '.' + ver[1] + '.' + ver[0] : '');
 
   function buildCatOptions() {
     var html = '<option value="all">Alle Kategorien (' + CARDS.length + ')</option>';
@@ -217,6 +217,94 @@
   });
 
   update();
+
+  /* ---------- Datenbank: Suche ---------- */
+  var SUB = { '₀':'0','₁':'1','₂':'2','₃':'3','₄':'4','₅':'5','₆':'6','₇':'7','₈':'8','₉':'9','⁺':'+','⁻':'-','−':'-' };
+  function norm(s) {
+    s = String(s || '').toLowerCase().replace(/[₀-₉⁺⁻−]/g, function (ch) { return SUB[ch]; })
+      .replace(/ß/g, 'ss').replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue');
+    try { s = s.normalize('NFD').replace(/[̀-ͯ]/g, ''); } catch (e) {}
+    return s.replace(/<[^>]*>/g, '').replace(/[^a-z0-9+\- ]+/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+  CARDS.forEach(function (c) {
+    c.n = { name: norm(c.name), alt: norm(c.alt), f: norm(c.formula), g: norm((c.groups || []).join(' ')), w: norm(c.where), id: norm(c.id) };
+  });
+  var dbQ = '', dbCat = 'all', dbOpen = null;
+  function score(c, toks) {
+    var total = 0;
+    for (var i = 0; i < toks.length; i++) {
+      var t = toks[i], s = 0, n = c.n;
+      if (n.name === t) s = 100;
+      else if (n.name.indexOf(t) === 0) s = 80;
+      else if (n.name.split(' ').some(function (w) { return w.indexOf(t) === 0; })) s = 65;
+      else if (n.name.indexOf(t) >= 0) s = 55;
+      else if (n.f === t || n.f.replace(/ /g, '') === t) s = 70;
+      else if (n.alt.indexOf(t) >= 0) s = 45;
+      else if (n.f.indexOf(t) >= 0) s = 35;
+      else if (n.id.indexOf(t) >= 0) s = 30;
+      else if (n.g.indexOf(t) >= 0) s = 20;
+      else if (n.w.indexOf(t) >= 0) s = 10;
+      if (!s) return 0;
+      total += s;
+    }
+    return total;
+  }
+  function dbResults() {
+    var toks = norm(dbQ).split(' ').filter(Boolean);
+    var pool = CARDS.filter(function (c) { return dbCat === 'all' || c.cat === dbCat; });
+    if (!toks.length) return pool.slice().sort(function (a, b) { return a.name.localeCompare(b.name, 'de'); });
+    return pool.map(function (c) { return { c: c, s: score(c, toks) }; })
+      .filter(function (x) { return x.s > 0; })
+      .sort(function (a, b) { return b.s - a.s || a.c.name.localeCompare(b.c.name, 'de'); })
+      .map(function (x) { return x.c; });
+  }
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
+  function renderDb() {
+    var r = dbResults();
+    $('db-count').textContent = r.length + (r.length === 1 ? ' Molekül' : ' Moleküle') + (dbQ.trim() ? ' gefunden' : ' (A–Z)');
+    $('db-list').innerHTML = r.length ? r.map(function (c) {
+      return '<li><button type="button" class="res" data-id="' + esc(c.id) + '"><span class="thumb">' + c.svg + '</span><span class="rt"><b>' + c.name + '</b><span>' + c.formula + ' · ' + esc(c.cat) + '</span></span></button></li>';
+    }).join('') : '<li class="none">Nichts gefunden. Versuche den Namen, die Summenformel oder einen Teil davon.</li>';
+  }
+  function openDetail(id) {
+    var c = byId[id]; if (!c) return;
+    dbOpen = id;
+    var alt = (c.alt ? '<p class="alt">auch: ' + c.alt + '</p>' : '') + (c.ster ? '<p class="alt">Stereochemie: ' + c.ster + '</p>' : '');
+    $('db-detail').innerHTML = '<div class="face dface"><button type="button" class="tbtn" id="db-back">← Zurück zur Liste</button>' +
+      '<div class="eyebrow"><span>' + esc(c.cat) + '</span></div><div class="struct">' + c.svg + '</div>' +
+      '<div><h2 class="name">' + c.name + '</h2>' + alt + '<p class="formula">' + c.formula + '</p></div>' +
+      '<div class="chips">' + c.groups.map(function (g) { return '<span class="chip">' + g + '</span>'; }).join('') + '</div>' +
+      '<div class="where"><h3>Im Alltag</h3><p>' + c.where + '</p></div></div>';
+    $('db-detail').hidden = false; $('db-list').hidden = true; $('db-count').hidden = true;
+    document.querySelector('.search').hidden = true;
+    window.scrollTo(0, 0);
+  }
+  function closeDetail() {
+    dbOpen = null;
+    $('db-detail').hidden = true; $('db-list').hidden = false; $('db-count').hidden = false;
+    document.querySelector('.search').hidden = false;
+  }
+  var dbCats = '<option value="all">Alle Kategorien</option>';
+  CATS.forEach(function (c) { dbCats += '<option value="' + esc(c) + '">' + c + '</option>'; });
+  $('db-cat').innerHTML = dbCats;
+  $('q').addEventListener('input', function () { dbQ = $('q').value; renderDb(); });
+  $('db-cat').addEventListener('change', function () { dbCat = $('db-cat').value; renderDb(); });
+  $('db-list').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('.res') : null;
+    if (b) openDetail(b.getAttribute('data-id'));
+  });
+  $('db-detail').addEventListener('click', function (e) { if (e.target.id === 'db-back') closeDetail(); });
+  function tab(which) {
+    var db = which === 'db';
+    $('view-db').hidden = !db; $('view-learn').hidden = db;
+    $('tab-db').setAttribute('aria-selected', db); $('tab-learn').setAttribute('aria-selected', !db);
+    $('sub').textContent = db ? CARDS.length + ' Strukturen zum Nachschlagen.' : CARDS.length + ' Moleküle aus Alltag und Biochemie. Erst raten, dann umdrehen.';
+    if (db) { renderDb(); setTimeout(function () { if (!dbOpen) $('q').focus(); }, 0); }
+    try { history.replaceState(null, '', db ? '#datenbank' : location.pathname + location.search); } catch (e) {}
+  }
+  $('tab-learn').addEventListener('click', function () { tab('learn'); });
+  $('tab-db').addEventListener('click', function () { tab('db'); });
+  if (location.hash === '#datenbank') tab('db');
 
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
     window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });

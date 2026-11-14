@@ -31,6 +31,22 @@
     </div>
   </div>
 
+  <nav class="tabs" role="tablist" aria-label="Bereich">
+    <button type="button" role="tab" id="tab-learn" aria-selected="true">Lernen</button>
+    <button type="button" role="tab" id="tab-db" aria-selected="false">Datenbank</button>
+  </nav>
+
+  <section id="view-db" class="wrap" hidden>
+    <div class="search">
+      <input type="search" id="q" placeholder="Molekül suchen, z. B. Kohlenmonoxid oder CO2" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Molekül suchen">
+      <select class="sel" id="db-cat" aria-label="Kategorie"></select>
+    </div>
+    <p class="count" id="db-count" aria-live="polite"></p>
+    <div id="db-detail" hidden></div>
+    <ul class="results" id="db-list"></ul>
+  </section>
+
+  <div id="view-learn" class="wrap">
   <div class="toolbar">
     <div class="seg" role="group" aria-label="Richtung">
       <button type="button" id="mode-struct" aria-pressed="true">Struktur → Name</button>
@@ -81,6 +97,8 @@
       <button type="button" class="btn primary" id="r-known" hidden>Gewusst</button>
     </div>
     <p class="keys">Tastatur: Leertaste dreht um, Pfeiltasten blättern, 1 = Nochmal, 2 = Gewusst</p>
+  </div>
+
   </div>
 
   <p class="foot" id="foot"></p>

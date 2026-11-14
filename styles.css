@@ -156,3 +156,24 @@ html { background: var(--bg); }
 .bar i.current { height: 14px; background: var(--ink); }
 .ov summary { cursor: pointer; color: var(--muted); font-size: 13px; padding: 2px 0 8px; }
 .ov[open] summary { margin-bottom: 4px; }
+
+.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 4px; }
+.tabs button { border: 0; background: transparent; padding: 9px 12px; border-radius: 9px; cursor: pointer; color: var(--muted); font-weight: 500; }
+.tabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+.tabs button:focus-visible, input:focus-visible, .res:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.search { display: grid; gap: 8px; }
+.search input { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; width: 100%; min-width: 0; font-size: 16px; }
+.count { margin: 0; font-size: 13px; color: var(--muted); }
+.results { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.res { display: grid; grid-template-columns: 96px 1fr; gap: 12px; align-items: center; width: 100%; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 8px 12px 8px 8px; cursor: pointer; }
+.thumb { display: block; }
+.thumb svg { width: 100%; height: 64px; display: block; }
+.rt { display: grid; gap: 2px; min-width: 0; }
+.rt b { font-weight: 600; overflow-wrap: anywhere; }
+.rt span { color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
+.none { color: var(--muted); padding: 12px 4px; }
+.dface { min-height: 0; align-items: stretch; }
+.dface .tbtn { align-self: flex-start; }
+.dface .struct svg { max-height: 360px; }
+#view-db { width: 100%; }
+.thumb svg { max-width: 96px; }
