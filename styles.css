@@ -175,5 +175,6 @@ html { background: var(--bg); }
 .dface { min-height: 0; align-items: stretch; }
 .dface .tbtn { align-self: flex-start; }
 .dface .struct svg { max-height: 360px; }
-#view-db { width: 100%; }
+#view-db, #view-learn, #stage { width: 100%; }
+.wrap > * { min-width: 0; }
 .thumb svg { max-width: 96px; }
