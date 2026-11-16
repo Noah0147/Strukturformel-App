@@ -229,7 +229,7 @@
   CARDS.forEach(function (c) {
     c.n = { name: norm(c.name), alt: norm(c.alt), f: norm(c.formula), g: norm((c.groups || []).join(' ')), w: norm(c.where), id: norm(c.id) };
   });
-  var dbQ = '', dbCat = 'all', dbOpen = null;
+  var dbQ = '', dbCat = 'all', dbOpen = null, dbScroll = 0;
   function score(c, toks) {
     var total = 0;
     for (var i = 0; i < toks.length; i++) {
@@ -268,7 +268,7 @@
   }
   function openDetail(id) {
     var c = byId[id]; if (!c) return;
-    dbOpen = id;
+    dbOpen = id; dbScroll = window.pageYOffset || document.documentElement.scrollTop || 0;
     var alt = (c.alt ? '<p class="alt">auch: ' + c.alt + '</p>' : '') + (c.ster ? '<p class="alt">Stereochemie: ' + c.ster + '</p>' : '');
     $('db-detail').innerHTML = '<div class="face dface"><button type="button" class="tbtn" id="db-back">← Zurück zur Liste</button>' +
       '<div class="eyebrow"><span>' + esc(c.cat) + '</span></div><div class="struct">' + c.svg + '</div>' +
@@ -283,6 +283,7 @@
     dbOpen = null;
     $('db-detail').hidden = true; $('db-list').hidden = false; $('db-count').hidden = false;
     document.querySelector('.search').hidden = false;
+    var y = dbScroll; window.scrollTo(0, y); setTimeout(function () { window.scrollTo(0, y); }, 0);
   }
   var dbCats = '<option value="all">Alle Kategorien</option>';
   CATS.forEach(function (c) { dbCats += '<option value="' + esc(c) + '">' + c + '</option>'; });
