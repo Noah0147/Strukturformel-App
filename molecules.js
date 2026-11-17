@@ -25,6 +25,7 @@
   function imidazole(h, a, theta) {
     var P = pentFrom(h, a, theta, { 2: 'NH', 4: 'N' }), i = P.idx;
     h.bd(i[0], i[1], 2, P.c); h.bd(i[1], i[2]); h.bd(i[2], i[3]); h.bd(i[3], i[4], 2, P.c); h.bd(i[4], i[0]);
+    h.ion(i[4], 'base', 6.0);
     return P;
   }
   function steroid(h, dbl) {
@@ -149,7 +150,7 @@
     return n;
   }
 
-  window.DATA_VERSION = '2026-11-17b';
+  window.DATA_VERSION = '2026-11-17c';
   window.CATEGORIES = ['Alkohole & Carbonyle', 'Säuren & Ester', 'Aromaten', 'Aminosäuren', 'Nucleobasen & Purine', 'Wirkstoffe & Aromastoffe', 'Stoffwechsel & Pflanzen', 'Vitamine', 'Zucker & Nucleotide', 'Steroide & Botenstoffe', 'Kleine Moleküle'];
 
 
@@ -394,7 +395,7 @@
         for (k = 0; k < 5; k++) { q = (90 + 72 * k) * Math.PI / 180; idx.push(h.add(RP * Math.cos(q), -RP * Math.sin(q), lab[k])); }
         h.bd(idx[0], idx[1], 2, [0, 0]); h.bd(idx[1], idx[2]); h.bd(idx[2], idx[3]); h.bd(idx[3], idx[4]); h.bd(idx[4], idx[0]);
         var a = h.at(idx[0], 90, 'OH'), b = h.at(idx[1], 162, 'HO'), c = h.at(idx[4], 18, 'O');
-        h.bd(idx[0], a); h.bd(idx[1], b); h.bd(idx[4], c, 2);
+        h.bd(idx[0], a); h.bd(idx[1], b); h.bd(idx[4], c, 2); h.ion(b, 'acid', 4.2);
         var c5 = h.at(idx[2], 240), o5 = h.at(c5, 180, 'HO'), c6 = h.at(c5, 300), o6 = h.at(c6, 0, 'OH');
         h.bd(idx[2], c5, 'd'); h.bd(c5, o5, 'd'); h.bd(c5, c6); h.bd(c6, o6);
         h.st(idx[2], [idx[3], idx[1], c5], 'R'); h.st(c5, [o5, idx[2], c6], 'S');

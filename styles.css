@@ -178,3 +178,11 @@ html { background: var(--bg); }
 #view-db, #view-learn, #stage { width: 100%; }
 .wrap > * { min-width: 0; }
 .thumb svg { max-width: 96px; }
+
+.ph { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+.phrow { display: flex; align-items: center; gap: 10px; }
+.phrow input { flex: 1; min-width: 0; margin: 0; accent-color: var(--warn); }
+.phl, .pho { font-weight: 600; color: var(--ink); }
+.pho { min-width: 1.6em; text-align: center; }
+.phoff { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 3px 9px; font-size: 12px; cursor: pointer; color: inherit; }
+.phcap { margin: 0; text-align: center; line-height: 1.35; }

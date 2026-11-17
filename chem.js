@@ -1,6 +1,6 @@
 (function () {
   var L = 46;
-  var EXT = { 'O': [7, 7], 'N': [7, 7], 'S': [7, 7], 'C': [7, 7], 'H': [7, 7], 'P': [7, 7], 'OH': [7, 21], 'HO': [21, 7], 'NH': [7, 21], 'HN': [21, 7], 'SH': [7, 21], 'HS': [21, 7], 'NH₂': [7, 31], 'H₂N': [31, 7], 'CH₂OH': [7, 54], 'HOH₂C': [54, 7], 'Cl': [10, 10], 'O⁻': [7, 19], 'N⁺': [7, 19], 'O⁺': [7, 19], 'C⁻': [7, 19], '⁻O': [19, 7], 'F': [6, 6], 'I': [3, 3], 'Co': [11, 11], 'R': [7, 7], 'CN': [7, 21] };
+  var EXT = { 'O': [7, 7], 'N': [7, 7], 'S': [7, 7], 'C': [7, 7], 'H': [7, 7], 'P': [7, 7], 'OH': [7, 21], 'HO': [21, 7], 'NH': [7, 21], 'HN': [21, 7], 'SH': [7, 21], 'HS': [21, 7], 'NH₂': [7, 31], 'H₂N': [31, 7], 'CH₂OH': [7, 54], 'HOH₂C': [54, 7], 'Cl': [10, 10], 'O⁻': [7, 19], 'N⁺': [7, 19], 'O⁺': [7, 19], 'C⁻': [7, 19], '⁻O': [19, 7], 'F': [6, 6], 'I': [3, 3], 'Co': [11, 11], 'R': [7, 7], 'CN': [7, 21], 'NH₃': [7, 31], 'H₃N': [31, 7] };
 
   function mol(fn) {
     var m = { atoms: [], bonds: [], st: [] };
@@ -12,7 +12,8 @@
     function bd(i, j, o, ctr) { m.bonds.push({ i: i, j: j, o: o || 1, ctr: ctr || null }); }
     /* st(zentrum, [Prioritäten 1..3 (4)], 'R'|'S'): Sollwert für die Prüfung der Keil-/Strichbindungen */
     function st(c, p, cfg) { m.st.push({ c: c, p: p, cfg: cfg }); }
-    fn({ add: add, at: at, bd: bd, st: st, m: m });
+    function ion(i, kind, pka) { (m.manIons = m.manIons || []).push({ i: i, kind: kind, pka: pka }); }
+    fn({ add: add, at: at, bd: bd, st: st, ion: ion, m: m });
     if (m.alpha != null) {
       /* L-Aminosäure im üblichen Schema: Aminogruppe am Keil (nach unten), Carboxygruppe rechts, Seitenkette links in der Ebene */
       var side = null;
@@ -156,5 +157,150 @@
     return '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + label + '"><g transform="translate(' + tx2.toFixed(1) + ' ' + ty2.toFixed(1) + ') scale(' + sc.toFixed(3) + ')">' + lines + texts + '</g></svg>';
   }
 
-  window.Chem = { L: L, EXT: EXT, mol: mol, ring: ring, KEK: KEK, SAT: SAT, AP: AP, RP: RP, fusedPent: fusedPent, aaBase: aaBase, render: render };
+
+  /* ---------- pH-Regler: ionisierbare Gruppen erkennen und Lehrbuch-pKa-Werte zuordnen ---------- */
+  var ACID = { 'OH': 'O⁻', 'HO': '⁻O', 'SH': 'S⁻', 'HS': '⁻S' };
+  var BASE = { 'NH₂': 'NH₃⁺', 'H₂N': '⁺H₃N', 'NH': 'NH₂⁺', 'HN': '⁺H₂N', 'N': 'NH⁺' };
+  function inv(o) { var r = {}, k; for (k in o) r[o[k]] = k; return r; }
+  var ACIDI = inv(ACID), BASEI = inv(BASE);
+  function fullLabel(a) {
+    var l = a.l || '';
+    if (a.cs === -1) return (a.chg === '+' ? '⁺' : '⁻') + l;
+    if (a.cs === 1) return l + (a.chg === '+' ? '⁺' : '⁻');
+    return l;
+  }
+  function ionize(m) {
+    if (m.ions) return m.ions;
+    var n = m.atoms.length, nb = [], i, lab = m.atoms.map(fullLabel), ions = [], taken = {};
+    for (i = 0; i < n; i++) nb.push([]);
+    m.bonds.forEach(function (b) {
+      var o = (b.o === 2 || b.o === 3) ? b.o : 1;
+      nb[b.i].push({ j: b.j, o: o }); nb[b.j].push({ j: b.i, o: o });
+    });
+    function isC(k) { return lab[k] === '' || lab[k] === 'C'; }
+    function hasDbl(k) { return nb[k].some(function (x) { return x.o >= 2; }); }
+    function sp3(k) { return isC(k) && !hasDbl(k); }
+    function freeN(k) { var f = BASE[lab[k]] ? lab[k] : BASEI[lab[k]]; return !!f && f !== 'N' && !nbrs(k).some(function (y) { return isC(y) && termO(y); }); }
+    function nbrs(k) { return nb[k].map(function (x) { return x.j; }); }
+    function termO(k) { return nb[k].some(function (x) { return x.o === 2 && lab[x.j] === 'O' && nb[x.j].length === 1; }); }
+    function isAmideC(k) { return termO(k); }
+    function ringOf(s) {
+      var path = [s], res = null;
+      function dfs(u, d) {
+        if (res) return;
+        if (d === 6) { if (nb[u].some(function (x) { return x.j === s; })) res = path.slice(); return; }
+        nb[u].forEach(function (x) { if (res || path.indexOf(x.j) >= 0) return; path.push(x.j); dfs(x.j, d + 1); path.pop(); });
+      }
+      dfs(s, 1); return res;
+    }
+    function aromatic(r) {
+      var c = 0, k, j, a, b;
+      for (k = 0; k < 6; k++) { a = r[k]; b = r[(k + 1) % 6]; for (j = 0; j < nb[a].length; j++) if (nb[a][j].j === b && nb[a][j].o === 2) c++; }
+      return c >= 2;
+    }
+    function add(k, kind, pka, nf) { if (taken[k]) return; taken[k] = true; ions.push({ i: k, kind: kind, pka: pka, nf: nf }); }
+    (m.manIons || []).forEach(function (e) {
+      var l = lab[e.i], nf = e.kind === 'acid' ? (ACID[l] ? l : ACIDI[l]) : (BASE[l] ? l : BASEI[l]);
+      if (nf) add(e.i, e.kind, e.pka, nf);
+    });
+    var phos = {}, guan = false;
+    for (i = 0; i < n; i++) {
+      if (taken[i]) continue;
+      var l = lab[i], nfA = ACID[l] ? l : ACIDI[l], nfB = BASE[l] ? l : BASEI[l], p, q, k, ok;
+      if (nfA && nb[i].length === 1 && nb[i][0].o === 1) {
+        p = nb[i][0].j;
+        if (nfA === 'OH' || nfA === 'HO') {
+          if (lab[p] === 'P') { (phos[p] = phos[p] || []).push(i); continue; }
+          if (lab[p] === 'S' && nb[p].filter(function (x) { return x.o === 2 && lab[x.j] === 'O'; }).length >= 2) { add(i, 'acid', -1.5, nfA); continue; }
+          if (!isC(p)) continue;
+          if (termO(p)) {
+            var al = nbrs(p).filter(function (x) { return isC(x); })[0], pk = 4.5;
+            if (al != null) {
+              if (sp3(al) && nbrs(al).some(function (x) { return freeN(x); })) pk = 2.2;
+              else if (nbrs(al).some(function (x) { return x !== p && sp3(x) && nbrs(x).some(function (y) { return freeN(y); }); })) pk = 3.9;
+              else if (nbrs(al).some(function (x) { return x !== p && sp3(x) && nbrs(x).some(function (y) { return y !== al && sp3(y) && nbrs(y).some(function (z) { return freeN(z); }); }); })) pk = 4.3;
+              else if (nbrs(al).some(function (x) { return x !== p && (lab[x] === 'OH' || lab[x] === 'HO' || lab[x] === 'O⁻' || lab[x] === '⁻O' || (lab[x] === 'O' && nb[x].length === 1)); })) pk = 3.5;
+              else if (hasDbl(al)) pk = 4.2;
+            }
+            add(i, 'acid', pk, nfA);
+          } else if (nb[p].some(function (x) { return x.o === 2 && isC(x.j); })) {
+            q = ringOf(p);
+            if (q && aromatic(q) && q.every(isC)) add(i, 'acid', 10, nfA);
+          }
+        } else if (sp3(p)) add(i, 'acid', 8.3, nfA);
+        continue;
+      }
+      if (!nfB) continue;
+      if ((nfB === 'NH₂' || nfB === 'H₂N') && nb[i].length === 1 && nb[i][0].o === 1) {
+        p = nb[i][0].j;
+        if (!isC(p) || isAmideC(p)) continue;
+        if (sp3(p)) { add(i, 'base', nbrs(p).some(function (x) { return isC(x) && termO(x); }) ? 9.5 : 10.4, nfB); }
+        else if (nb[p].every(function (x) { return lab[x.j] !== 'N' && lab[x.j] !== 'NH' && lab[x.j] !== 'HN' && lab[x.j] !== 'O'; })) {
+          q = ringOf(p); if (q && aromatic(q) && q.every(isC)) add(i, 'base', 4.6, nfB);
+        }
+      } else if ((nfB === 'NH' || nfB === 'HN') && nb[i].length === 2 && nb[i].every(function (x) { return x.o === 1 && sp3(x.j); })) {
+        add(i, 'base', 10.5, nfB);
+      } else if ((nfB === 'NH' || nfB === 'HN') && nb[i].length === 1 && nb[i][0].o === 2) {
+        p = nb[i][0].j;
+        if (isC(p)) {
+          var nn = nbrs(p).filter(function (x) { return x !== i && /^[NH]/.test(lab[x]) && lab[x] !== 'H'; }).length, oo = nbrs(p).some(function (x) { return lab[x] === 'O' || lab[x] === 'OH' || lab[x] === 'HO'; });
+          if (nn >= 2 && !oo && !guan) { guan = true; add(i, 'base', 12.5, nfB); }
+        }
+      } else if (nfB === 'N') {
+        if (nb[i].length === 3 && nb[i].every(function (x) { return x.o === 1 && sp3(x.j); }) && nb[i].every(function (x) { return !isAmideC(x.j); })) add(i, 'base', 9.5, nfB);
+        else if (nb[i].length === 2 && nb[i].every(function (x) { return isC(x.j); })) {
+          q = ringOf(i);
+          if (q && aromatic(q) && q.every(function (x) { return x === i || isC(x); })) add(i, 'base', 5.2, nfB);
+        }
+      }
+    }
+    Object.keys(phos).forEach(function (P) {
+      var list = phos[P], pk = list.length === 1 ? [1.5] : (list.length === 2 ? [1.5, 6.5] : [2.1, 7.2, 12.3]);
+      list.forEach(function (k, z) { add(k, 'acid', pk[Math.min(z, pk.length - 1)], lab[k] === '⁻O' || lab[k] === 'HO' ? 'HO' : 'OH'); });
+    });
+    m.ions = ions; m.fixedChg = 0; m.fixPos = 0;
+    m.atoms.forEach(function (a, k) {
+      if (taken[k] || !a.chg) return;
+      m.fixedChg += a.chg === '+' ? 1 : -1;
+      if (a.chg === '+' && !nbrs(k).some(function (y) { return m.atoms[y].chg === '\u2212'; })) m.fixPos++;
+    });
+    return ions;
+  }
+  function ionState(e, pH) { return e.kind === 'acid' ? pH > e.pka : pH < e.pka; } /* Säure: deprotoniert / Base: protoniert */
+  function chargeAt(m, pH) {
+    var net = m.fixedChg, pos = 0, neg = 0;
+    ionize(m).forEach(function (e) { if (ionState(e, pH)) { if (e.kind === 'acid') { net--; neg++; } else { net++; pos++; } } });
+    return { net: net, zw: (pos > 0 || m.fixPos > 0) && neg > 0 && net === 0 };
+  }
+  function phInfo(m, pH) {
+    var r = chargeAt(m, pH), ions = ionize(m), hasA = false, hasB = false;
+    ions.forEach(function (e) { if (e.kind === 'acid') hasA = true; else hasB = true; });
+    function f(x) {
+      var q = m.fixedChg;
+      ions.forEach(function (e) { q += e.kind === 'acid' ? -1 / (1 + Math.pow(10, e.pka - x)) : 1 / (1 + Math.pow(10, x - e.pka)); });
+      return q;
+    }
+    var pi = null;
+    if (hasA && hasB && f(-2) > 0 && f(16) < 0) {
+      var lo = -2, hi = 16, k, mid;
+      for (k = 0; k < 40; k++) { mid = (lo + hi) / 2; if (f(mid) > 0) lo = mid; else hi = mid; }
+      pi = (lo + hi) / 2;
+    }
+    return { net: r.net, zw: r.zw, pi: pi };
+  }
+  function renderPH(m, pH, label) {
+    var st = {};
+    ionize(m).forEach(function (e) { st[e.i] = e; });
+    var atoms = m.atoms.map(function (a, k) {
+      var e = st[k], l = fullLabel(a);
+      if (e) {
+        if (e.kind === 'acid') l = ionState(e, pH) ? ACID[e.nf] : e.nf;
+        else l = ionState(e, pH) ? BASE[e.nf] : e.nf;
+      }
+      return { x: a.x, y: a.y, l: l };
+    });
+    return render(Object.assign({}, m, { atoms: atoms }), label);
+  }
+
+  window.Chem = { L: L, EXT: EXT, mol: mol, ring: ring, KEK: KEK, SAT: SAT, AP: AP, RP: RP, fusedPent: fusedPent, aaBase: aaBase, render: render, ionize: ionize, phInfo: phInfo, renderPH: renderPH };
 })();

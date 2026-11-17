@@ -70,6 +70,44 @@
   function deck() { var b = base(); return st.retryOnly ? b.filter(function (id) { return st.status[id] === 'retry'; }) : b; }
   function clampPos() { var d = deck(); if (!d.length) { st.pos = 0; } else if (st.pos >= d.length || st.pos < 0) { st.pos = ((st.pos % d.length) + d.length) % d.length; } }
 
+  /* ---------- pH-Regler ---------- */
+  var phVal = null, phCache = {};
+  function hasIons(c) { return window.Chem.ionize(c.m).length > 0; }
+  function phBox(c) {
+    if (!hasIons(c)) return '';
+    return '<div class="ph" data-id="' + c.id + '"><div class="phrow"><span class="phl">pH</span><input type="range" min="1" max="14" step="1" value="7" aria-label="pH-Wert"><output class="pho">–</output><button type="button" class="phoff">Original</button></div><p class="phcap"></p></div>';
+  }
+  function phSvg(c) {
+    if (phVal == null) return c.svg;
+    var k = c.id + '|' + phVal;
+    return phCache[k] || (phCache[k] = window.Chem.renderPH(c.m, phVal, 'Strukturformel bei pH ' + phVal));
+  }
+  function de(x) { return x.toFixed(1).replace('.', ','); }
+  function phApply(root) {
+    var boxes = root.querySelectorAll('.ph');
+    for (var i = 0; i < boxes.length; i++) {
+      var b = boxes[i], c = byId[b.getAttribute('data-id')], t = b.previousElementSibling;
+      if (t && t.querySelector) { t.innerHTML = phSvg(c); }
+      b.querySelector('input').value = phVal == null ? 7 : phVal;
+      b.querySelector('.pho').textContent = phVal == null ? '–' : phVal;
+      b.querySelector('.phoff').hidden = phVal == null;
+      var cap = b.querySelector('.phcap');
+      if (phVal == null) { cap.textContent = 'Regler bewegen: Struktur bei diesem pH (ungefähre Lehrbuch-pKa-Werte). Im Körper: pH ≈ 7,4.'; }
+      else {
+        var r = window.Chem.phInfo(c.m, phVal), q = r.net === 0 ? '0' : (r.net > 0 ? '+' + r.net : '\u2212' + (-r.net));
+        cap.textContent = 'pH ' + phVal + (phVal === 7 ? ' (≈ physiologisch)' : '') + ' · Nettoladung ' + q + (r.zw ? ' · Zwitterion' : '') + (r.pi != null ? ' · pI ≈ ' + de(r.pi) : '');
+      }
+    }
+  }
+  document.addEventListener('input', function (e) {
+    var t = e.target;
+    if (t && t.closest && t.closest('.ph') && t.type === 'range') { phVal = parseInt(t.value, 10); phApply(document); }
+  });
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    if (t && t.classList && t.classList.contains('phoff')) { phVal = null; phApply(document); }
+  });
+
   function faces(c, n) {
     var p = '<span>Karte ' + (st.pos + 1) + ' von ' + n + '</span>';
     var nw = isNew(c.id) ? '<span class="newchip">Neu</span>' : '';
@@ -78,13 +116,13 @@
                '<div class="where"><h3>Im Alltag</h3><p>' + c.where + '</p></div>';
     if (st.mode === 'struct') {
       return {
-        f: '<div class="eyebrow"><span>Struktur' + nw + '</span>' + p + '</div><div class="struct">' + c.svg + '</div><p class="hint">Wie heißt dieses Molekül? Tippen zum Umdrehen.</p>',
+        f: '<div class="eyebrow"><span>Struktur' + nw + '</span>' + p + '</div><div class="struct">' + c.svg + '</div>' + phBox(c) + '<p class="hint">Wie heißt dieses Molekül? Tippen zum Umdrehen.</p>',
         b: '<div class="eyebrow"><span>Name</span>' + p + '</div><div><h2 class="name">' + c.name + '</h2>' + alt + '<p class="formula">' + c.formula + '</p></div>' + info
       };
     }
     return {
       f: '<div class="eyebrow"><span>Name' + nw + '</span>' + p + '</div><div class="struct"><h2 class="name center">' + c.name + '</h2></div><p class="hint">Wie sieht die Struktur aus? Tippen zum Umdrehen.</p>',
-      b: '<div class="eyebrow"><span>Struktur</span>' + p + '</div><div class="struct small">' + c.svg + '</div><p class="formula">' + c.formula + '</p>' + info
+      b: '<div class="eyebrow"><span>Struktur</span>' + p + '</div><div class="struct small">' + c.svg + '</div>' + phBox(c) + '<p class="formula">' + c.formula + '</p>' + info
     };
   }
 
@@ -104,6 +142,7 @@
     if (!has) return;
     var c = byId[d[st.pos]], f = faces(c, d.length);
     front.innerHTML = f.f; back.innerHTML = f.b;
+    phApply(front); phApply(back);
     $('pos').textContent = 'Karte ' + (st.pos + 1) + ' von ' + d.length;
   }
 
@@ -152,8 +191,9 @@
     update();
   }
 
-  card.addEventListener('click', function () { setFlip(!flipped); });
+  card.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.ph')) return; setFlip(!flipped); });
   card.addEventListener('keydown', function (e) {
+    if (e.target.closest && e.target.closest('.ph')) return;
     if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); setFlip(!flipped); }
   });
   document.addEventListener('keydown', function (e) {
@@ -271,10 +311,11 @@
     dbOpen = id; dbScroll = window.pageYOffset || document.documentElement.scrollTop || 0;
     var alt = (c.alt ? '<p class="alt">auch: ' + c.alt + '</p>' : '') + (c.ster ? '<p class="alt">Stereochemie: ' + c.ster + '</p>' : '');
     $('db-detail').innerHTML = '<div class="face dface"><button type="button" class="tbtn" id="db-back">← Zurück zur Liste</button>' +
-      '<div class="eyebrow"><span>' + esc(c.cat) + '</span></div><div class="struct">' + c.svg + '</div>' +
+      '<div class="eyebrow"><span>' + esc(c.cat) + '</span></div><div class="struct">' + c.svg + '</div>' + phBox(c) +
       '<div><h2 class="name">' + c.name + '</h2>' + alt + '<p class="formula">' + c.formula + '</p></div>' +
       '<div class="chips">' + c.groups.map(function (g) { return '<span class="chip">' + g + '</span>'; }).join('') + '</div>' +
       '<div class="where"><h3>Im Alltag</h3><p>' + c.where + '</p></div></div>';
+    phApply($('db-detail'));
     $('db-detail').hidden = false; $('db-list').hidden = true; $('db-count').hidden = true;
     document.querySelector('.search').hidden = true;
     window.scrollTo(0, 0);
