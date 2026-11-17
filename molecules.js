@@ -149,8 +149,65 @@
     return n;
   }
 
-  window.DATA_VERSION = '2026-11-17';
-  window.CATEGORIES = ['Alkohole & Carbonyle', 'Säuren & Ester', 'Aromaten', 'Aminosäuren', 'Nucleobasen & Purine', 'Wirkstoffe & Aromastoffe', 'Stoffwechsel & Pflanzen', 'Zucker & Nucleotide', 'Steroide & Botenstoffe', 'Kleine Moleküle'];
+  window.DATA_VERSION = '2026-11-17b';
+  window.CATEGORIES = ['Alkohole & Carbonyle', 'Säuren & Ester', 'Aromaten', 'Aminosäuren', 'Nucleobasen & Purine', 'Wirkstoffe & Aromastoffe', 'Stoffwechsel & Pflanzen', 'Vitamine', 'Zucker & Nucleotide', 'Steroide & Botenstoffe', 'Kleine Moleküle'];
+
+
+  /* ---- Hilfsfunktionen für Vitamine ---- */
+  function vp(cx, cy, deg) { var q = deg * Math.PI / 180; return [cx + L * Math.cos(q), cy - L * Math.sin(q)]; }
+  function vadd(h, cx, cy, deg, label) { var p = vp(cx, cy, deg); return h.add(p[0], p[1], label); }
+  /* Zickzack-Kette mit Methylzweigen: me = {Atomnummer: 'p' | 'w' | 'd'}, dbl = Liste der Doppelbindungen (Bindungsnummern, 1-basiert) */
+  function chainB(h, start, first, n, dbl, me) {
+    var out = [], ms = {}, prev = start, a = first, k, i, m;
+    for (k = 0; k < n; k++) {
+      i = h.at(prev, a); h.bd(prev, i, dbl && dbl.indexOf(k + 1) >= 0 ? 2 : 1); out.push(i);
+      if (me && me[k + 1]) { m = h.at(i, a > 0 ? 90 : 270); h.bd(i, m, me[k + 1] === 'p' ? 1 : me[k + 1]); ms[k + 1] = m; }
+      prev = i; a = -a;
+    }
+    return { a: out, m: ms };
+  }
+  function naphthoquinone(h) { /* Gerüst von Menadion; gibt C2 (Methyl) und C3 (Rest) zurück */
+    var r = ring(h, 0, 0, 90, KEK), cx2 = L * Math.sqrt(3);
+    function pt(deg) { var q = deg * Math.PI / 180; return [cx2 + L * Math.cos(q), -L * Math.sin(q)]; }
+    var t = pt(90), ur = pt(30), lr = pt(-30), b = pt(-90);
+    var a1 = h.add(t[0], t[1]), a2 = h.add(ur[0], ur[1]), a3 = h.add(lr[0], lr[1]), a4 = h.add(b[0], b[1]);
+    h.bd(r[5], a1); h.bd(a1, a2); h.bd(a2, a3, 2, [cx2, 0]); h.bd(a3, a4); h.bd(a4, r[4]);
+    var o1 = h.at(a1, 90, 'O'), o2 = h.at(a4, 270, 'O'), me = h.at(a2, 30); h.bd(a1, o1, 2); h.bd(a4, o2, 2); h.bd(a2, me);
+    return { c2: a2, c3: a3 };
+  }
+  function vitD(h, ergo, oKind, c18Kind) { /* Vitamin D (9,10-Secosteroid); ergo = Ergocalciferol (D2) */
+    var d = Math.PI / 180, cxC = 0, cyC = 0, a = {};
+    function hx(n, deg) { a[n] = h.add(cxC + L * Math.cos(deg * d), cyC - L * Math.sin(deg * d)); }
+    hx('c9', 210); hx('c8', 270); hx('c14', 330); hx('c13', 30); hx('c12', 90); hx('c11', 150);
+    var pcx = cxC + L * Math.cos(30 * d) + AP;
+    function px(n, deg) { a[n] = h.add(pcx + RP * Math.cos(deg * d), cyC - RP * Math.sin(deg * d)); }
+    px('c15', 288); px('c16', 0); px('c17', 72);
+    [['c9', 'c8'], ['c14', 'c13'], ['c13', 'c12'], ['c12', 'c11'], ['c11', 'c9'], ['c14', 'c15'], ['c15', 'c16'], ['c16', 'c17'], ['c17', 'c13']].forEach(function (b) { h.bd(a[b[0]], a[b[1]]); });
+    h.bd(a.c8, a.c14);
+    var m18 = h.at(a.c13, 90); h.bd(a.c13, m18, 'w');
+    hs(h, a.c14, 270, 'd');
+    var c7 = h.at(a.c8, 270); h.bd(a.c8, c7, 2);
+    var c6 = h.at(c7, 210); h.bd(c7, c6);
+    var A = h.m.atoms[c6], r = ring(h, A.x, A.y + 2 * L, 90, SAT);
+    h.bd(c6, r[0], 2);
+    var o = h.at(r[2], 210, 'HO'); h.bd(r[2], o, oKind || 'd');
+    var c19 = h.at(r[5], 30); h.bd(r[5], c19, 2);
+    h.st(r[2], [o, r[1], r[3]], 'S');
+    var c20 = h.at(a.c17, 72); h.bd(a.c17, c20, 'w');
+    var c21 = h.at(c20, 132); h.bd(c20, c21, 'd');
+    var c22 = h.at(c20, 12); h.bd(c20, c22, 0 || 1);
+    var c23 = h.at(c22, 72), c24 = h.at(c23, 12), c25 = h.at(c24, 72), c26, c27;
+    if (ergo) {
+      h.bd(c22, c23, 2); h.bd(c23, c24);
+      var c28 = h.at(c24, 312); h.bd(c24, c28, 'w'); h.bd(c24, c25);
+      c26 = h.at(c25, 132); c27 = h.at(c25, 12); h.bd(c25, c26); h.bd(c25, c27);
+      h.st(c24, [c23, c25, c28], 'R');
+    } else {
+      h.bd(c22, c23); h.bd(c23, c24); h.bd(c24, c25);
+      c26 = h.at(c25, 132); c27 = h.at(c25, 12); h.bd(c25, c26); h.bd(c25, c27);
+    }
+    h.st(c20, [a.c17, c22, c21], 'R');
+  }
 
   window.MOLECULES = [
     { id: 'essig', cat: 'Säuren & Ester', name: 'Essigsäure', alt: 'Ethansäure', formula: 'C₂H₄O₂', groups: ['Carboxygruppe'],
@@ -329,7 +386,7 @@
         h.bd(r[0], c1); h.bd(c1, c2); h.bd(c2, n);
       }) },
 
-    { id: 'vitc', cat: 'Stoffwechsel & Pflanzen', name: 'Vitamin C', alt: 'Ascorbinsäure', formula: 'C₆H₈O₆', groups: ['Lacton (cyclischer Ester)', 'Enol-Hydroxygruppen', 'Diol-Seitenkette'],
+    { id: 'vitc', cat: 'Vitamine', name: 'Vitamin C', alt: 'Ascorbinsäure', formula: 'C₆H₈O₆', groups: ['Lacton (cyclischer Ester)', 'Enol-Hydroxygruppen', 'Diol-Seitenkette', 'wasserlöslich'],
       ster: 'L-Ascorbinsäure',
       where: 'Zitrusfrüchte und Paprika. Wirkt als Antioxidans und wird für die Kollagensynthese gebraucht.',
       m: mol(function (h) {
@@ -635,7 +692,7 @@
       }) },
 
     /* ---- Vitamin ---- */
-    { id: 'nicotinamid', cat: 'Stoffwechsel & Pflanzen', name: 'Nicotinamid', alt: 'Niacinamid, Vitamin B3', formula: 'C₆H₆N₂O', groups: ['Pyridin-Ring', 'Amid'],
+    { id: 'nicotinamid', cat: 'Vitamine', name: 'Nicotinamid', alt: 'Niacinamid, Vitamin B3', formula: 'C₆H₆N₂O', groups: ['Pyridin-Ring', 'Amid', 'wasserlöslich'],
       where: 'Vitamin B3. Es ist Baustein der Coenzyme NAD und NADP, die in Stoffwechselreaktionen Elektronen übertragen.',
       m: mol(function (h) {
         var r = ring(h, 0, 0, 90, KEK, { 2: 'N' });
@@ -898,7 +955,7 @@
         h.bd(n, c1); h.bd(c1, c2); var o2 = oh(h, c2, 270, 'w');
         var c3 = h.at(c2, 30), c4 = h.at(c3, -30); h.bd(c2, c3); h.bd(c3, c4); var ca = h.at(c4, -90, 'O'), cb = h.at(c4, 30, 'O⁻'); h.bd(c4, ca, 2); h.bd(c4, cb); h.st(c2, [o2, c1, c3], 'R');
       }) },
-    { id: 'retinol', cat: 'Stoffwechsel & Pflanzen', name: 'Retinol', alt: 'Vitamin A', formula: 'C₂₀H₃₀O', groups: ['Ring mit Doppelbindung', 'Konjugierte Polyenkette', 'Hydroxygruppe'],
+    { id: 'retinol', cat: 'Vitamine', name: 'Retinol', alt: 'Vitamin A', formula: 'C₂₀H₃₀O', groups: ['Ring mit Doppelbindung', 'Konjugierte Polyenkette', 'Hydroxygruppe', 'fettlöslich'],
       ster: 'all-E (alle Doppelbindungen trans)',
       where: 'Vitamin A aus Leber, Milch und Eigelb. Aus β-Carotin der Karotten bildet der Körper es selbst. Der Sehfarbstoff Rhodopsin enthält Retinal, das aus Retinol entsteht.',
       m: mol(function (h) {
@@ -1327,7 +1384,7 @@
       where: 'Grundgerüst von Dopamin, Adrenalin und vielen Wirkstoffen. Es kommt in Spuren im Gehirn und in Schokolade vor.',
       m: mol(function (h) { var r = ring(h, 0, 0, 90, KEK), c1 = h.at(r[0], 90), c2 = h.at(c1, 150), n = h.at(c2, 210, 'H₂N'); h.bd(r[0], c1); h.bd(c1, c2); h.bd(c2, n); }) },
 
-    { id: 'niacin', cat: 'Stoffwechsel & Pflanzen', name: 'Nicotinsäure', alt: 'Niacin, Vitamin B3', formula: 'C₆H₅NO₂', groups: ['Pyridin-Ring', 'Carboxygruppe'],
+    { id: 'niacin', cat: 'Vitamine', name: 'Nicotinsäure', alt: 'Niacin, Vitamin B3', formula: 'C₆H₅NO₂', groups: ['Pyridin-Ring', 'Carboxygruppe', 'wasserlöslich'],
       where: 'Die Säureform von Vitamin B3. Der Körper macht daraus NAD. Ein Mangel führt zur Mangelkrankheit Pellagra.',
       m: mol(function (h) { var r = ring(h, 0, 0, 90, KEK, { 2: 'N' }), c = h.at(r[0], 90), o = h.at(c, 30, 'O'), q = h.at(c, 150, 'HO'); h.bd(r[0], c); h.bd(c, o, 2); h.bd(c, q); }) },
     { id: 'betain', cat: 'Stoffwechsel & Pflanzen', name: 'Betain', alt: 'Trimethylglycin', formula: 'C₅H₁₁NO₂', groups: ['Quartäres Ammonium', 'Carboxylat'],
@@ -1523,14 +1580,14 @@
         h.bd(p.n9, c1); h.bd(c1, o1); h.bd(o1, c2); h.bd(c2, c3); h.bd(c3, o2);
       }) },
 
-    { id: 'pyridoxin', cat: 'Stoffwechsel & Pflanzen', name: 'Pyridoxin', alt: 'Vitamin B6', formula: 'C₈H₁₁NO₃', groups: ['Pyridinring', 'Zwei Hydroxymethylgruppen', 'Phenolische OH-Gruppe'],
+    { id: 'pyridoxin', cat: 'Vitamine', name: 'Pyridoxin', alt: 'Vitamin B6', formula: 'C₈H₁₁NO₃', groups: ['Pyridinring', 'Zwei Hydroxymethylgruppen', 'Phenolische OH-Gruppe', 'wasserlöslich'],
       where: 'Vitamin B6. Seine aktive Form Pyridoxalphosphat ist Cofaktor bei Reaktionen des Aminosäure-Stoffwechsels, etwa bei Transaminierungen.',
       m: mol(function (h) {
         var r = ring(h, 0, 0, 90, KEK, { 0: 'N' }), me = h.at(r[1], 150), ho = h.at(r[2], 210, 'HO'); h.bd(r[1], me); h.bd(r[2], ho);
         var c1 = h.at(r[3], 270), o1 = h.at(c1, 210, 'HO'); h.bd(r[3], c1); h.bd(c1, o1);
         var c2 = h.at(r[4], 330), o2 = h.at(c2, 270, 'OH'); h.bd(r[4], c2); h.bd(c2, o2);
       }) },
-    { id: 'pantothensaeure', cat: 'Stoffwechsel & Pflanzen', name: 'Pantothensäure', alt: 'Vitamin B5', formula: 'C₉H₁₇NO₅', groups: ['Amid', 'Carboxygruppe', 'Zwei Hydroxygruppen'],
+    { id: 'pantothensaeure', cat: 'Vitamine', name: 'Pantothensäure', alt: 'Vitamin B5', formula: 'C₉H₁₇NO₅', groups: ['Amid', 'Carboxygruppe', 'Zwei Hydroxygruppen', 'wasserlöslich'],
       ster: 'D-Pantothensäure, (R)',
       where: 'Vitamin B5 und Baustein von Coenzym A. Der Name kommt vom griechischen „pantothen“ (überall), weil es in fast allen Lebensmitteln steckt.',
       m: mol(function (h) {
@@ -1538,7 +1595,7 @@
         h.bd(ho, c1); h.bd(c1, c2); h.bd(c2, m1); h.bd(c2, m2); h.bd(c2, c3); h.bd(c3, oh, 'd'); h.bd(c3, c4); h.bd(c4, o, 2); h.bd(c4, n); h.bd(n, c5); h.bd(c5, c6); h.bd(c6, c7); cooh(h, c7, 30);
         h.st(c3, [oh, c4, c2], 'R');
       }) },
-    { id: 'menadion', cat: 'Stoffwechsel & Pflanzen', name: 'Menadion', alt: 'Vitamin K₃, 2-Methyl-1,4-naphthochinon', formula: 'C₁₁H₈O₂', groups: ['Chinon', 'Aromatischer Ring', 'Methylgruppe'],
+    { id: 'menadion', cat: 'Vitamine', name: 'Menadion', alt: 'Vitamin K₃, 2-Methyl-1,4-naphthochinon', formula: 'C₁₁H₈O₂', groups: ['Chinon', 'Aromatischer Ring', 'Methylgruppe', 'fettlöslich'],
       where: 'Synthetische Vorstufe der Vitamin-K-Familie (Vitamin K₃). Vitamin K braucht der Körper für die Gerinnungsfaktoren des Blutes.',
       m: mol(function (h) {
         var r = ring(h, 0, 0, 90, KEK), cx2 = L * Math.sqrt(3);
@@ -1634,6 +1691,151 @@
       m: mol(function (h) { var n = h.add(0, 0, 'N⁺'), a = h.at(n, 90, 'O'), b = h.at(n, 210, 'O⁻'), c = h.at(n, 330, 'O⁻'); h.bd(n, a, 2); h.bd(n, b); h.bd(n, c); }) },
     { id: 'ammonium', cat: 'Kleine Moleküle', name: 'Ammonium', alt: 'NH₄⁺', formula: 'NH₄⁺', groups: ['Tetraedrisch', 'Kation'],
       where: 'Die protonierte Form von Ammoniak, bei physiologischem pH überwiegt sie. Pflanzen und Mikroorganismen bauen es in Aminosäuren ein, etwa über Glutamin.',
-      m: mol(function (h) { var n = h.add(0, 0, 'N⁺'), k; for (k = 0; k < 4; k++) h.bd(n, h.at(n, 45 + 90 * k, 'H')); }) }
+      m: mol(function (h) { var n = h.add(0, 0, 'N⁺'), k; for (k = 0; k < 4; k++) h.bd(n, h.at(n, 45 + 90 * k, 'H')); }) },
+    /* ---- Vitamine (neu) ---- */
+    { id: 'thiamin', cat: 'Vitamine', name: 'Thiamin', alt: 'Vitamin B₁, Aneurin', formula: 'C₁₂H₁₇N₄OS⁺', groups: ['Pyrimidinring', 'Thiazolium-Ring', 'Aminogruppe', 'Hydroxygruppe', 'wasserlöslich'],
+      where: 'Vitamin B₁ aus Vollkorn, Schweinefleisch und Hülsenfrüchten. Als Thiaminpyrophosphat ist es Coenzym der Pyruvat-Dehydrogenase. Ein Mangel führt zu Beriberi.',
+      m: mol(function (h) {
+        var r = ring(h, 0, 0, 90, KEK, { 1: 'N', 3: 'N' });
+        var nh = h.at(r[0], 90, 'NH₂'); h.bd(r[0], nh);
+        var me = h.at(r[2], 210); h.bd(r[2], me);
+        var c1 = h.at(r[5], 30); h.bd(r[5], c1);
+        var n = h.at(c1, -30, 'N⁺'); h.bd(c1, n);
+        var P = pentFrom(h, n, -30, { 3: 'S' }), i = P.idx;
+        h.bd(i[0], i[1]); h.bd(i[1], i[2], 2, P.c); h.bd(i[2], i[3]); h.bd(i[3], i[4]); h.bd(i[4], i[0], 2, P.c);
+        var m2 = h.at(i[1], outDir(h, P, 1)); h.bd(i[1], m2);
+        var e1 = h.at(i[2], outDir(h, P, 2)); h.bd(i[2], e1);
+        var e2 = h.at(e1, 330, 'OH'); h.bd(e1, e2);
+      }) },
+    { id: 'riboflavin', cat: 'Vitamine', name: 'Riboflavin', alt: 'Vitamin B₂', formula: 'C₁₇H₂₀N₄O₆', groups: ['Isoalloxazin-Ringsystem', 'Ribitylkette', 'Zwei Carbonylgruppen', 'wasserlöslich'],
+      ster: 'D-Ribityl, (2S,3S,4R)',
+      where: 'Vitamin B₂ aus Milch, Eiern und Leber, der Farbstoff gibt Vitaminlösungen ihre gelbe Farbe. Es ist Baustein von FAD und FMN, den Coenzymen vieler Redoxreaktionen.',
+      m: mol(function (h) {
+        var S = Math.sqrt(3) * L;
+        var a6 = vadd(h, 0, 0, 90), a7 = vadd(h, 0, 0, 150), a8 = vadd(h, 0, 0, 210), a9 = vadd(h, 0, 0, 270), c9a = vadd(h, 0, 0, 330), c5a = vadd(h, 0, 0, 30);
+        var n5 = vadd(h, S, 0, 90, 'N'), c4a = vadd(h, S, 0, 30), c10a = vadd(h, S, 0, 330), n10 = vadd(h, S, 0, 270, 'N');
+        var c4 = vadd(h, 2 * S, 0, 90), n3 = vadd(h, 2 * S, 0, 30, 'NH'), c2 = vadd(h, 2 * S, 0, 330), n1 = vadd(h, 2 * S, 0, 270, 'N');
+        h.bd(c5a, a6); h.bd(a6, a7, 2, [0, 0]); h.bd(a7, a8); h.bd(a8, a9, 2, [0, 0]); h.bd(a9, c9a); h.bd(c9a, c5a, 2, [0, 0]);
+        h.bd(c5a, n5); h.bd(n5, c4a, 2, [S, 0]); h.bd(c4a, c10a); h.bd(c10a, n10); h.bd(n10, c9a);
+        h.bd(c4a, c4); h.bd(c4, n3); h.bd(n3, c2); h.bd(c2, n1); h.bd(n1, c10a, 2, [2 * S, 0]);
+        var o4 = h.at(c4, 90, 'O'), o2 = h.at(c2, 330, 'O'); h.bd(c4, o4, 2); h.bd(c2, o2, 2);
+        var m7 = h.at(a7, 150), m8 = h.at(a8, 210); h.bd(a7, m7); h.bd(a8, m8);
+        var c1p = h.at(n10, 300), c2p = h.at(c1p, 240), c3p = h.at(c2p, 300), c4p = h.at(c3p, 240), c5p = h.at(c4p, 300);
+        h.bd(n10, c1p); h.bd(c1p, c2p); h.bd(c2p, c3p); h.bd(c3p, c4p); h.bd(c4p, c5p);
+        var o5 = h.at(c5p, 240, 'HO'); h.bd(c5p, o5);
+        var oo2 = h.at(c2p, 180, 'HO'), oo3 = h.at(c3p, 0, 'OH'), oo4 = h.at(c4p, 180, 'HO');
+        h.bd(c2p, oo2, 'w'); h.bd(c3p, oo3, 'd'); h.bd(c4p, oo4, 'w');
+        h.st(c2p, [oo2, c3p, c1p], 'S'); h.st(c3p, [oo3, c4p, c2p], 'S'); h.st(c4p, [oo4, c3p, c5p], 'R');
+      }) },
+    { id: 'biotin', cat: 'Vitamine', name: 'Biotin', alt: 'Vitamin B₇, Vitamin H', formula: 'C₁₀H₁₆N₂O₃S', groups: ['Harnstoff-Ring (Imidazolidinon)', 'Thiophan-Ring', 'Carboxygruppe', 'wasserlöslich'],
+      ster: '(3aS,4S,6aR)',
+      where: 'Vitamin B₇ aus Eigelb, Leber und Nüssen. Es ist Cofaktor der Carboxylasen, die CO₂ übertragen, etwa bei der Fettsäuresynthese. Rohes Eiklar enthält Avidin, das Biotin fest bindet.',
+      m: mol(function (h) {
+        function pv(cx, deg, l) { var q = deg * Math.PI / 180; return h.add(cx + RP * Math.cos(q), -RP * Math.sin(q), l); }
+        var rc = AP, lc = -AP;
+        var c6a = pv(rc, 144), c3a = pv(rc, 216), c4 = pv(rc, 288), s5 = pv(rc, 0, 'S'), c6 = pv(rc, 72);
+        var n1 = pv(lc, 108, 'NH'), c2 = pv(lc, 180), n3 = pv(lc, 252, 'NH');
+        h.bd(c6a, c3a); h.bd(c3a, c4); h.bd(c4, s5); h.bd(s5, c6); h.bd(c6, c6a);
+        h.bd(c6a, n1); h.bd(n1, c2); h.bd(c2, n3); h.bd(n3, c3a);
+        var o = h.at(c2, 180, 'O'); h.bd(c2, o, 2);
+        var z0 = h.at(c4, -30); h.bd(c4, z0, 'w');
+        var z = [z0].concat(zig(h, z0, 4, 30));
+        cooh(h, z[4], -30);
+        var hb = hs(h, c3a, 270, 'd'), ha = hs(h, c6a, 90, 'd');
+        h.st(c3a, [n3, c4, c6a, hb], 'S'); h.st(c6a, [n1, c6, c3a, ha], 'R'); h.st(c4, [s5, c3a, z0], 'S');
+      }) },
+    { id: 'folsaeure', cat: 'Vitamine', name: 'Folsäure', alt: 'Vitamin B₉, Pteroylglutaminsäure', formula: 'C₁₉H₁₉N₇O₆', groups: ['Pteridin-Ringsystem', 'p-Aminobenzoesäure', 'Glutaminsäure', 'wasserlöslich'],
+      ster: 'L-Glutamat, (S)',
+      where: 'Vitamin B₉ aus Blattgemüse, Hülsenfrüchten und Leber. Als Tetrahydrofolat überträgt es Ein-Kohlenstoff-Gruppen bei der Synthese von Nucleotiden. Mangel führt zu Anämie und in der Schwangerschaft zu Neuralrohrdefekten.',
+      m: mol(function (h) {
+        var S = Math.sqrt(3) * L;
+        var c4 = vadd(h, 0, 0, 90), n3 = vadd(h, 0, 0, 150, 'NH'), c2 = vadd(h, 0, 0, 210), n1 = vadd(h, 0, 0, 270, 'N'), c8a = vadd(h, 0, 0, 330), c4a = vadd(h, 0, 0, 30);
+        var n5 = vadd(h, S, 0, 90, 'N'), c6 = vadd(h, S, 0, 30), c7 = vadd(h, S, 0, 330), n8 = vadd(h, S, 0, 270, 'N');
+        h.bd(c4, c4a); h.bd(c4a, c8a, 2, [S, 0]); h.bd(c8a, n1); h.bd(n1, c2, 2, [0, 0]); h.bd(c2, n3); h.bd(n3, c4);
+        h.bd(c4a, n5); h.bd(n5, c6, 2, [S, 0]); h.bd(c6, c7); h.bd(c7, n8, 2, [S, 0]); h.bd(n8, c8a);
+        var o = h.at(c4, 90, 'O'); h.bd(c4, o, 2);
+        var nh2 = h.at(c2, 210, 'H₂N'); h.bd(c2, nh2);
+        var ch2 = h.at(c6, 30); h.bd(c6, ch2);
+        var nh = h.at(ch2, -30, 'NH'); h.bd(ch2, nh);
+        var N = h.m.atoms[nh], r = ring(h, N.x + 2 * L * Math.cos(30 * Math.PI / 180), N.y - L, 30, KEK);
+        h.bd(nh, r[3]);
+        var cc = h.at(r[0], 30); h.bd(r[0], cc);
+        var oc = h.at(cc, 90, 'O'); h.bd(cc, oc, 2);
+        var n2 = h.at(cc, -30, 'NH'); h.bd(cc, n2);
+        var ca = h.at(n2, 30);
+        var ac = h.at(ca, 90); h.bd(ca, ac, 'd');
+        var ao = h.at(ac, 150, 'HO'), ab = h.at(ac, 30, 'O'); h.bd(ac, ao); h.bd(ac, ab, 2);
+        h.bd(n2, ca);
+        var cb = h.at(ca, -30); h.bd(ca, cb);
+        var cg = h.at(cb, 30); h.bd(cb, cg);
+        var cd = h.at(cg, -30); h.bd(cg, cd);
+        cooh(h, cd, -30);
+        h.st(ca, [n2, ac, cb], 'S');
+      }) },
+    { id: 'cobalamin', cat: 'Vitamine', name: 'Cobalamin', alt: 'Vitamin B₁₂, Cyanocobalamin (vereinfacht)', formula: 'C₆₃H₈₈CoN₁₄O₁₄P', groups: ['Corrin-Ring', 'Cobalt-Zentrum', 'Cyanid-Ligand', 'wasserlöslich'],
+      ster: 'Vereinfachte Kernstruktur: R = Amid-Seitenketten, unten das Dimethylbenzimidazol-Nucleotid',
+      where: 'Vitamin B₁₂ kommt fast nur in tierischen Lebensmitteln vor, gebildet wird es von Mikroorganismen. Es braucht den Intrinsic Factor zur Aufnahme und ist Cofaktor der Methionin-Synthase und der Methylmalonyl-CoA-Mutase.',
+      m: mol(function (h) {
+        var co = h.add(0, 0, 'Co'), phis = [135, 45, 315, 225], d = 1.5 * L, rings4 = [], k, j;
+        for (k = 0; k < 4; k++) {
+          var cx = d * (Math.cos(phis[k] * Math.PI / 180) > 0 ? 1 : -1), cy = -d * (Math.sin(phis[k] * Math.PI / 180) > 0 ? 1 : -1), v = [];
+          for (j = 0; j < 5; j++) { var q = (phis[k] + 180 + 72 * j) * Math.PI / 180; v.push(h.add(cx + RP * Math.cos(q), cy - RP * Math.sin(q), j === 0 ? 'N' : '')); }
+          for (j = 0; j < 5; j++) h.bd(v[j], v[(j + 1) % 5], j === 0 ? 2 : 1, j === 0 ? [cx, cy] : null);
+          h.bd(co, v[0]);
+          rings4.push(v);
+          [2, 3].forEach(function (b) { var q2 = (phis[k] + 180 + 72 * b) * Math.PI / 180, rr = h.add(cx + (RP + L) * Math.cos(q2), cy - (RP + L) * Math.sin(q2), 'R'); h.bd(v[b], rr); });
+        }
+        var A = rings4[0], B = rings4[1], C = rings4[2], D = rings4[3];
+        function meso(p, q, ux, uy) {
+          var P = h.m.atoms[p], Q = h.m.atoms[q], mx = (P.x + Q.x) / 2, my = (P.y + Q.y) / 2, half = Math.hypot(P.x - Q.x, P.y - Q.y) / 2, off = Math.sqrt(Math.max(L * L - half * half, 0.25 * L * L));
+          return h.add(mx + ux * off, my + uy * off);
+        }
+        var c5 = meso(A[1], B[4], 0, -1), c10 = meso(B[1], C[4], 1, 0), c15 = meso(C[1], D[4], 0, 1);
+        h.bd(A[1], c5); h.bd(c5, B[4], 2); h.bd(B[1], c10); h.bd(c10, C[4], 2); h.bd(C[1], c15); h.bd(c15, D[4], 2); h.bd(D[1], A[4]);
+        var m5 = h.at(c5, 90); h.bd(c5, m5); var m15 = h.at(c15, 270); h.bd(c15, m15); var m1 = h.at(A[4], 180); h.bd(A[4], m1);
+        var cn = h.at(co, 90, 'CN'); h.bd(co, cn, 'w');
+        var bn = h.at(co, 270, 'N'); h.bd(co, bn, 'd'); var rr2 = h.at(bn, 270, 'R'); h.bd(bn, rr2);
+      }) },
+    { id: 'cholecalciferol', cat: 'Vitamine', name: 'Cholecalciferol', alt: 'Vitamin D₃', formula: 'C₂₇H₄₄O', groups: ['Secosteroid (geöffneter B-Ring)', 'Konjugiertes Trien', 'Hydroxygruppe', 'fettlöslich'],
+      ster: '(3S,5Z,7E)-9,10-Secocholesta-5,7,10(19)-trien-3-ol',
+      where: 'Vitamin D₃ entsteht in der Haut aus 7-Dehydrocholesterin durch UV-B-Licht und steckt in fettem Fisch. Leber und Niere machen daraus Calcitriol, das die Calciumaufnahme im Darm fördert. Mangel führt zu Rachitis.',
+      m: mol(function (h) { vitD(h, false); }) },
+    { id: 'ergocalciferol', cat: 'Vitamine', name: 'Ergocalciferol', alt: 'Vitamin D₂', formula: 'C₂₈H₄₄O', groups: ['Secosteroid (geöffneter B-Ring)', 'Konjugiertes Trien', 'Hydroxygruppe', 'fettlöslich'],
+      ster: '(3S,5Z,7E,22E)-9,10-Secoergosta-5,7,10(19),22-tetraen-3-ol',
+      where: 'Vitamin D₂ entsteht in Pilzen und Hefen aus Ergosterol unter UV-Licht. Es wird Lebensmitteln und Präparaten zugesetzt und im Körper ähnlich wie D₃ aktiviert.',
+      m: mol(function (h) { vitD(h, true); }) },
+    { id: 'tocopherol', cat: 'Vitamine', name: 'α-Tocopherol', alt: 'Vitamin E', formula: 'C₂₉H₅₀O₂', groups: ['Chroman-Ring', 'Phenolische OH-Gruppe', 'Isoprenoide Seitenkette', 'fettlöslich'],
+      ster: 'RRR-α-Tocopherol, (2R,4′R,8′R)',
+      where: 'Vitamin E aus Pflanzenölen, Nüssen und Samen. Es sitzt in Zellmembranen und fängt als Antioxidans Radikale ab, damit ungesättigte Fettsäuren nicht oxidieren.',
+      m: mol(function (h) {
+        var S = Math.sqrt(3) * L;
+        var a5 = vadd(h, 0, 0, 90), a6 = vadd(h, 0, 0, 150), a7 = vadd(h, 0, 0, 210), a8 = vadd(h, 0, 0, 270), c8a = vadd(h, 0, 0, 330), c4a = vadd(h, 0, 0, 30);
+        var c4 = vadd(h, S, 0, 90), c3 = vadd(h, S, 0, 30), c2 = vadd(h, S, 0, 330), o1 = vadd(h, S, 0, 270, 'O');
+        h.bd(c4a, a5, 2, [0, 0]); h.bd(a5, a6); h.bd(a6, a7, 2, [0, 0]); h.bd(a7, a8); h.bd(a8, c8a, 2, [0, 0]); h.bd(c8a, c4a);
+        h.bd(c4a, c4); h.bd(c4, c3); h.bd(c3, c2); h.bd(c2, o1); h.bd(o1, c8a);
+        var m5 = h.at(a5, 90), ho = h.at(a6, 150, 'HO'), m7 = h.at(a7, 210), m8 = h.at(a8, 270);
+        h.bd(a5, m5); h.bd(a6, ho); h.bd(a7, m7); h.bd(a8, m8);
+        var m2 = h.at(c2, 30); h.bd(c2, m2, 'd');
+        var ch = chainB(h, c2, -30, 13, null, { 4: 'd', 8: 'd', 12: 'p' });
+        h.st(c2, [o1, c3, ch.a[0], m2], 'R');
+        h.st(ch.a[3], [ch.a[2], ch.a[4], ch.m[4]], 'R');
+        h.st(ch.a[7], [ch.a[6], ch.a[8], ch.m[8]], 'R');
+      }) },
+    { id: 'phyllochinon', cat: 'Vitamine', name: 'Phyllochinon', alt: 'Vitamin K₁, Phytomenadion', formula: 'C₃₁H₄₆O₂', groups: ['Naphthochinon', 'Isoprenoide Phytylkette', 'C=C-Doppelbindung (E)', 'fettlöslich'],
+      ster: '(2′E,7′R,11′R)',
+      where: 'Vitamin K₁ aus grünem Blattgemüse wie Spinat und Grünkohl. Es wird für die Gerinnungsfaktoren des Blutes gebraucht, indem es die Carboxylierung von Glutamatresten ermöglicht. Neugeborene bekommen es als Vorsorge.',
+      m: mol(function (h) {
+        var q = naphthoquinone(h);
+        var ch = chainB(h, q.c3, -30, 16, [3], { 3: 'p', 7: 'w', 11: 'w', 15: 'p' });
+        h.st(ch.a[6], [ch.a[5], ch.a[7], ch.m[7]], 'R');
+        h.st(ch.a[10], [ch.a[9], ch.a[11], ch.m[11]], 'R');
+      }) },
+    { id: 'menachinon', cat: 'Vitamine', name: 'Menachinon-4', alt: 'Vitamin K₂ (MK-4)', formula: 'C₃₁H₄₀O₂', groups: ['Naphthochinon', 'Isoprenoide Kette (4 Einheiten)', 'Vier C=C-Doppelbindungen (E)', 'fettlöslich'],
+      where: 'Vitamin K₂ entsteht durch Darmbakterien und steckt in fermentierten Lebensmitteln wie Natto. Es wirkt wie K₁ bei der Blutgerinnung und beim Einbau von Calcium in Knochen.',
+      m: mol(function (h) {
+        var q = naphthoquinone(h);
+        var ch = chainB(h, q.c3, -30, 15, [3, 7, 11, 15], { 3: 'p', 7: 'p', 11: 'p', 15: 'p' });
+        var ex = h.at(ch.a[14], 30); h.bd(ch.a[14], ex);
+      }) }
   ];
 })();
