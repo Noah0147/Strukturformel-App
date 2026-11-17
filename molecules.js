@@ -46,12 +46,11 @@
     });
     return a;
   }
-  var PUR = 98; /* Abstand N9 → C1′, damit die Ribose unter dem Sechsring Platz hat */
   function adenosinCore(h, deoxy) {
     var r = ring(h, 0, 0, 90, [2, 1, 2, 1, 0, 1], { 1: 'N', 3: 'N' });
     var nh = h.at(r[0], 90, 'NH₂'); h.bd(r[0], nh);
     var p = fusedPent(h, r, 'N', 'N', '78');
-    return haworthNuc(h, p.n9, deoxy, PUR);
+    return haworthNuc(h, p.n9, deoxy, 0, true);
   }
 
   /* Haworth-Projektion: Ring in Perspektive (vorne fett), Gruppen senkrecht nach oben (+1) oder unten (-1) */
@@ -73,11 +72,16 @@
   }
   function hoh(h, a, dir, cx) { return hv(h, a, dir, h.m.atoms[a].x < cx - 2 ? 'HO' : 'OH'); }
   function hch(h, a, dir, cx) { return hv(h, a, dir, h.m.atoms[a].x < cx - 2 ? 'HOH₂C' : 'CH₂OH', 60); }
+  function mirrorY(h) {
+    h.m.atoms.forEach(function (a) { a.y = -a.y; });
+    h.m.bonds.forEach(function (b) { if (b.ctr) b.ctr = [b.ctr[0], -b.ctr[1]]; });
+  }
   function mirrorX(h, x0) {
     h.m.atoms.forEach(function (a) { a.x = 2 * x0 - a.x; });
     h.m.bonds.forEach(function (b) { if (b.ctr) b.ctr = [2 * x0 - b.ctr[0], b.ctr[1]]; });
   }
-  function haworthNuc(h, n, deoxy, drop) { /* β-D-Ribofuranose unter dem Ring-Stickstoff/N9 der Base; gibt C5' zurück */
+  function haworthNuc(h, n, deoxy, drop, mirror) { /* β-D-Ribofuranose unter dem Ring-Stickstoff/N9 der Base; gibt C5' zurück */
+    if (mirror) mirrorX(h, h.m.atoms[n].x); /* Purine: Sechsring rechts vom Fünfring */
     var N = h.m.atoms[n], R = 40, a1 = 342 * Math.PI / 180, dr = drop || 46;
     var cx = N.x - R * Math.cos(a1), cy = N.y + dr - 0.4 * R * Math.sin(a1);
     var q = hring(h, cx, cy, R, [342, 54, 126, 198, 270], { 4: 'O' });
@@ -145,7 +149,7 @@
     return n;
   }
 
-  window.DATA_VERSION = '2026-11-14';
+  window.DATA_VERSION = '2026-11-17';
   window.CATEGORIES = ['Alkohole & Carbonyle', 'Säuren & Ester', 'Aromaten', 'Aminosäuren', 'Nucleobasen & Purine', 'Wirkstoffe & Aromastoffe', 'Stoffwechsel & Pflanzen', 'Zucker & Nucleotide', 'Steroide & Botenstoffe', 'Kleine Moleküle'];
 
   window.MOLECULES = [
@@ -257,7 +261,7 @@
       m: mol(function (h) { var c0 = h.add(0, 0), c1 = h.at(c0, 0), a = h.at(c0, 120, 'O'), b = h.at(c0, 240, 'HO'), c = h.at(c1, 60, 'O'), d = h.at(c1, -60, 'OH'); h.bd(c0, c1); h.bd(c0, a, 2); h.bd(c0, b); h.bd(c1, c, 2); h.bd(c1, d); }) },
     { id: 'pyruvat', cat: 'Säuren & Ester', name: 'Brenztraubensäure', alt: 'Pyruvat, 2-Oxopropansäure', formula: 'C₃H₄O₃', groups: ['Carbonylgruppe (Keton)', 'Carboxygruppe'],
       where: 'Endprodukt der Glykolyse. Wird zu Acetyl-CoA oder bei Sauerstoffmangel zu Lactat umgesetzt.',
-      m: mol(function (h) { var c0 = h.add(0, 0), c1 = h.at(c0, 30), o1 = h.at(c1, 90, 'O'), c2 = h.at(c1, -30), o2 = h.at(c2, 30, 'O'), o3 = h.at(c2, -90, 'OH'); h.bd(c0, c1); h.bd(c1, o1, 2); h.bd(c1, c2); h.bd(c2, o2, 2); h.bd(c2, o3); }) },
+      m: mol(function (h) { var c0 = h.add(0, 0), c1 = h.at(c0, -30), o1 = h.at(c1, 270, 'O'), c2 = h.at(c1, 30), o2 = h.at(c2, 90, 'O'), o3 = h.at(c2, 330, 'OH'); h.bd(c0, c1); h.bd(c1, o1, 2); h.bd(c1, c2); h.bd(c2, o2, 2); h.bd(c2, o3); }) },
 
     { id: 'toluol', cat: 'Aromaten', name: 'Toluol', alt: 'Methylbenzol', formula: 'C₇H₈', groups: ['Aromatischer Ring', 'Methylgruppe'],
       where: 'Lösungsmittel in Lacken und Klebstoffen und Bestandteil von Benzin.',
@@ -395,15 +399,17 @@
       m: mol(function (h) {
         var r = ring(h, 0, 0, 90, [2, 1, 2, 1, 0, 1], { 1: 'N', 3: 'N' });
         var nh = h.at(r[0], 90, 'NH₂'); h.bd(r[0], nh);
-        fusedPent(h, r, 'N', 'NH', '78');
+        fusedPent(h, r, 'N', 'HN', '78');
+        mirrorX(h, 0);
       }) },
     { id: 'guanin', cat: 'Nucleobasen & Purine', name: 'Guanin', alt: '', formula: 'C₅H₅N₅O', groups: ['Purinbase', 'Carbonylgruppe', 'Aminogruppe'],
       where: 'Base in DNA und RNA. Es paart mit Cytosin über drei Wasserstoffbrücken.',
       m: mol(function (h) {
-        var r = ring(h, 0, 0, 90, [1, 1, 2, 1, 0, 1], { 1: 'HN', 3: 'N' });
+        var r = ring(h, 0, 0, 90, [1, 1, 2, 1, 0, 1], { 1: 'NH', 3: 'N' });
         var o = h.at(r[0], 90, 'O'); h.bd(r[0], o, 2);
-        var nh = h.at(r[2], 210, 'H₂N'); h.bd(r[2], nh);
-        fusedPent(h, r, 'N', 'NH', '78');
+        var nh = h.at(r[2], 210, 'NH₂'); h.bd(r[2], nh);
+        fusedPent(h, r, 'N', 'HN', '78');
+        mirrorX(h, 0);
       }) },
     { id: 'cytosin', cat: 'Nucleobasen & Purine', name: 'Cytosin', alt: '', formula: 'C₄H₅N₃O', groups: ['Pyrimidinbase', 'Aminogruppe', 'Carbonylgruppe'],
       where: 'Base in DNA und RNA. Es paart mit Guanin. Durch Desaminierung entsteht daraus Uracil.',
@@ -505,7 +511,7 @@
       ster: 'L-Arginin, (S)',
       where: 'Basische Aminosäure und Teil des Harnstoffzyklus. Aus ihr entsteht das Signalmolekül Stickstoffmonoxid (NO).',
       m: mol(function (h) {
-        var b = aaBase(h), c3 = h.at(b.c1, 150), c4 = h.at(c3, 210), c5 = h.at(c4, 150), c6 = h.at(c5, 210), n1 = h.at(c6, 150, 'HN'), cg = h.at(n1, 210), n2 = h.at(cg, 270, 'NH₂'), n3 = h.at(cg, 150, 'NH');
+        var b = aaBase(h), c3 = h.at(b.c1, 150), c4 = h.at(c3, 210), c5 = h.at(c4, 150), c6 = h.at(c5, 210), n1 = h.at(c6, 150, 'HN'), cg = h.at(n1, 210), n2 = h.at(cg, 150, 'H₂N'), n3 = h.at(cg, 270, 'NH');
         h.bd(b.c1, c3); h.bd(c3, c4); h.bd(c4, c5); h.bd(c5, c6); h.bd(c6, n1); h.bd(n1, cg); h.bd(cg, n2); h.bd(cg, n3, 2);
       }) },
     { id: 'histidin', cat: 'Aminosäuren', name: 'Histidin', alt: '2-Amino-3-(imidazol-4-yl)propansäure', formula: 'C₆H₉N₃O₂', groups: ['Imidazolring', 'Aminogruppe', 'Carboxygruppe'],
@@ -820,10 +826,10 @@
       ster: '(R)-(−)-Carvon (Minze) gezeigt, das Spiegelbild (S) riecht nach Kümmel',
       where: 'Das eine Spiegelbild riecht nach Kümmel, das andere nach Minze. Hier ein schönes Beispiel, dass Stereochemie den Geruch bestimmt.',
       m: mol(function (h) {
-        var r = ring(h, 0, 0, 90, [1, 1, 1, 1, 2, 1]);
-        var o = h.at(r[0], 90, 'O'); h.bd(r[0], o, 2);
-        var me = h.at(r[5], 30); h.bd(r[5], me);
-        var c = h.at(r[2], 210), a = h.at(c, 150), b = h.at(c, 270); h.bd(r[2], c, 'w'); h.bd(c, a, 2); h.bd(c, b); h.st(r[2], [c, r[1], r[3]], 'R');
+        var r = ring(h, 0, 0, 330, [1, 1, 1, 1, 2, 1]);
+        var o = h.at(r[0], 330, 'O'); h.bd(r[0], o, 2);
+        var me = h.at(r[5], 270); h.bd(r[5], me);
+        var c = h.at(r[2], 90), a = h.at(c, 30), b = h.at(c, 150); h.bd(r[2], c, 'w'); h.bd(c, a, 2); h.bd(c, b); h.st(r[2], [c, r[1], r[3]], 'R');
       }) },
     { id: 'linalool', cat: 'Wirkstoffe & Aromastoffe', name: 'Linalool', alt: '3,7-Dimethylocta-1,6-dien-3-ol', formula: 'C₁₀H₁₈O', groups: ['Hydroxygruppe (tertiärer Alkohol)', 'Zwei C=C-Doppelbindungen', 'Terpen'],
       ster: '(R)-(−)-Linalool gezeigt, das Spiegelbild (S) riecht eher nach Koriander',
@@ -865,6 +871,7 @@
         var last = z[5], c8 = h.at(last, -30);
         h.bd(last, c8);
         var m1 = h.at(c8, 30), m2 = h.at(c8, 270); h.bd(c8, m1); h.bd(c8, m2);
+        mirrorY(h);
       }) },
 
     /* ---- Stoffwechsel & Pflanzen ---- */
@@ -1160,7 +1167,7 @@
 
     { id: 'amphetamin', cat: 'Wirkstoffe & Aromastoffe', name: 'Amphetamin', alt: '1-Phenylpropan-2-amin', formula: 'C₉H₁₃N', groups: ['Aromatischer Ring', 'Primäres Amin'],
       where: 'Stimulans, das die Freisetzung von Dopamin und Noradrenalin verstärkt. Verwandte Wirkstoffe werden bei ADHS eingesetzt. Das Molekül hat ein Stereozentrum, hier ohne Stereochemie gezeichnet.',
-      m: mol(function (h) { var r = ring(h, 0, 0, 90, KEK), c1 = h.at(r[0], 90), c2 = h.at(c1, 30), n = h.at(c2, 90, 'NH₂'), me = h.at(c2, -30); h.bd(r[0], c1); h.bd(c1, c2); h.bd(c2, n); h.bd(c2, me); }) },
+      m: mol(function (h) { var r = ring(h, 0, 0, 0, KEK), c1 = h.at(r[0], 30), c2 = h.at(c1, -30), n = h.at(c2, 270, 'NH₂'), me = h.at(c2, 30); h.bd(r[0], c1); h.bd(c1, c2); h.bd(c2, n); h.bd(c2, me); }) },
     { id: 'metformin', cat: 'Wirkstoffe & Aromastoffe', name: 'Metformin', alt: '', formula: 'C₄H₁₁N₅', groups: ['Biguanid', 'Mehrere Aminogruppen'],
       where: 'Das am häufigsten verschriebene Mittel bei Typ-2-Diabetes. Es senkt die Glucosebildung der Leber.',
       m: mol(function (h) { var n1 = h.add(0, 0, 'N'), m1 = h.at(n1, 150), m2 = h.at(n1, 210), c1 = h.at(n1, 30), n2 = h.at(c1, 90, 'NH'), n3 = h.at(c1, -30, 'NH'), c2 = h.at(n3, 30), n4 = h.at(c2, 90, 'NH'), n5 = h.at(c2, -30, 'NH₂'); h.bd(n1, m1); h.bd(n1, m2); h.bd(n1, c1); h.bd(c1, n2, 2); h.bd(c1, n3); h.bd(n3, c2); h.bd(c2, n4, 2); h.bd(c2, n5); }) },
@@ -1186,7 +1193,7 @@
       }) },
     { id: 'benzocain', cat: 'Wirkstoffe & Aromastoffe', name: 'Benzocain', alt: 'Ethyl-4-aminobenzoat', formula: 'C₉H₁₁NO₂', groups: ['Aromatischer Ring', 'Ester', 'Aminogruppe'],
       where: 'Oberflächenanästhetikum in Halsschmerztabletten und Sonnenbrand-Sprays. Es betäubt die Schleimhaut.',
-      m: mol(function (h) { var r = ring(h, 0, 0, 90, KEK), n = h.at(r[0], 90, 'H₂N'), c = h.at(r[3], 270), o = h.at(c, 210, 'O'), o2 = h.at(c, 330, 'O'), e1 = h.at(o2, 30), e2 = h.at(e1, -30); h.bd(r[0], n); h.bd(r[3], c); h.bd(c, o, 2); h.bd(c, o2); h.bd(o2, e1); h.bd(e1, e2); }) },
+      m: mol(function (h) { var r = ring(h, 0, 0, 30, KEK), n = h.at(r[3], 210, 'H₂N'), c = h.at(r[0], 30), o = h.at(c, 90, 'O'), o2 = h.at(c, 330, 'O'), e1 = h.at(o2, 30), e2 = h.at(e1, -30); h.bd(r[3], n); h.bd(r[0], c); h.bd(c, o, 2); h.bd(c, o2); h.bd(o2, e1); h.bd(e1, e2); }) },
     { id: 'diclofenac', cat: 'Wirkstoffe & Aromastoffe', name: 'Diclofenac', alt: '', formula: 'C₁₄H₁₁Cl₂NO₂', groups: ['Carboxygruppe', 'Sekundäres Amin', 'Zwei Chloratome'],
       where: 'Schmerz- und Entzündungsmittel (NSAR) aus der Gruppe von Ibuprofen und ASS. Es hemmt die Cyclooxygenasen.',
       m: mol(function (h) {
@@ -1233,6 +1240,7 @@
       m: mol(function (h) {
         var r = ring(h, 0, 0, 90, SAT, { 2: 'HN', 4: 'NH' });
         var a = h.at(r[1], 150, 'O'), b = h.at(r[3], -90, 'O'), c = h.at(r[5], 30, 'O'); h.bd(r[1], a, 2); h.bd(r[3], b, 2); h.bd(r[5], c, 2);
+        mirrorY(h);
       }) },
 
     { id: 'galactose', cat: 'Zucker & Nucleotide', name: 'Galactose', alt: 'Schleimzucker', formula: 'C₆H₁₂O₆', groups: ['Sechsring (Pyranose)', 'Hydroxygruppen', 'Epimer der Glucose an C4'],
@@ -1253,11 +1261,11 @@
       ster: 'β-D-Ribofuranosyl, (2R,3R,4S,5R)',
       where: 'Nucleosid der RNA. Als GTP dient es als Energieträger und Schalter, etwa bei G-Proteinen.',
       m: mol(function (h) {
-        var r = ring(h, 0, 0, 90, [1, 1, 2, 1, 0, 1], { 1: 'HN', 3: 'N' });
+        var r = ring(h, 0, 0, 90, [1, 1, 2, 1, 0, 1], { 1: 'NH', 3: 'N' });
         var o = h.at(r[0], 90, 'O'); h.bd(r[0], o, 2);
-        var nh = h.at(r[2], 210, 'H₂N'); h.bd(r[2], nh);
+        var nh = h.at(r[2], 210, 'NH₂'); h.bd(r[2], nh);
         var p = fusedPent(h, r, 'N', 'N', '78');
-        var c5 = haworthNuc(h, p.n9, false, PUR); oh(h, c5, 150);
+        var c5 = haworthNuc(h, p.n9, false, 0, true); oh(h, c5, 150);
       }) },
     { id: 'thymidin', cat: 'Zucker & Nucleotide', name: 'Thymidin', alt: 'Thymin + Desoxyribose', formula: 'C₁₀H₁₄N₂O₅', groups: ['Desoxynucleosid', 'Pyrimidinbase', '2′-Desoxyribose'],
       ster: 'β-D-2-Desoxyribofuranosyl, (2R,4S,5R)',
@@ -1441,7 +1449,7 @@
       m: mol(function (h) { var r = ring(h, 0, 0, 90, [1, 2, 1, 1, 1, 2], { 5: 'N', 3: 'NH' }), nh = h.at(r[0], 90, 'NH₂'), o = h.at(r[4], 330, 'O'), me = h.at(r[1], 150); h.bd(r[0], nh); h.bd(r[4], o, 2); h.bd(r[1], me); }) },
     { id: 'alloxan', cat: 'Nucleobasen & Purine', name: 'Alloxan', alt: 'Pyrimidin-2,4,5,6-tetron', formula: 'C₄H₂N₂O₄', groups: ['Pyrimidinring', 'Vier Carbonylgruppen'],
       where: 'Zerstört bei Versuchstieren die insulinproduzierenden β-Zellen der Bauchspeicheldrüse und wird zur Erzeugung von Modell-Diabetes eingesetzt.',
-      m: mol(function (h) { var r = ring(h, 0, 0, 90, SAT, { 2: 'HN', 4: 'NH' }), a = h.at(r[0], 90, 'O'), b = h.at(r[1], 150, 'O'), c = h.at(r[3], 270, 'O'), d = h.at(r[5], 30, 'O'); h.bd(r[0], a, 2); h.bd(r[1], b, 2); h.bd(r[3], c, 2); h.bd(r[5], d, 2); }) },
+      m: mol(function (h) { var r = ring(h, 0, 0, 90, SAT, { 2: 'HN', 4: 'NH' }), a = h.at(r[0], 90, 'O'), b = h.at(r[1], 150, 'O'), c = h.at(r[3], 270, 'O'), d = h.at(r[5], 30, 'O'); h.bd(r[0], a, 2); h.bd(r[1], b, 2); h.bd(r[3], c, 2); h.bd(r[5], d, 2); mirrorY(h); }) },
 
     { id: 'propofol', cat: 'Wirkstoffe & Aromastoffe', name: 'Propofol', alt: '2,6-Diisopropylphenol', formula: 'C₁₂H₁₈O', groups: ['Phenol', 'Zwei Isopropylgruppen'],
       where: 'Weit verbreitetes Narkosemittel (Hypnotikum), das intravenös gespritzt wird. Es wirkt über GABA-A-Rezeptoren.',
@@ -1572,8 +1580,8 @@
       ster: 'β-D-Ribofuranosyl, (2R,3R,4S,5R)',
       where: 'Entsteht aus Adenosin durch Desaminierung. In tRNAs steht Inosin an der Wackelposition des Anticodons und kann mit mehreren Basen paaren.',
       m: mol(function (h) {
-        var r = ring(h, 0, 0, 90, [1, 1, 2, 1, 0, 1], { 1: 'HN', 3: 'N' }), o = h.at(r[0], 90, 'O'); h.bd(r[0], o, 2);
-        var p = fusedPent(h, r, 'N', 'N', '78'), c5 = haworthNuc(h, p.n9, false, PUR); oh(h, c5, 150);
+        var r = ring(h, 0, 0, 90, [1, 1, 2, 1, 0, 1], { 1: 'NH', 3: 'N' }), o = h.at(r[0], 90, 'O'); h.bd(r[0], o, 2);
+        var p = fusedPent(h, r, 'N', 'N', '78'), c5 = haworthNuc(h, p.n9, false, 0, true); oh(h, c5, 150);
       }) },
     { id: 'xylose', cat: 'Zucker & Nucleotide', name: 'Xylose', alt: 'Holzzucker', formula: 'C₅H₁₀O₅', groups: ['Sechsring (Pyranose)', 'Hydroxygruppen', 'Pentose'],
       ster: 'β-D-Xylopyranose',
