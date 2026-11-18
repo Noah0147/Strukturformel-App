@@ -372,3 +372,6 @@ span.gp { cursor: default; }
 
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .bt { --gc: #A9BDCB; } :root:not([data-theme="light"]) .bt.g1 { --gc: #7DB2FF; } :root:not([data-theme="light"]) .bt.g2 { --gc: #4ADE9C; } :root:not([data-theme="light"]) .bt.g3 { --gc: #FFA55C; } :root:not([data-theme="light"]) .bt.g4 { --gc: #C79BFF; } :root:not([data-theme="light"]) .bt.g5 { --gc: #FF7FAE; } }
 :root[data-theme="dark"] .bt { --gc: #A9BDCB; } :root[data-theme="dark"] .bt.g1 { --gc: #7DB2FF; } :root[data-theme="dark"] .bt.g2 { --gc: #4ADE9C; } :root[data-theme="dark"] .bt.g3 { --gc: #FFA55C; } :root[data-theme="dark"] .bt.g4 { --gc: #C79BFF; } :root[data-theme="dark"] .bt.g5 { --gc: #FF7FAE; }
+.beq { display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
+.bln { margin: 0; font-size: 14px; line-height: 2.5; font-weight: 600; }
+.bdown { color: var(--accent); font-size: 22px; font-weight: 700; line-height: 1; padding: 2px 0 2px 14px; }

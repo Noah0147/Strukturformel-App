@@ -149,11 +149,7 @@
         return '<span class="bt' + g + '">' + q[0] + '</span>';
       }).join('<span class="bp"> + </span>');
     }
-    function sideA(arr) {
-      var h = side(arr), k = h.indexOf('<span class="bp">');
-      return '<span class="bnw"><span class="barr2">→</span> ' + (k < 0 ? h : h.slice(0, k)) + '</span>' + (k < 0 ? '' : h.slice(k));
-    }
-    return '<h3 class="ph3">Bilanz</h3><p class="bbasis">' + b.basis + '</p><p class="beq">' + side(b.rein) + '<span class="bp"> </span>' + sideA(b.raus) + '</p>' + (b.note ? '<p class="bnote">' + b.note + '</p>' : '');
+    return '<h3 class="ph3">Bilanz</h3><p class="bbasis">' + b.basis + '</p><div class="beq"><p class="bln">' + side(b.rein) + '</p><span class="bdown" aria-hidden="true">↓</span><p class="bln">' + side(b.raus) + '</p></div>' + (b.note ? '<p class="bnote">' + b.note + '</p>' : '');
   }
   function factsCard() { return '<div class="pcard"><h3 class="ph3">Zum Merken</h3><ul class="pfacts">' + cur.facts.map(function (f) { return '<li>' + f + '</li>'; }).join('') + '</ul></div>'; }
   function learnScheme() {
