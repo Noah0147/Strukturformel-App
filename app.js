@@ -13,7 +13,7 @@
   function setH(v, initial) {
     Chem.setH(v);
     var b = document.getElementById('h-toggle');
-    if (b) { b.setAttribute('aria-pressed', v ? 'true' : 'false'); b.textContent = v ? 'H-Atome: an' : 'H-Atome anzeigen'; }
+    if (b) { b.setAttribute('aria-pressed', v ? 'true' : 'false'); b.innerHTML = '<span class="hsw"></span><span>' + (v ? 'H-Atome an' : 'H-Atome anzeigen') + '</span>'; }
     try { localStorage.setItem(HKEY, v ? '1' : '0'); } catch (e) {}
     if (initial) return;
     renderAll(); phCache = {};
@@ -60,7 +60,7 @@
 
   $('sub').textContent = CARDS.length + ' Moleküle aus Alltag und Biochemie. Erst raten, dann umdrehen.';
   var ver = (window.DATA_VERSION || '').split('-');
-  $('foot').textContent = CARDS.length + ' Karten' + (ver.length === 3 ? ' · Stand ' + parseInt(ver[2], 10) + '.' + ver[1] + '.' + ver[0] : '') + ' · Version 28';
+  $('foot').textContent = CARDS.length + ' Karten' + (ver.length === 3 ? ' · Stand ' + parseInt(ver[2], 10) + '.' + ver[1] + '.' + ver[0] : '') + ' · Version 29';
 
   function buildCatOptions() {
     var html = '<option value="all">Alle Kategorien (' + CARDS.length + ')</option>';

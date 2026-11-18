@@ -346,5 +346,9 @@ span.gp { cursor: default; }
 .gn.ov .gl.b.slot { min-height: 0; font-size: 14px; font-size: 4cqw; margin: 2px 0; padding: 8px 6px; }
 .pslot { display: flex; align-items: center; justify-content: center; text-align: center; font-weight: 600; }
 
-.hbtn { margin-top: 8px; padding: 5px 12px; font: inherit; font-size: 13px; color: var(--muted); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; cursor: pointer; }
-.hbtn[aria-pressed="true"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); font-weight: 500; }
+.hbtn { margin-top: 10px; display: inline-flex; align-items: center; gap: 10px; padding: 7px 14px 7px 8px; font: inherit; font-size: 14px; font-weight: 600; color: var(--accent); background: var(--soft); border: 1.5px solid var(--accent); border-radius: 999px; cursor: pointer; box-shadow: var(--shadow); }
+.hbtn .hsw { position: relative; width: 38px; height: 22px; flex: none; border-radius: 999px; background: var(--line); transition: background .15s; }
+.hbtn .hsw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--surface); box-shadow: 0 1px 2px rgba(0,0,0,.35); transition: transform .15s; }
+.hbtn[aria-pressed="true"] { color: var(--accent-ink); background: var(--accent); }
+.hbtn[aria-pressed="true"] .hsw { background: rgba(255,255,255,.35); }
+.hbtn[aria-pressed="true"] .hsw::after { transform: translateX(16px); }
