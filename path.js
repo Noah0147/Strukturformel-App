@@ -12,7 +12,7 @@
   function comp(id) { for (var i = 0; i < cur.comps.length; i++) if (cur.comps[i].id === id) return cur.comps[i]; return null; }
   function molObj(id) { var ms = window.MOLECULES || []; for (var i = 0; i < ms.length; i++) if (ms[i].id === id) return ms[i]; return null; }
   var svgC = {};
-  function molSvg(id) { var m = molObj(id); return m ? (svgC[id] || (svgC[id] = window.Chem.renderPH(m.m, 7.4, 'Strukturformel bei pH 7,4'))) : ''; }
+  function molSvg(id) { var m = molObj(id); return m ? (svgC[id] || (svgC[id] = window.Chem.renderPH(m.m, 7.4, 'Strukturformel bei pH 7,4', true))) : ''; }
   function isOv() { return cur.type === 'overview'; }
   var HY = { 'Dihydroxyacetonphosphat': 'Dihydroxy&shy;aceton&shy;phosphat', '1,3-Bisphosphoglycerat': '1,3-Bis&shy;phospho&shy;glycerat', '2-Phosphoglycerat': '2-Phospho&shy;glycerat', '3-Phosphoglycerat': '3-Phospho&shy;glycerat',
     'Phosphoenolpyruvat': 'Phospho&shy;enol&shy;pyruvat', 'Glycerinaldehyd-3-phosphat': 'Glycerin&shy;aldehyd-3-&shy;phosphat', 'Fructose-1,6-bisphosphat': 'Fructose-1,6-&shy;bisphosphat', 'Glucose-6-phosphat': 'Glucose-6-&shy;phosphat',

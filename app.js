@@ -13,6 +13,7 @@
   function setH(v, initial) {
     Chem.setH(v);
     var b = document.getElementById('h-toggle');
+    var hp = document.getElementById('vs-help'); if (hp) hp.hidden = !v;
     if (b) { b.setAttribute('aria-pressed', v ? 'true' : 'false'); b.innerHTML = '<span class="hsw"></span><span>' + (v ? 'Valenzstrichformel an' : 'Valenzstrichformel') + '</span>'; }
     try { localStorage.setItem(HKEY, v ? '1' : '0'); } catch (e) {}
     if (initial) return;
@@ -60,7 +61,7 @@
 
   $('sub').textContent = CARDS.length + ' Moleküle aus Alltag und Biochemie. Erst raten, dann umdrehen.';
   var ver = (window.DATA_VERSION || '').split('-');
-  $('foot').textContent = CARDS.length + ' Karten' + (ver.length === 3 ? ' · Stand ' + parseInt(ver[2], 10) + '.' + ver[1] + '.' + ver[0] : '') + ' · Version 32';
+  $('foot').textContent = CARDS.length + ' Karten' + (ver.length === 3 ? ' · Stand ' + parseInt(ver[2], 10) + '.' + ver[1] + '.' + ver[0] : '') + ' · Version 33';
 
   function buildCatOptions() {
     var html = '<option value="all">Alle Kategorien (' + CARDS.length + ')</option>';
@@ -85,6 +86,7 @@
 
   /* ---------- pH-Regler ---------- */
   var phVal = null, phCache = {};
+  function vsNote(c) { return (Chem.getH() && !Chem.valenzOK(c.m)) ? '<p class="vsnote">Skelettformel: Für diese Struktur gibt es keine Valenzstrichformel.</p>' : ''; }
   function hasIons(c) { return window.Chem.ionize(c.m).length > 0; }
   function phBox(c) {
     if (!hasIons(c)) return '';
@@ -129,13 +131,13 @@
                '<div class="where"><h3>Im Alltag</h3><p>' + c.where + '</p></div>';
     if (st.mode === 'struct') {
       return {
-        f: '<div class="eyebrow"><span>Struktur' + nw + '</span>' + p + '</div><div class="struct">' + c.svg + '</div>' + phBox(c) + '<p class="hint">Wie heißt dieses Molekül? Tippen zum Umdrehen.</p>',
+        f: '<div class="eyebrow"><span>Struktur' + nw + '</span>' + p + '</div><div class="struct">' + c.svg + '</div>' + phBox(c) + vsNote(c) + '<p class="hint">Wie heißt dieses Molekül? Tippen zum Umdrehen.</p>',
         b: '<div class="eyebrow"><span>Name</span>' + p + '</div><div><h2 class="name">' + c.name + '</h2>' + alt + '<p class="formula">' + c.formula + '</p></div>' + info
       };
     }
     return {
       f: '<div class="eyebrow"><span>Name' + nw + '</span>' + p + '</div><div class="struct"><h2 class="name center">' + c.name + '</h2></div><p class="hint">Wie sieht die Struktur aus? Tippen zum Umdrehen.</p>',
-      b: '<div class="eyebrow"><span>Struktur</span>' + p + '</div><div class="struct small">' + c.svg + '</div>' + phBox(c) + '<p class="formula">' + c.formula + '</p>' + info
+      b: '<div class="eyebrow"><span>Struktur</span>' + p + '</div><div class="struct small">' + c.svg + '</div>' + phBox(c) + vsNote(c) + '<p class="formula">' + c.formula + '</p>' + info
     };
   }
 
@@ -324,7 +326,7 @@
     dbOpen = id; dbScroll = window.pageYOffset || document.documentElement.scrollTop || 0;
     var alt = (c.alt ? '<p class="alt">auch: ' + c.alt + '</p>' : '') + (c.ster ? '<p class="alt">Stereochemie: ' + c.ster + '</p>' : '');
     $('db-detail').innerHTML = '<div class="face dface"><button type="button" class="tbtn" id="db-back">← Zurück zur Liste</button>' +
-      '<div class="eyebrow"><span>' + esc(c.cat) + '</span></div><div class="struct">' + c.svg + '</div>' + phBox(c) +
+      '<div class="eyebrow"><span>' + esc(c.cat) + '</span></div><div class="struct">' + c.svg + '</div>' + phBox(c) + vsNote(c) +
       '<div><h2 class="name">' + c.name + '</h2>' + alt + '<p class="formula">' + c.formula + '</p></div>' +
       '<div class="chips">' + c.groups.map(function (g) { return '<span class="chip">' + g + '</span>'; }).join('') + '</div>' +
       '<div class="where"><h3>Im Alltag</h3><p>' + c.where + '</p></div></div>';

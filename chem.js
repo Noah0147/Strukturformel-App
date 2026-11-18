@@ -63,69 +63,129 @@
     return { n: n, c1: c1, c2: c2 };
   }
 
-  var showH = false; /* true: Valenzstrichformel (alle Atome, auch C und H, einzeln gezeichnet) */
-  function withH(m) {
-    var atoms = m.atoms.map(function (a) { return Object.assign({}, a); }), bonds = m.bonds.map(function (b) { return b; }), n0 = atoms.length, i;
-    function addH(i, ang, len, l) { atoms.push({ x: atoms[i].x + (len || 30) * Math.cos(ang), y: atoms[i].y + (len || 30) * Math.sin(ang), l: l || 'H' }); bonds.push({ i: i, j: atoms.length - 1, o: 1, ctr: null }); return atoms.length - 1; }
-    function angles(i) {
-      var angs = [];
-      bonds.forEach(function (b) { if (b.i === i || b.j === i) { var Q = atoms[b.i === i ? b.j : b.i]; angs.push(Math.atan2(Q.y - atoms[i].y, Q.x - atoms[i].x)); } });
-      return angs.sort(function (p, q) { return p - q; });
+  var showH = false; /* true: Valenzstrichformel, aber nur für einfache, kettenförmige Moleküle (siehe valence) */
+  var VAL = { C: 4, N: 3, O: 2, S: 2, F: 1, Cl: 1, I: 1 }, DIRS = { E: [1, 0], S: [0, 1], W: [-1, 0], N: [0, -1] };
+  /* Valenzstrichformel: lineare Kette, alle Atome einzeln; gibt null zurück, wenn die Struktur dafür nicht geeignet ist (Ringe, Phosphat, CoA ...) */
+  function buildValence(m) {
+    if (m.haworth) return null;
+    var nodes = [], map = {}, edges = [], i, STEP = 44;
+    for (i = 0; i < m.atoms.length; i++) {
+      var a = m.atoms[i], l = a.l || '', q = a.chg === '+' ? 1 : (a.chg ? -1 : 0), f = l.charAt(0), z = l.charAt(l.length - 1), el = null, sub = false;
+      if (f === '⁻' || f === '⁺') { q = f === '⁺' ? 1 : -1; l = l.slice(1); } else if (z === '⁻' || z === '⁺') { q = z === '⁺' ? 1 : -1; l = l.slice(0, -1); }
+      if (!l || l === 'C') el = 'C';
+      else if (l === 'H') continue;
+      else if (/^(O|N|S|F|Cl|I)$/.test(l)) el = l;
+      else if (l === 'OH' || l === 'HO') el = 'O';
+      else if (l === 'SH' || l === 'HS') el = 'S';
+      else if (/^(NH₂|H₂N|NH₃|H₃N|NH|HN)$/.test(l)) el = 'N';
+      else if (l === 'CH₂OH' || l === 'HOH₂C') { el = 'C'; sub = true; }
+      else return null;
+      if (el === 'C' && q) return null;
+      map[i] = nodes.length; nodes.push({ el: el, q: q, adj: [], h: 0 });
+      if (sub) { nodes.push({ el: 'O', q: 0, adj: [], h: 0 }); edges.push([nodes.length - 2, nodes.length - 1, 1]); }
     }
-    function spread(i, k, len) { /* k H-Atome gleichmäßig in die größte Lücke */
-      var angs = angles(i), start, gap, k2;
-      if (!angs.length) { start = -Math.PI / 2; gap = 2 * Math.PI; }
-      else { gap = -1; start = 0; angs.forEach(function (t, q) { var nx = q + 1 < angs.length ? angs[q + 1] : angs[0] + 2 * Math.PI, g = nx - t; if (g > gap) { gap = g; start = t; } }); }
-      for (k2 = 1; k2 <= k; k2++) addH(i, start + gap * k2 / (k + 1), len);
+    if (nodes.length > 18) return null;
+    var wedgeAt = {};
+    for (i = 0; i < m.bonds.length; i++) {
+      var b = m.bonds[i], o = b.o;
+      if (b.ctr) return null;
+      if (o === 'w' || o === 'd') { wedgeAt[b.i] = true; o = 1; }
+      else if (o !== 1 && o !== 2 && o !== 3) return null;
+      if (map[b.i] == null || map[b.j] == null) continue; /* Bindung zu einem H-Atom */
+      edges.push([map[b.i], map[b.j], o]);
     }
-    for (i = 0; i < n0; i++) {
-      var A = atoms[i];
-      if (A.l) continue;
-      var val = 0;
-      m.bonds.forEach(function (b) { if (b.i === i || b.j === i) val += (b.o === 2 || b.o === 3) ? b.o : 1; });
-      var nh = 4 - val;
-      if (!A.rc) A.l = 'C'; /* Haworth-Ring: Ringkohlenstoffe bleiben unbeschriftet (Konvention) */
-      if (nh <= 0) continue;
-      if (A.rc) { /* Haworth-Ring: H senkrecht, gegenüber der Gruppe */
-        var vb = null;
-        m.bonds.forEach(function (b) { if ((b.i === i || b.j === i) && b.v) vb = b; });
-        (vb ? [-vb.v] : (nh >= 2 ? [1, -1] : [1])).forEach(function (dv) { addH(i, dv > 0 ? -Math.PI / 2 : Math.PI / 2, 26); });
-        continue;
+    if (edges.length !== nodes.length - 1) return null;
+    edges.forEach(function (e) { nodes[e[0]].adj.push({ n: e[1], o: e[2] }); nodes[e[1]].adj.push({ n: e[0], o: e[2] }); });
+    var seen = {}, queue = [0]; seen[0] = true;
+    while (queue.length) { var u = queue.shift(); nodes[u].adj.forEach(function (e) { if (!seen[e.n]) { seen[e.n] = true; queue.push(e.n); } }); }
+    if (Object.keys(seen).length !== nodes.length) return null;
+    for (i = 0; i < nodes.length; i++) {
+      var nd = nodes[i], sum = 0;
+      nd.adj.forEach(function (e) { sum += e.o; });
+      nd.h = VAL[nd.el] + (nd.el === 'C' ? 0 : nd.q) - sum;
+      if (nd.h < 0) return null;
+    }
+    for (i = 0; i < edges.length; i++) { /* E/Z-Isomerie geht in der linearen Zeichnung verloren */
+      var e2 = edges[i];
+      if (e2[2] === 2 && nodes[e2[0]].el === 'C' && nodes[e2[1]].el === 'C' && nodes[e2[0]].adj.length > 1 && nodes[e2[1]].adj.length > 1) return null;
+    }
+    var cen = {};
+    (m.st || []).forEach(function (s) {
+      var cn = map[s.c];
+      if (cn == null || !s.p || s.p.length !== 3 || nodes[cn].adj.length !== 3 || nodes[cn].h !== 1) { cen.bad = true; return; }
+      var pp = s.p.map(function (x) { return map[x]; });
+      if (pp.some(function (x) { return x == null || nodes[cn].adj.every(function (e) { return e.n !== x; }); })) { cen.bad = true; return; }
+      cen[cn] = { p: pp, cfg: s.cfg };
+    });
+    if (cen.bad) return null;
+    for (var wa in wedgeAt) if (map[wa] == null || !cen[map[wa]]) return null;
+    /* längste Kette */
+    function bfs(s) {
+      var par = {}, dist = {}, qq = [s], far = s; par[s] = -1; dist[s] = 0;
+      while (qq.length) { var u2 = qq.shift(); if (dist[u2] > dist[far]) far = u2; nodes[u2].adj.forEach(function (e) { if (dist[e.n] == null) { dist[e.n] = dist[u2] + 1; par[e.n] = u2; qq.push(e.n); } }); }
+      return { far: far, par: par };
+    }
+    var r1 = bfs(0), r2 = bfs(r1.far), path = [], p = r2.far;
+    while (p !== -1) { path.push(p); p = r2.par[p]; }
+    function oScore(k) { var nd = nodes[k]; if (nd.el === 'O') return 2; var s = 0; nd.adj.forEach(function (e) { if (nodes[e.n].el === 'O') s++; }); return s; }
+    if (oScore(path[0]) > oScore(path[path.length - 1])) path.reverse();
+    var onPath = {}; path.forEach(function (k, ix) { onPath[k] = ix; });
+    function size(k, from) { var s = 1; nodes[k].adj.forEach(function (e) { if (e.n !== from) s += size(e.n, k); }); return s; }
+    /* Abstände entlang der Kette: Seitenzweige mit Nebenbesetzung brauchen Platz */
+    var wide = path.map(function (k) {
+      var w = 0;
+      nodes[k].adj.forEach(function (e) { if (onPath[e.n] == null && (nodes[e.n].adj.length - 1 + nodes[e.n].h) >= 2) w = 1; });
+      return w;
+    });
+    var X = [0];
+    for (i = 1; i < path.length; i++) X.push(X[i - 1] + STEP * (1 + wide[i - 1] + wide[i]));
+    if (X[X.length - 1] > STEP * 9) return null; /* zu lang: würde winzig */
+    var out = { atoms: [], bonds: [] }, nid = {};
+    function lab(k) { var nd = nodes[k]; return nd.el + (nd.q > 0 ? '⁺' : nd.q < 0 ? '⁻' : ''); }
+    function addAt(k, x, y) { nid[k] = out.atoms.length; out.atoms.push({ x: x, y: y, l: lab(k) }); }
+    function addHat(k, x, y, kind) { out.atoms.push({ x: x, y: y, l: 'H' }); out.bonds.push({ i: nid[k], j: out.atoms.length - 1, o: kind || 1, ctr: null }); }
+    function order(k, from) { return nodes[k].adj.filter(function (e) { return e.n !== from; }).sort(function (a2, b2) { return size(b2.n, k) - size(a2.n, k); }); }
+    function branch(k, from, d, ox, oy, bo) { /* k sitzt bei (ox,oy), kam aus Richtung d */
+      addAt(k, ox, oy);
+      out.bonds.push({ i: nid[from], j: nid[k], o: bo, ctr: null });
+      var ch = order(k, from), slots = [d, [d[1], -d[0]], [-d[1], d[0]]], used = 0;
+      ch.forEach(function (e) { var s = slots[used++]; branch(e.n, k, s, ox + s[0] * STEP, oy + s[1] * STEP, e.o); });
+      for (var h = 0; h < nodes[k].h; h++) { var s2 = slots[used++]; addHat(k, ox + s2[0] * STEP, oy + s2[1] * STEP); }
+    }
+    path.forEach(function (k, ix) {
+      addAt(k, X[ix], 0);
+      if (ix > 0) out.bonds.push({ i: nid[path[ix - 1]], j: nid[k], o: nodes[k].adj.filter(function (e) { return e.n === path[ix - 1]; })[0].o, ctr: null });
+    });
+    path.forEach(function (k, ix) {
+      var free = [DIRS.N, DIRS.S];
+      if (ix === 0) free.push(DIRS.W);
+      if (ix === path.length - 1) free.push(DIRS.E);
+      var ch = nodes[k].adj.filter(function (e) { return onPath[e.n] == null; }).sort(function (a2, b2) { return size(b2.n, k) - size(a2.n, k); });
+      var stereoH = null;
+      if (cen[k]) {
+        if (ix === 0 || ix === path.length - 1 || ch.length !== 1) { out.fail = true; return; }
+        var P = path[ix - 1], Q = path[ix + 1], pr = cen[k].p, Xn = ch[0].n;
+        function cyc(seq) { var s0 = pr.indexOf(seq[0]); return pr[(s0 + 1) % 3] === seq[1] && pr[(s0 + 2) % 3] === seq[2]; }
+        var seqA = [Q, P, Xn], seqB = [Q, Xn, P], wantClock = cen[k].cfg === 'R'; /* A: X oben, H unten; B: X unten, H oben */
+        var useA = cyc(seqA) === wantClock;
+        free = useA ? [DIRS.N, DIRS.S] : [DIRS.S, DIRS.N];
+        stereoH = free[1];
       }
-      spread(i, nh, 30);
-    }
-    /* beschriftete Gruppen in einzelne Atome auflösen */
-    for (i = 0; i < n0; i++) {
-      var B = atoms[i], L = B.l, chg = '', f, z;
-      if (!L) continue;
-      f = L.charAt(0); z = L.charAt(L.length - 1);
-      if (f === '⁻' || f === '⁺') { chg = f; L = L.slice(1); } else if (z === '⁻' || z === '⁺') { chg = z; L = L.slice(0, -1); }
-      var nbs = [];
-      bonds.forEach(function (b) { if (b.i === i || b.j === i) nbs.push(atoms[b.i === i ? b.j : b.i]); });
-      if (nbs.length === 1 && nbs[0].rc) continue; /* Gruppen am Haworth-Ring bleiben als OH, CH₂OH stehen */
-      if (L === 'OH' || L === 'HO' || L === 'SH' || L === 'HS') {
-        B.l = L.replace('H', '') + chg;
-        if (nbs.length === 1) {
-          var th = Math.atan2(nbs[0].y - B.y, nbs[0].x - B.x) + Math.PI, c1 = th + 0.95, c2 = th - 0.95;
-          addH(i, Math.sin(c1) < Math.sin(c2) ? c1 : c2, 28);
-        } else spread(i, 1, 28);
-      } else if (L === 'NH₂' || L === 'H₂N' || L === 'NH₃' || L === 'H₃N') {
-        B.l = 'N' + chg; spread(i, L.indexOf('₃') >= 0 ? 3 : 2, 28);
-      } else if (L === 'NH' || L === 'HN') {
-        B.l = 'N' + chg; spread(i, 1, 28);
-      } else if ((L === 'CH₂OH' || L === 'HOH₂C') && nbs.length === 1) {
-        var out = Math.atan2(B.y - nbs[0].y, B.x - nbs[0].x), oi = atoms.length;
-        B.l = 'C';
-        atoms.push({ x: B.x + 38 * Math.cos(out), y: B.y + 38 * Math.sin(out), l: 'O' }); bonds.push({ i: i, j: oi, o: 1, ctr: null });
-        spread(i, 2, 28);
-        var th2 = out, cc1 = th2 + 0.95, cc2 = th2 - 0.95;
-        addH(oi, Math.sin(cc1) < Math.sin(cc2) ? cc1 : cc2, 28);
+      var used = 0;
+      ch.forEach(function (e) { var s = free[used++]; branch(e.n, k, s, X[ix] + s[0] * STEP, s[1] * STEP, e.o); });
+      for (var h = 0; h < nodes[k].h; h++) {
+        var s3 = free[used++];
+        if (!s3) { out.fail = true; return; }
+        addHat(k, X[ix] + s3[0] * STEP, s3[1] * STEP, stereoH && s3 === stereoH ? 'd' : 1);
       }
-    }
-    return Object.assign({}, m, { atoms: atoms, bonds: bonds, _h: true });
+    });
+    if (out.fail) return null;
+    for (i = 0; i < out.atoms.length; i++) for (var j2 = i + 1; j2 < out.atoms.length; j2++) if (Math.hypot(out.atoms[i].x - out.atoms[j2].x, out.atoms[i].y - out.atoms[j2].y) < 30) return null;
+    return { atoms: out.atoms, bonds: out.bonds, st: [], _v: true };
   }
-  function render(m, label) {
-    if (showH && !m._h) m = withH(m);
+  function valence(m) { if (m._vs === undefined) { var r = null; try { r = buildValence(m); } catch (e) { r = null; } m._vs = r; } return m._vs; }
+  function render(m, label, skel) {
+    if (showH && !skel && !m._v) { var vv = valence(m); if (vv) m = vv; }
     var lines = '', texts = '';
     m.atoms.forEach(function (a, ix) { a.idx = ix; /* Ladung vom Elementsymbol trennen: Bindungen enden am Buchstaben, die Ladung steht als Hochzeichen daneben */
       if (a.pp || !a.l) return;
@@ -392,7 +452,7 @@
     }
     return { net: r.net, zw: r.zw, pi: pi };
   }
-  function renderPH(m, pH, label) {
+  function renderPH(m, pH, label, skel) {
     var st = {};
     ionize(m).forEach(function (e) { st[e.i] = e; });
     var atoms = m.atoms.map(function (a, k) {
@@ -401,10 +461,10 @@
         if (e.kind === 'acid') l = ionState(e, pH) ? ACID[e.nf] : e.nf;
         else l = ionState(e, pH) ? BASE[e.nf] : e.nf;
       }
-      return Object.assign({}, a, { l: l });
+      return Object.assign({}, a, { l: l, pp: false, chg: undefined, cs: undefined });
     });
-    return render(Object.assign({}, m, { atoms: atoms }), label);
+    return render(Object.assign({}, m, { atoms: atoms, _vs: undefined }), label, skel);
   }
 
-  window.Chem = { L: L, EXT: EXT, mol: mol, ring: ring, KEK: KEK, SAT: SAT, AP: AP, RP: RP, fusedPent: fusedPent, aaBase: aaBase, render: render, ionize: ionize, phInfo: phInfo, renderPH: renderPH, setH: function (v) { showH = !!v; }, getH: function () { return showH; } };
+  window.Chem = { L: L, EXT: EXT, mol: mol, ring: ring, KEK: KEK, SAT: SAT, AP: AP, RP: RP, fusedPent: fusedPent, aaBase: aaBase, render: render, ionize: ionize, phInfo: phInfo, renderPH: renderPH, setH: function (v) { showH = !!v; }, getH: function () { return showH; }, valenzOK: function (m) { return !!valence(m); } };
 })();
