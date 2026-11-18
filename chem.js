@@ -82,6 +82,20 @@
     function seg(a, b, c, d) {
       return '<line x1="' + a.toFixed(1) + '" y1="' + b.toFixed(1) + '" x2="' + c.toFixed(1) + '" y2="' + d.toFixed(1) + '"/>';
     }
+    function sideOf(b, A, B, nx, ny) { /* +1/-1: Seite, auf der die übrigen Nachbarn liegen; 0: symmetrisch (Nachbarn auf beiden Seiten oder keine) */
+      var sum = 0, cnt = 0;
+      m.bonds.forEach(function (c) {
+        if (c === b) return;
+        var P = null, Q = null;
+        if (c.i === b.i || c.i === b.j) { P = m.atoms[c.i]; Q = m.atoms[c.j]; } else if (c.j === b.i || c.j === b.j) { P = m.atoms[c.j]; Q = m.atoms[c.i]; }
+        if (!P) return;
+        var vx = Q.x - P.x, vy = Q.y - P.y, vl = Math.hypot(vx, vy) || 1;
+        sum += (vx / vl) * nx + (vy / vl) * ny; cnt++;
+      });
+      if (!cnt) return 0;
+      var avg = sum / cnt;
+      return Math.abs(sum) > 0.45 ? (sum > 0 ? 1 : -1) : 0;
+    }
     m.bonds.forEach(function (b) {
       var A = m.atoms[b.i], B = m.atoms[b.j];
       var dx = B.x - A.x, dy = B.y - A.y, len = Math.hypot(dx, dy), ux = dx / len, uy = dy / len;
@@ -96,6 +110,12 @@
         var ta = g1 ? g1 + 4 : t, tb = g2 ? g2 + 4 : t;
         lines += seg(A.x + ux * ta + s * nx * off, A.y + uy * ta + s * ny * off,
                      B.x - ux * tb + s * nx * off, B.y - uy * tb + s * ny * off);
+      } else if (b.o === 2 && sideOf(b, A, B, nx, ny) !== 0) {
+        /* Kettenende (z. B. Aldehyd): eine Linie auf der Achse, die zweite versetzt zur Seite der übrigen Bindungen, so endet nichts in der Luft */
+        var sd = sideOf(b, A, B, nx, ny), off2 = 6, t2 = 0.17 * len;
+        lines += seg(x1, y1, x2, y2);
+        var ta2 = g1 ? g1 + 4 : t2, tb2 = g2 ? g2 + 4 : t2;
+        lines += seg(A.x + ux * ta2 + sd * nx * off2, A.y + uy * ta2 + sd * ny * off2, B.x - ux * tb2 + sd * nx * off2, B.y - uy * tb2 + sd * ny * off2);
       } else if (b.o === 2) {
         var o2 = 3.4;
         lines += seg(x1 + nx * o2, y1 + ny * o2, x2 + nx * o2, y2 + ny * o2);
