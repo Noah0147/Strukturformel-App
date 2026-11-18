@@ -4,14 +4,15 @@
   var P = window.PATHWAYS || [], root = document.getElementById('view-path');
   if (!root || !P.length) return;
   var body = document.getElementById('path-body'), sel = document.getElementById('path-sel');
-  var cur = P[0], mode = 'learn', selN = null, round = null, built = false, modeNo = {};
+  var cur = P[0], mode = 'learn', selN = null, round = null, qz = null, built = false, modeNo = {};
   var QN = 5;
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
   function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
   function pc(x, t) { return (x / t * 100).toFixed(2) + '%'; }
   function comp(id) { for (var i = 0; i < cur.comps.length; i++) if (cur.comps[i].id === id) return cur.comps[i]; return null; }
   function molObj(id) { var ms = window.MOLECULES || []; for (var i = 0; i < ms.length; i++) if (ms[i].id === id) return ms[i]; return null; }
-  function molSvg(id) { var m = molObj(id); return m ? (m.svg || window.Chem.render(m.m, 'Strukturformel')) : ''; }
+  var svgC = {};
+  function molSvg(id) { var m = molObj(id); return m ? (svgC[id] || (svgC[id] = window.Chem.renderPH(m.m, 7.4, 'Strukturformel bei pH 7,4'))) : ''; }
   function isOv() { return cur.type === 'overview'; }
   var HY = { 'Dihydroxyacetonphosphat': 'Dihydroxy&shy;aceton&shy;phosphat', '1,3-Bisphosphoglycerat': '1,3-Bis&shy;phospho&shy;glycerat', '2-Phosphoglycerat': '2-Phospho&shy;glycerat', '3-Phosphoglycerat': '3-Phospho&shy;glycerat',
     'Phosphoenolpyruvat': 'Phospho&shy;enol&shy;pyruvat', 'Glycerinaldehyd-3-phosphat': 'Glycerin&shy;aldehyd-3-&shy;phosphat', 'Fructose-1,6-bisphosphat': 'Fructose-1,6-&shy;bisphosphat', 'Glucose-6-phosphat': 'Glucose-6-&shy;phosphat',
@@ -241,11 +242,11 @@
     var ms = cur.modes, no = modeNo[cur.id];
     if (no == null) no = Math.floor(Math.random() * ms.length); else no = (no + 1) % ms.length;
     modeNo[cur.id] = no;
-    round = buildTask(ms[no]); round.qs = pickQs();
+    round = buildTask(ms[no]);
   }
   function taskHtml() {
     var r = round, h = '';
-    if (r.mode === 'names' || r.mode === 'structs' || r.mode === 'enz') { h = graphHtml({ train: true }); if (!isOv()) h += '<p class="zhint">Tipp: Auf eine Struktur tippen (bzw. auf ⤢) vergrößert sie.</p>'; }
+    if (r.mode === 'names' || r.mode === 'structs' || r.mode === 'enz') { h = graphHtml({ train: true }); if (!isOv()) h += '<p class="zhint">Tipp: Auf eine Struktur tippen (bzw. auf ⤢) vergrößert sie. Gezeichnet bei pH 7,4, also als Anionen (Carboxylat, Phosphat).</p>'; }
     else if (r.mode === 'comps') {
       h = '<div class="gd scheme" style="aspect-ratio:' + cur.dia.size[0] + ' / ' + cur.dia.size[1] + '">' + cur.svg;
       r.slots.forEach(function (s) {
@@ -271,29 +272,46 @@
     }).join('');
   }
   function qHtml() {
-    return round.qs.map(function (q, qi) {
-      var h = '<fieldset class="q"><legend>' + (qi + 2) + ' · ' + q.q + '</legend>';
+    return qz.qs.map(function (q, qi) {
+      var h = '<fieldset class="q"><legend>' + (qi + 1) + ' · ' + q.q + '</legend>';
       q.o.forEach(function (o, oi) {
         var cls = '';
-        if (round.done) cls = oi === q.a ? ' ok' : (q.chosen === oi ? ' bad' : '');
-        h += '<label class="opt' + cls + '"><input type="radio" name="q' + qi + '" value="' + oi + '"' + (q.chosen === oi ? ' checked' : '') + (round.done ? ' disabled' : '') + '><span>' + o + '</span></label>';
+        if (qz.done) cls = oi === q.a ? ' ok' : (q.chosen === oi ? ' bad' : '');
+        h += '<label class="opt' + cls + '"><input type="radio" name="q' + qi + '" value="' + oi + '"' + (q.chosen === oi ? ' checked' : '') + (qz.done ? ' disabled' : '') + '><span>' + o + '</span></label>';
       });
-      if (round.done) h += '<p class="why">' + q.why + '</p>';
+      if (qz.done) h += '<p class="why">' + q.why + '</p>';
       return h + '</fieldset>';
     }).join('');
   }
   function score() {
-    var r = round, ok = r.slots.filter(isRight).length, qs = round.qs.filter(function (q) { return q.chosen === q.a; }).length;
-    return { d: ok, dn: r.slots.length, q: qs, qn: round.qs.length };
+    var r = round, ok = r.slots.filter(isRight).length;
+    return { d: ok, dn: r.slots.length };
+  }
+  function qscore() {
+    return { q: qz.qs.filter(function (q) { return q.chosen === q.a; }).length, qn: qz.qs.length };
   }
   function result() {
-    var s = score(), all = s.d === s.dn && s.q === s.qn;
-    return '<div class="banner pres"><p><b>Aufgabe 1: ' + s.d + ' von ' + s.dn + ' richtig. Fragen: ' + s.q + ' von ' + s.qn + '.</b> ' + (all ? 'Sehr gut, alles gewusst.' : 'Rot markierte Felder zeigen die richtige Lösung, unten stehen die Erklärungen.') + '</p><button type="button" class="tbtn" id="p-new">Neue Runde</button></div>';
+    var s = score(), all = s.d === s.dn;
+    return '<div class="banner pres"><p><b>' + s.d + ' von ' + s.dn + ' richtig.</b> ' + (all ? 'Sehr gut, alles gewusst.' : 'Rot markierte Felder zeigen die richtige Lösung.') + '</p><button type="button" class="tbtn" id="p-new">Neue Runde</button></div>';
+  }
+  function qresult() {
+    var s = qscore(), all = s.q === s.qn;
+    return '<div class="banner pres"><p><b>' + s.q + ' von ' + s.qn + ' richtig.</b> ' + (all ? 'Sehr gut, alles gewusst.' : 'Unter den Fragen stehen die Erklärungen.') + '</p><button type="button" class="tbtn" id="q-new">Neue Fragen</button></div>';
+  }
+  function quiz() {
+    if (!qz) qz = { qs: pickQs(), done: false };
+    body.innerHTML = '<div id="pres"></div><div class="pcard" id="pq"></div><div class="actions"><button type="button" class="btn primary wide" id="q-check">Auswerten</button><button type="button" class="btn" id="q-new2">Neue Fragen</button></div>';
+    paintQ();
+  }
+  function paintQ() {
+    document.getElementById('pq').innerHTML = '<h3 class="ph3">Fragen: ' + esc(cur.name) + '</h3>' + qHtml();
+    document.getElementById('pres').innerHTML = qz.done ? qresult() : '';
+    document.getElementById('q-check').hidden = qz.done;
   }
   function train() {
     if (!round) newRound();
     body.innerHTML = '<div id="pres"></div><div class="pcard"><h3 class="ph3" id="ttl"></h3><p class="hint left" id="thint"></p><div id="gdia"></div><div class="chips pool" id="gpool"></div></div>' +
-      '<div class="pcard" id="pq"></div><div class="actions"><button type="button" class="btn primary wide" id="p-check">Auswerten</button><button type="button" class="btn" id="p-new2">Neue Runde</button></div>';
+      '<div class="actions"><button type="button" class="btn primary wide" id="p-check">Auswerten</button><button type="button" class="btn" id="p-new2">Neue Runde</button></div>';
     paint(true);
   }
   function paintTask() {
@@ -302,10 +320,9 @@
   }
   function paint(full) {
     var r = round;
-    document.getElementById('ttl').textContent = '1 · ' + r.title;
+    document.getElementById('ttl').textContent = r.title;
     document.getElementById('thint').textContent = r.hint;
     paintTask();
-    if (full) document.getElementById('pq').innerHTML = '<h3 class="ph3">Fragen</h3>' + qHtml();
     document.getElementById('pres').innerHTML = round.done ? result() : '';
     document.getElementById('p-check').hidden = round.done;
   }
@@ -328,11 +345,12 @@
     r.selChip = r.selChip === id ? null : id; paintTask();
   }
 
-  function render() { if (mode === 'learn') learn(); else train(); }
+  function render() { if (mode === 'learn') learn(); else if (mode === 'quiz') quiz(); else train(); }
   function setMode(m) {
     mode = m;
     document.getElementById('pm-learn').setAttribute('aria-pressed', m === 'learn');
     document.getElementById('pm-train').setAttribute('aria-pressed', m === 'train');
+    document.getElementById('pm-quiz').setAttribute('aria-pressed', m === 'quiz');
     render();
   }
 
@@ -345,7 +363,7 @@
     document.body.appendChild(el);
   }
   body.addEventListener('click', function (e) {
-    var t = e.target.closest ? e.target.closest('[data-zoom],[data-k],[data-n],[data-e],[data-slot],[data-chip],[data-open],#p-check,#p-new,#p-new2') : null;
+    var t = e.target.closest ? e.target.closest('[data-zoom],[data-k],[data-n],[data-e],[data-slot],[data-chip],[data-open],#p-check,#p-new,#p-new2,#q-check,#q-new,#q-new2') : null;
     if (!t) return;
     if (t.hasAttribute('data-zoom')) { zoom(t.getAttribute('data-zoom')); return; }
     if (t.hasAttribute('data-open')) { if (window.openMolecule) window.openMolecule(t.getAttribute('data-open')); return; }
@@ -356,6 +374,8 @@
       var pv = document.getElementById('gprev'); if (pv && pv.scrollIntoView) pv.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       return;
     }
+    if (t.id === 'q-check') { qz.done = true; paintQ(); document.getElementById('pres').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return; }
+    if (t.id === 'q-new' || t.id === 'q-new2') { qz = null; quiz(); window.scrollTo(0, 0); return; }
     if (!round) return;
     if (t.hasAttribute('data-slot')) { onSlot(t.getAttribute('data-slot')); return; }
     if (t.hasAttribute('data-chip')) { onChip(t.getAttribute('data-chip')); return; }
@@ -368,12 +388,13 @@
   });
   body.addEventListener('change', function (e) {
     var t = e.target;
-    if (!round || round.done || !t || t.type !== 'radio') return;
-    round.qs[parseInt(t.name.slice(1), 10)].chosen = parseInt(t.value, 10);
+    if (!qz || qz.done || !t || t.type !== 'radio') return;
+    qz.qs[parseInt(t.name.slice(1), 10)].chosen = parseInt(t.value, 10);
   });
   document.getElementById('pm-learn').addEventListener('click', function () { setMode('learn'); });
   document.getElementById('pm-train').addEventListener('click', function () { setMode('train'); });
+  document.getElementById('pm-quiz').addEventListener('click', function () { setMode('quiz'); });
   sel.innerHTML = P.map(function (p, i) { return '<option value="' + i + '">' + esc(p.name) + '</option>'; }).join('');
-  sel.addEventListener('change', function () { cur = P[parseInt(sel.value, 10)]; selN = null; round = null; render(); });
+  sel.addEventListener('change', function () { cur = P[parseInt(sel.value, 10)]; selN = null; round = null; qz = null; render(); });
   window.PathUI = { _r: function () { return round; }, open: function () { if (!built) { built = true; setMode('learn'); } }, count: P.length };
 })();
