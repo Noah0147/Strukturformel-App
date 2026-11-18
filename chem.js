@@ -148,7 +148,19 @@
         lines += seg(x1 + nx * o3, y1 + ny * o3, x2 + nx * o3, y2 + ny * o3);
         lines += seg(x1 - nx * o3, y1 - ny * o3, x2 - nx * o3, y2 - ny * o3);
       } else {
-        lines += seg(x1, y1, x2, y2);
+        /* Einzelbindung endet an einem Kettenatom mit Doppelbindung (z. B. Aldehyd): um den Winkelversatz verlängern, damit sie die äußere Linie trifft */
+        function extFor(P, Q) {
+          if (P.l) return 0;
+          var dbl = null, n = 0;
+          m.bonds.forEach(function (c) { if (c.i === P.idx || c.j === P.idx) { n++; if (c !== b && c.o === 2 && !c.ctr) dbl = c; } });
+          if (n !== 2 || !dbl) return 0;
+          var R = m.atoms[dbl.i === P.idx ? dbl.j : dbl.i];
+          var ax = R.x - P.x, ay = R.y - P.y, al = Math.hypot(ax, ay) || 1, wx = Q.x - P.x, wy = Q.y - P.y, wl = Math.hypot(wx, wy) || 1;
+          var wn = Math.abs((ax * wy - ay * wx) / (al * wl));
+          return wn < 0.2 ? 0 : 3.4 / wn;
+        }
+        var eA = extFor(A, B), eB = extFor(B, A);
+        lines += seg(x1 - ux * eA, y1 - uy * eA, x2 + ux * eB, y2 + uy * eB);
       }
     });
     var minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
