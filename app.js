@@ -337,16 +337,18 @@
   });
   $('db-detail').addEventListener('click', function (e) { if (e.target.id === 'db-back') closeDetail(); });
   function tab(which) {
-    var db = which === 'db';
-    $('view-db').hidden = !db; $('view-learn').hidden = db;
-    $('tab-db').setAttribute('aria-selected', db); $('tab-learn').setAttribute('aria-selected', !db);
-    $('sub').textContent = db ? CARDS.length + ' Strukturen zum Nachschlagen.' : CARDS.length + ' Moleküle aus Alltag und Biochemie. Erst raten, dann umdrehen.';
+    var db = which === 'db', pa = which === 'path';
+    $('view-db').hidden = !db; $('view-path').hidden = !pa; $('view-learn').hidden = db || pa;
+    $('tab-db').setAttribute('aria-selected', db); $('tab-path').setAttribute('aria-selected', pa); $('tab-learn').setAttribute('aria-selected', !db && !pa);
+    $('sub').textContent = pa ? 'Stoffwechselwege verstehen und üben.' : db ? CARDS.length + ' Strukturen zum Nachschlagen.' : CARDS.length + ' Moleküle aus Alltag und Biochemie. Erst raten, dann umdrehen.';
+    if (pa && window.PathUI) window.PathUI.open();
     if (db) { renderDb(); setTimeout(function () { if (!dbOpen) $('q').focus(); }, 0); }
-    try { history.replaceState(null, '', db ? '#datenbank' : location.pathname + location.search); } catch (e) {}
+    try { history.replaceState(null, '', db ? '#datenbank' : pa ? '#stoffwechsel' : location.pathname + location.search); } catch (e) {}
   }
   $('tab-learn').addEventListener('click', function () { tab('learn'); });
   $('tab-db').addEventListener('click', function () { tab('db'); });
-  if (location.hash === '#datenbank') tab('db');
+  $('tab-path').addEventListener('click', function () { tab('path'); });
+  if (location.hash === '#datenbank') tab('db'); else if (location.hash === '#stoffwechsel') tab('path');
 
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
     window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
