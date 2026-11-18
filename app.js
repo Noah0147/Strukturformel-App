@@ -5,11 +5,11 @@
   var CATS = (window.CATEGORIES || []).slice();
   CARDS.forEach(function (c) {
     if (CATS.indexOf(c.cat) < 0) CATS.push(c.cat);
-    c.svg = Chem.render(c.m, 'Strukturformel eines Moleküls');
+    c.svg = Chem.render(c.m, 'Strukturformel eines Moleküls'); c.svgH = Chem.getH();
   });
 
   var HKEY = 'strukturformel-app-vs-v1';
-  function renderAll() { CARDS.forEach(function (c) { c.svg = Chem.render(c.m, 'Strukturformel eines Moleküls'); }); }
+  function renderAll() { CARDS.forEach(function (c) { c.svg = Chem.render(c.m, 'Strukturformel eines Moleküls'); c.svgH = Chem.getH(); }); }
   function setH(v, initial) {
     Chem.setH(v);
     var b = document.getElementById('h-toggle');
@@ -26,6 +26,7 @@
   var SEEN_KEY = 'strukturformel-app-seen-v1';
   var DISMISS_KEY = 'strukturformel-app-install-dismissed';
   var byId = {}; CARDS.forEach(function (c) { byId[c.id] = c; });
+  function svgOf(c) { if (c.svgH !== Chem.getH()) { c.svg = Chem.render(c.m, 'Strukturformel eines Moleküls'); c.svgH = Chem.getH(); } return c.svg; }
   var ids = CARDS.map(function (c) { return c.id; });
   var st = { status: {}, mode: 'struct', order: ids.slice(), pos: 0, retryOnly: false, cat: 'all' };
 
@@ -61,7 +62,7 @@
 
   $('sub').textContent = CARDS.length + ' Moleküle aus Alltag und Biochemie. Erst raten, dann umdrehen.';
   var ver = (window.DATA_VERSION || '').split('-');
-  $('foot').textContent = CARDS.length + ' Karten' + (ver.length === 3 ? ' · Stand ' + parseInt(ver[2], 10) + '.' + ver[1] + '.' + ver[0] : '') + ' · Version 33';
+  $('foot').textContent = CARDS.length + ' Karten' + (ver.length === 3 ? ' · Stand ' + parseInt(ver[2], 10) + '.' + ver[1] + '.' + ver[0] : '') + ' · Version 34';
 
   function buildCatOptions() {
     var html = '<option value="all">Alle Kategorien (' + CARDS.length + ')</option>';
@@ -93,7 +94,7 @@
     return '<div class="ph" data-id="' + c.id + '"><div class="phrow"><span class="phl">pH</span><input type="range" min="1" max="14" step="1" value="7" aria-label="pH-Wert"><output class="pho">–</output><button type="button" class="phoff">Original</button></div><p class="phcap"></p></div>';
   }
   function phSvg(c) {
-    if (phVal == null) return c.svg;
+    if (phVal == null) return svgOf(c);
     var k = c.id + '|' + phVal;
     return phCache[k] || (phCache[k] = window.Chem.renderPH(c.m, phVal, 'Strukturformel bei pH ' + phVal));
   }
@@ -131,13 +132,13 @@
                '<div class="where"><h3>Im Alltag</h3><p>' + c.where + '</p></div>';
     if (st.mode === 'struct') {
       return {
-        f: '<div class="eyebrow"><span>Struktur' + nw + '</span>' + p + '</div><div class="struct">' + c.svg + '</div>' + phBox(c) + vsNote(c) + '<p class="hint">Wie heißt dieses Molekül? Tippen zum Umdrehen.</p>',
+        f: '<div class="eyebrow"><span>Struktur' + nw + '</span>' + p + '</div><div class="struct">' + svgOf(c) + '</div>' + phBox(c) + vsNote(c) + '<p class="hint">Wie heißt dieses Molekül? Tippen zum Umdrehen.</p>',
         b: '<div class="eyebrow"><span>Name</span>' + p + '</div><div><h2 class="name">' + c.name + '</h2>' + alt + '<p class="formula">' + c.formula + '</p></div>' + info
       };
     }
     return {
       f: '<div class="eyebrow"><span>Name' + nw + '</span>' + p + '</div><div class="struct"><h2 class="name center">' + c.name + '</h2></div><p class="hint">Wie sieht die Struktur aus? Tippen zum Umdrehen.</p>',
-      b: '<div class="eyebrow"><span>Struktur</span>' + p + '</div><div class="struct small">' + c.svg + '</div>' + phBox(c) + vsNote(c) + '<p class="formula">' + c.formula + '</p>' + info
+      b: '<div class="eyebrow"><span>Struktur</span>' + p + '</div><div class="struct small">' + svgOf(c) + '</div>' + phBox(c) + vsNote(c) + '<p class="formula">' + c.formula + '</p>' + info
     };
   }
 
@@ -318,7 +319,7 @@
     var r = dbResults();
     $('db-count').textContent = r.length + (r.length === 1 ? ' Molekül' : ' Moleküle') + (dbQ.trim() ? ' gefunden' : ' (A–Z)');
     $('db-list').innerHTML = r.length ? r.map(function (c) {
-      return '<li><button type="button" class="res" data-id="' + esc(c.id) + '"><span class="thumb">' + c.svg + '</span><span class="rt"><b>' + c.name + '</b><span>' + c.formula + ' · ' + esc(c.cat) + '</span></span></button></li>';
+      return '<li><button type="button" class="res" data-id="' + esc(c.id) + '"><span class="thumb">' + svgOf(c) + '</span><span class="rt"><b>' + c.name + '</b><span>' + c.formula + ' · ' + esc(c.cat) + '</span></span></button></li>';
     }).join('') : '<li class="none">Nichts gefunden. Versuche den Namen, die Summenformel oder einen Teil davon.</li>';
   }
   function openDetail(id) {
@@ -326,7 +327,7 @@
     dbOpen = id; dbScroll = window.pageYOffset || document.documentElement.scrollTop || 0;
     var alt = (c.alt ? '<p class="alt">auch: ' + c.alt + '</p>' : '') + (c.ster ? '<p class="alt">Stereochemie: ' + c.ster + '</p>' : '');
     $('db-detail').innerHTML = '<div class="face dface"><button type="button" class="tbtn" id="db-back">← Zurück zur Liste</button>' +
-      '<div class="eyebrow"><span>' + esc(c.cat) + '</span></div><div class="struct">' + c.svg + '</div>' + phBox(c) + vsNote(c) +
+      '<div class="eyebrow"><span>' + esc(c.cat) + '</span></div><div class="struct">' + svgOf(c) + '</div>' + phBox(c) + vsNote(c) +
       '<div><h2 class="name">' + c.name + '</h2>' + alt + '<p class="formula">' + c.formula + '</p></div>' +
       '<div class="chips">' + c.groups.map(function (g) { return '<span class="chip">' + g + '</span>'; }).join('') + '</div>' +
       '<div class="where"><h3>Im Alltag</h3><p>' + c.where + '</p></div></div>';
