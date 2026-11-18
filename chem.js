@@ -110,16 +110,26 @@
         var ta = g1 ? g1 + 4 : t, tb = g2 ? g2 + 4 : t;
         lines += seg(A.x + ux * ta + s * nx * off, A.y + uy * ta + s * ny * off,
                      B.x - ux * tb + s * nx * off, B.y - uy * tb + s * ny * off);
-      } else if (b.o === 2 && sideOf(b, A, B, nx, ny) !== 0) {
-        /* Kettenende (z. B. Aldehyd): eine Linie auf der Achse, die zweite versetzt zur Seite der übrigen Bindungen, so endet nichts in der Luft */
-        var sd = sideOf(b, A, B, nx, ny), off2 = 6, t2 = 0.17 * len;
-        lines += seg(x1, y1, x2, y2);
-        var ta2 = g1 ? g1 + 4 : t2, tb2 = g2 ? g2 + 4 : t2;
-        lines += seg(A.x + ux * ta2 + sd * nx * off2, A.y + uy * ta2 + sd * ny * off2, B.x - ux * tb2 + sd * nx * off2, B.y - uy * tb2 + sd * ny * off2);
       } else if (b.o === 2) {
+        /* symmetrisch; an einem unbeschrifteten Kettenatom mit genau einem weiteren Nachbarn werden die Linien so verkürzt, dass sie sauber in die Einzelbindung übergehen */
         var o2 = 3.4;
-        lines += seg(x1 + nx * o2, y1 + ny * o2, x2 + nx * o2, y2 + ny * o2);
-        lines += seg(x1 - nx * o2, y1 - ny * o2, x2 - nx * o2, y2 - ny * o2);
+        function endT(P, ux2, uy2, nx2, ny2, sg) { /* Startversatz entlang der Achse für die Linie auf Seite sg */
+          if (P.l) return 0;
+          var nbs = [];
+          m.bonds.forEach(function (c) { if (c === b) return; var Q = c.i === P.idx ? m.atoms[c.j] : (c.j === P.idx ? m.atoms[c.i] : null); if (Q) nbs.push(Q); });
+          if (nbs.length !== 1) return 0;
+          var wx = nbs[0].x - P.x, wy = nbs[0].y - P.y, wl = Math.hypot(wx, wy) || 1; wx /= wl; wy /= wl;
+          var wn = wx * nx2 + wy * ny2, wu = wx * ux2 + wy * uy2;
+          if (Math.abs(wn) < 0.2) return 0;
+          var tin = (o2 / wn) * wu * (wn > 0 ? 1 : -1) * 1; /* Schnitt der Innenlinie mit der Nachbarbindung */
+          tin = (o2 * Math.abs(1 / wn)) * wu;
+          return (sg * wn > 0) ? tin : -tin;
+        }
+        [1, -1].forEach(function (sg) {
+          var tA = endT(A, ux, uy, nx, ny, sg), tB = endT(B, -ux, -uy, -nx, -ny, -sg);
+          var sx = (g1 ? x1 : A.x + ux * tA) , sy = (g1 ? y1 : A.y + uy * tA), ex = (g2 ? x2 : B.x - ux * tB), ey = (g2 ? y2 : B.y - uy * tB);
+          lines += seg(sx + sg * nx * o2, sy + sg * ny * o2, ex + sg * nx * o2, ey + sg * ny * o2);
+        });
       } else if (b.o === 'b' || b.o === 'mi' || b.o === 'mj') {
         var dx = x2 - x1, dy = y2 - y1, L = Math.sqrt(dx * dx + dy * dy), px = -dy / L, py = dx / L, wi = (b.o === 'b' || b.o === 'mi') ? 4 : 0.8, wj = (b.o === 'b' || b.o === 'mj') ? 4 : 0.8;
         lines += '<polygon class="w" points="' + [x1 + px * wi, y1 + py * wi, x2 + px * wj, y2 + py * wj, x2 - px * wj, y2 - py * wj, x1 - px * wi, y1 - py * wi].map(function (v) { return v.toFixed(1); }).join(' ') + '"/>';
