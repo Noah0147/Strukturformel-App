@@ -363,9 +363,12 @@ span.gp { cursor: default; }
 .bt { display: inline-block; padding: 0 6px; border-radius: 7px; border: 1px solid var(--line); background: var(--surface); white-space: nowrap; }
 .bp { color: var(--muted); }
 .barr2 { color: var(--accent); font-size: 16px; font-weight: 700; }
-.bt.g1 { --gc: #1F6FD1; } .bt.g2 { --gc: #0F8A5F; } .bt.g3 { --gc: #D2691E; } .bt.g4 { --gc: #8A3FC0; } .bt.g5 { --gc: #C2306B; }
-.bt[class*="g"] { color: var(--gc); border-color: var(--gc); background: color-mix(in srgb, var(--gc) 12%, var(--surface)); }
+.bt { --gc: #4F6B7D; } .bt.g1 { --gc: #1F6FD1; } .bt.g2 { --gc: #0F8A5F; } .bt.g3 { --gc: #D2691E; } .bt.g4 { --gc: #8A3FC0; } .bt.g5 { --gc: #C2306B; }
+.bt { color: var(--gc); border-color: var(--gc); background: color-mix(in srgb, var(--gc) 12%, var(--surface)); box-shadow: 0 0 8px color-mix(in srgb, var(--gc) 28%, transparent); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .bt.g1 { --gc: #7DB2FF; } :root:not([data-theme="light"]) .bt.g2 { --gc: #4ADE9C; } :root:not([data-theme="light"]) .bt.g3 { --gc: #FFA55C; } :root:not([data-theme="light"]) .bt.g4 { --gc: #C79BFF; } :root:not([data-theme="light"]) .bt.g5 { --gc: #FF7FAE; } }
 :root[data-theme="dark"] .bt.g1 { --gc: #7DB2FF; } :root[data-theme="dark"] .bt.g2 { --gc: #4ADE9C; } :root[data-theme="dark"] .bt.g3 { --gc: #FFA55C; } :root[data-theme="dark"] .bt.g4 { --gc: #C79BFF; } :root[data-theme="dark"] .bt.g5 { --gc: #FF7FAE; }
 .bnote { margin: 10px 0 0; font-size: 13px; color: var(--muted); line-height: 1.4; }
 .bnw { white-space: nowrap; }
+
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .bt { --gc: #A9BDCB; } :root:not([data-theme="light"]) .bt.g1 { --gc: #7DB2FF; } :root:not([data-theme="light"]) .bt.g2 { --gc: #4ADE9C; } :root:not([data-theme="light"]) .bt.g3 { --gc: #FFA55C; } :root:not([data-theme="light"]) .bt.g4 { --gc: #C79BFF; } :root:not([data-theme="light"]) .bt.g5 { --gc: #FF7FAE; } }
+:root[data-theme="dark"] .bt { --gc: #A9BDCB; } :root[data-theme="dark"] .bt.g1 { --gc: #7DB2FF; } :root[data-theme="dark"] .bt.g2 { --gc: #4ADE9C; } :root[data-theme="dark"] .bt.g3 { --gc: #FFA55C; } :root[data-theme="dark"] .bt.g4 { --gc: #C79BFF; } :root[data-theme="dark"] .bt.g5 { --gc: #FF7FAE; }
