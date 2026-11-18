@@ -140,9 +140,15 @@
       row('Aufgabe', c.rolle) + row('Reaktion', c.reaktion) + row('Cofaktoren', c.cof) + row('Protonen', c.h) + row('Hemmstoffe', c.hemm) +
       '<div class="where"><h3>Im Alltag</h3><p>' + c.alltag + '</p></div>';
   }
+  function balHtml() {
+    var b = cur.bil;
+    if (!b) return '<p class="pintro">' + cur.intro + '</p>';
+    function col(t, arr) { return '<div class="bcol"><span class="bh">' + t + '</span>' + arr.map(function (s) { return '<span class="bchip' + (/NADH|FADH₂|ATP|GTP/.test(s) ? ' e' : '') + '">' + s + '</span>'; }).join('') + '</div>'; }
+    return '<h3 class="ph3">Bilanz</h3><p class="bbasis">' + b.basis + '</p><div class="bil">' + col('Rein', b.rein) + '<span class="barr" aria-hidden="true">→</span>' + col('Raus', b.raus) + '</div>' + (b.note ? '<p class="bnote">' + b.note + '</p>' : '');
+  }
   function factsCard() { return '<div class="pcard"><h3 class="ph3">Zum Merken</h3><ul class="pfacts">' + cur.facts.map(function (f) { return '<li>' + f + '</li>'; }).join('') + '</ul></div>'; }
   function learnScheme() {
-    body.innerHTML = '<div class="pcard"><p class="pintro">' + cur.intro + '</p><div class="pdia" id="pdia">' + cur.svg + '</div>' +
+    body.innerHTML = '<div class="pcard">' + balHtml() + '<div class="pdia" id="pdia">' + cur.svg + '</div>' +
       '<div class="chips pchips" id="pchips">' + cur.comps.map(function (c) { return '<button type="button" class="pick" data-k="' + c.id + '">' + c.name + '</button>'; }).join('') + '</div>' +
       '<div class="pinfo" id="pinfo"></div></div>' + factsCard();
     mark();
@@ -184,7 +190,7 @@
     el.innerHTML = h;
   }
   function learnGraph() {
-    var h = '<div class="pcard"><p class="pintro">' + cur.intro + '</p><div id="gdia">' + graphHtml({}) + '</div><div class="pinfo" id="gprev"></div></div>';
+    var h = '<div class="pcard">' + balHtml() + '<div id="gdia">' + graphHtml({}) + '</div><div class="pinfo" id="gprev"></div></div>';
     (cur.extra || []).forEach(function (x) {
       h += '<div class="pcard"><h3 class="ph3">' + x.title + '</h3>' + x.items.map(function (it) { return '<div class="prow"><b>' + it[0] + '</b><span>' + it[1] + '</span></div>'; }).join('') + '</div>';
     });
