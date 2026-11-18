@@ -375,3 +375,6 @@ span.gp { cursor: default; }
 .beq { display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
 .bln { margin: 0; font-size: 14px; line-height: 2.5; font-weight: 600; }
 .bdown { color: var(--accent); font-size: 22px; font-weight: 700; line-height: 1; padding: 2px 0 2px 14px; }
+.beq { align-items: center; }
+.bln { text-align: center; }
+.bdown { padding: 2px 0; }
