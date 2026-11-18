@@ -182,5 +182,56 @@
     { title: 'Weg des Kohlenstoffs', items: [['glc', 'Glucose'], ['pyr', 'Pyruvat'], ['acoa', 'Acetyl-CoA'], ['cit', 'Citrat'], ['co2', 'CO₂']] }
   ];
 
+
+  /* ---------- Diagramme (Layout in einem 360-Einheiten-Raster) und Übungsmodi ---------- */
+  var colL = 70, colR = 290;
+  gly.dia = { size: [360, 505], node: [88, 72],
+    nodes: { glc: [colL, 45], g6p: [colL, 145], f6p: [colL, 245], fbp: [colL, 345], gap: [colL, 460], dhap: [180, 392], bpg: [colR, 460], pg3: [colR, 345], pg2: [colR, 245], pep: [colR, 145], pyr: [colR, 45] },
+    pill: [[28, 0], [28, 0], [28, 0], [-28, 0], [6, 6], [0, 0], [-28, 0], [-28, 0], [-28, 0], [-28, 0]] };
+  ['−ATP', '', '−ATP', '', '', '+NADH', '+ATP', '', '−H₂O', '+ATP'].forEach(function (t, i) { gly.steps[i].tag = t; });
+  ['HK', 'PGI', 'PFK-1', 'ALD', 'TPI', 'GAPDH', 'PGK', 'PGM', 'ENO', 'PK'].forEach(function (t, i) { gly.steps[i].ab = t; });
+  gly.modes = ['names', 'structs', 'enz'];
+
+  tca.dia = { size: [360, 470], node: [86, 72], ring: [180, 235],
+    nodes: { cit: [180, 50], iso: [292, 110], akg: [312, 235], scoa: [292, 360], suc: [180, 420], fum: [68, 360], mal: [48, 235], oaa: [68, 110], acoa: [180, 235] } };
+  ['', '', '+NADH, −CO₂', '+NADH, −CO₂', '+GTP', '+FADH₂', '', '+NADH'].forEach(function (t, i) { tca.steps[i].tag = t; });
+  ['CS', 'ACO', 'IDH', 'KGDH', 'SCS', 'SDH', 'FUM', 'MDH'].forEach(function (t, i) { tca.steps[i].ab = t; });
+  tca.modes = ['structs', 'names', 'enz'];
+
+  pdh.dia = { size: [360, 150], node: [100, 76], nodes: { pyr: [62, 75], acoa: [298, 75] }, pill: [[0, 0]], pillText: 'PDH',
+    notes: [[180, 38, '− CO₂'], [180, 118, 'NAD⁺ → NADH + H⁺, + CoA-SH']] };
+  pdh.steps[0].ab = 'PDH'; pdh.steps[0].tag = '';
+  pdh.pairs = [
+    { title: 'Cofaktor und Vitamin', hint: 'Welches Vitamin liefert welchen Cofaktor des PDH-Komplexes?', rows: [['Thiaminpyrophosphat (TPP)', 'Vitamin B₁ (Thiamin)'], ['FAD', 'Vitamin B₂ (Riboflavin)'], ['NAD⁺', 'Vitamin B₃ (Niacin)'], ['Coenzym A', 'Vitamin B₅ (Pantothensäure)'], ['Liponsäure', 'wird vom Körper selbst gebildet']] },
+    { title: 'Enzyme des Komplexes', hint: 'Welche Aufgabe hat welches Enzym des PDH-Komplexes?', rows: [['E1 · Pyruvat-Decarboxylase', 'spaltet CO₂ von Pyruvat ab'], ['E2 · Transacetylase', 'überträgt die Acetylgruppe auf CoA'], ['E3 · Dihydrolipoyl-Dehydrogenase', 'regeneriert Liponsäure, bildet NADH']] }
+  ];
+  pdh.modes = ['names', 'pairs0', 'structs', 'pairs1'];
+
+  ov.dia = { size: [360, 440], node: [290, 88], nodes: { g: [180, 48], p: [180, 160], c: [180, 272], a: [180, 384] },
+    links: [['g', 'p', '2 Pyruvat'], ['p', 'c', '2 Acetyl-CoA'], ['c', 'a', '10 NADH + 2 FADH₂ (aus allen Stufen)']] };
+  ov.pairs = [
+    { title: 'Stufe und Ort', hint: 'Wo in der Zelle läuft welche Stufe ab?', rows: [['Glykolyse', 'Cytosol'], ['Pyruvat-Dehydrogenase', 'Mitochondrienmatrix'], ['Citratzyklus', 'Mitochondrienmatrix'], ['Atmungskette', 'innere Mitochondrienmembran']] },
+    { title: 'Stufe und Ausbeute', hint: 'Welche Produkte entstehen in welcher Stufe (pro Glucose)?', rows: [['Glykolyse', '2 Pyruvat, 2 NADH, netto 2 ATP'], ['Pyruvat-Dehydrogenase', '2 Acetyl-CoA, 2 NADH, 2 CO₂'], ['Citratzyklus', '6 NADH, 2 FADH₂, 2 GTP, 4 CO₂'], ['Atmungskette', 'H₂O und ca. 26–28 ATP']] }
+  ];
+  ov.modes = ['names', 'pairs0', 'pairs1'];
+
+  var atm = (window.PATHWAYS || []).filter(function (p) { return p.id === 'atmungskette'; })[0];
+  if (atm) {
+    atm.dia = { size: [440, 312], comps: [
+      { key: 'k1', val: 'NADH-Dehydrogenase (Komplex I)', short: 'I', pos: [40, 152, 60, 80] },
+      { key: 'k2', val: 'Succinat-Dehydrogenase (Komplex II)', short: 'II', pos: [116, 152, 40, 80] },
+      { key: 'q', val: 'Ubichinon (Q)', short: 'Q', pos: [172, 152, 30, 30] },
+      { key: 'k3', val: 'Cytochrom-bc₁-Komplex (Komplex III)', short: 'III', pos: [238, 152, 60, 80] },
+      { key: 'c', val: 'Cytochrom c', short: 'c', pos: [286, 84, 36, 26] },
+      { key: 'k4', val: 'Cytochrom-c-Oxidase (Komplex IV)', short: 'IV', pos: [332, 152, 56, 80] },
+      { key: 'k5', val: 'ATP-Synthase (Komplex V)', short: 'V', pos: [404, 166, 56, 108] }] };
+    atm.pairs = [
+      { title: 'Hemmstoffe', hint: 'Welcher Hemmstoff blockiert welches Bauteil?', rows: [['Rotenon', 'Komplex I'], ['Malonat', 'Komplex II'], ['Antimycin A', 'Komplex III'], ['Cyanid und Kohlenmonoxid', 'Komplex IV'], ['Oligomycin', 'ATP-Synthase']] },
+      { title: 'Protonenpumpen', hint: 'Wie viele H⁺ pumpt das Bauteil pro NADH-Elektronenpaar?', rows: [['Komplex I', '4 H⁺'], ['Komplex II', '0 H⁺'], ['Komplex III', '4 H⁺'], ['Komplex IV', '2 H⁺']] },
+      { title: 'Cofaktoren', hint: 'Welche Cofaktoren gehören zu welchem Bauteil?', rows: [['Komplex I', 'FMN und Fe-S-Cluster'], ['Komplex II', 'FAD, Fe-S-Cluster, Häm b'], ['Komplex III', 'Cytochrom b, c₁ und Rieske-Fe-S'], ['Komplex IV', 'Häm a, Häm a₃, Cu_A, Cu_B'], ['Cytochrom c', 'Häm c']] }
+    ];
+    atm.modes = ['comps', 'pairs0', 'pairs1', 'pairs2'];
+  }
+
   window.PATHWAYS = [ov, gly, pdh, tca].concat(window.PATHWAYS || []);
 })();

@@ -193,22 +193,39 @@ html { background: var(--bg); }
 .pintro { margin: 0; line-height: 1.5; }
 .pdia svg { width: 100%; height: auto; display: block; }
 .pdia text { font-family: var(--font-body); fill: var(--ink); text-anchor: middle; }
+.scheme text { font-family: var(--font-body); fill: var(--ink); text-anchor: middle; }
 .pdia .zone { font-size: 12px; fill: var(--muted); }
+.scheme .zone { font-size: 12px; fill: var(--muted); }
 .pdia .sub { font-size: 12px; font-weight: 600; }
+.scheme .sub { font-size: 12px; font-weight: 600; }
 .pdia .big { font-size: 20px; font-weight: 700; }
+.scheme .big { font-size: 20px; font-weight: 700; }
 .pdia .hl { font-size: 12px; font-weight: 600; fill: var(--o); }
+.scheme .hl { font-size: 12px; font-weight: 600; fill: var(--o); }
 .pdia .hl.off { fill: var(--muted); font-weight: 400; }
+.scheme .hl.off { fill: var(--muted); font-weight: 400; }
 .pdia .legt { font-size: 12px; fill: var(--muted); text-anchor: start; }
+.scheme .legt { font-size: 12px; fill: var(--muted); text-anchor: start; }
 .pdia .mem { fill: var(--soft); stroke: var(--line); }
+.scheme .mem { fill: var(--soft); stroke: var(--line); }
 .pdia .cx { fill: var(--surface); stroke: var(--stroke); stroke-width: 1.6; }
+.scheme .cx { fill: var(--surface); stroke: var(--stroke); stroke-width: 1.6; }
 .pdia .cq { fill: var(--warn-soft); stroke: var(--warn); stroke-width: 1.6; }
+.scheme .cq { fill: var(--warn-soft); stroke: var(--warn); stroke-width: 1.6; }
 .pdia .cc { fill: var(--warn-soft); stroke: var(--o); stroke-width: 1.6; }
+.scheme .cc { fill: var(--warn-soft); stroke: var(--o); stroke-width: 1.6; }
 .pdia .ef { fill: none; stroke: var(--accent); stroke-width: 2; stroke-dasharray: 5 3; }
+.scheme .ef { fill: none; stroke: var(--accent); stroke-width: 2; stroke-dasharray: 5 3; }
 .pdia .hf { fill: none; stroke: var(--o); stroke-width: 2; }
+.scheme .hf { fill: none; stroke: var(--o); stroke-width: 2; }
 .pdia .pk { cursor: pointer; outline: none; }
+.scheme .pk { cursor: pointer; outline: none; }
 .pdia .pk:hover .cx, .pdia .pk:focus-visible .cx { stroke: var(--accent); }
+.scheme .pk:hover .cx, .scheme .pk:focus-visible .cx { stroke: var(--accent); }
 .pdia .pk.sel .cx, .pdia .pk.sel .cq, .pdia .pk.sel .cc { stroke: var(--accent); stroke-width: 3.4; }
+.scheme .pk.sel .cx, .scheme .pk.sel .cq, .scheme .pk.sel .cc { stroke: var(--accent); stroke-width: 3.4; }
 .pdia .pk.sel text.sub { fill: var(--accent); }
+.scheme .pk.sel text.sub { fill: var(--accent); }
 .pick { cursor: pointer; border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 7px 12px; border-radius: 10px; font-size: 14px; font-family: inherit; }
 .pick[aria-pressed="true"] { border-color: var(--accent); background: var(--soft); }
 .pick:disabled { cursor: default; }
@@ -236,6 +253,7 @@ html { background: var(--bg); }
 .why { margin: 2px 0 8px; font-size: 14px; color: var(--muted); line-height: 1.45; }
 .pres { margin-bottom: 0; }
 .pdia .sf { fill: none; stroke: var(--accent); stroke-width: 2; }
+.scheme .sf { fill: none; stroke: var(--accent); stroke-width: 2; }
 
 .chain { display: grid; gap: 0; }
 .met { display: grid; grid-template-columns: 150px 1fr; gap: 12px; align-items: center; text-align: left; font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 8px 12px; cursor: pointer; box-shadow: var(--shadow); }
@@ -256,3 +274,56 @@ html { background: var(--bg); }
 .stage { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; display: grid; gap: 8px; box-shadow: var(--shadow); }
 .arrow { text-align: center; color: var(--accent); font-size: 22px; line-height: 1.2; padding: 4px 0; }
 @media (max-width: 380px) { .met { grid-template-columns: 118px 1fr; } .mth svg { width: 118px; } .rx { margin-left: 48px; } }
+
+/* Diagramme */
+.gd { position: relative; width: 100%; max-width: 560px; margin: 0 auto; container-type: inline-size; }
+.gsvg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.ga { fill: none; stroke: var(--accent); stroke-width: 2; }
+.gring { fill: none; stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 4 5; }
+.gtag { font-family: var(--font-body); font-size: 8.5px; fill: var(--muted); }
+.gn { position: absolute; transform: translate(-50%, -50%); box-sizing: border-box; display: flex; flex-direction: column; align-items: stretch; gap: 1px; padding: 3px; font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; cursor: pointer; box-shadow: var(--shadow); text-align: center; min-width: 0; overflow: hidden; }
+.gn:disabled { cursor: default; opacity: 1; color: var(--ink); }
+.gn .gt { flex: 1; min-height: 0; display: grid; place-items: center; border-radius: 7px; }
+.gn .gt svg { width: 100%; height: 100%; display: block; }
+.gn .gl { font-size: 10px; font-size: 2.6cqw; hyphens: auto; -webkit-hyphens: auto; line-height: 1.1; font-weight: 600; overflow-wrap: anywhere; display: block; padding: 1px 2px; border-radius: 6px; }
+.gn.ov { justify-content: center; text-align: left; padding: 6px 12px; gap: 2px; }
+.gn.ov .gl.b { font-size: 14px; font-size: 3.9cqw; }
+.gn.ov .gx { font-size: 11px; font-size: 3cqw; color: var(--muted); line-height: 1.2; }
+.gn.sel { border-color: var(--accent); box-shadow: 0 0 0 3px var(--soft), var(--shadow); }
+.gq { font-size: 22px; color: var(--muted); }
+.gp { position: absolute; transform: translate(-50%, -50%); width: 30px; height: 26px; padding: 0; border: 0; font: inherit; font-size: 10px; font-weight: 700; color: var(--accent-ink); background: var(--accent); clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); display: grid; place-items: center; cursor: pointer; }
+.gp.wide { width: 62px; height: 30px; font-size: 12px; }
+span.gp { cursor: default; }
+.gp.sel { background: var(--warn); color: #fff; }
+.slot.empty .gl, .slot.empty .gt { border: 1.5px dashed var(--muted); color: var(--muted); }
+.slot.filled .gl, .slot.filled .gt { border: 1.5px solid var(--accent); }
+.slot.sel { border-color: var(--warn); }
+.gn.sel .slot { border-color: var(--warn); }
+.slot.ok .gl, .slot.ok .gt { border: 1.5px solid var(--accent); background: var(--soft); }
+.slot.bad .gl, .slot.bad .gt { border: 1.5px solid var(--o); }
+.gp.slot.empty { background: var(--line); color: var(--ink); }
+.gp.slot.filled { background: var(--accent); }
+.gp.slot.ok { background: var(--accent); }
+.gp.slot.bad { background: var(--o); color: #fff; }
+.gp.slot.sel { background: var(--warn); color: #fff; }
+.pool { gap: 8px; }
+.pick.st { padding: 4px; width: calc(50% - 4px); }
+.pick.st svg { width: 100%; height: auto; display: block; }
+.pick.on { border-color: var(--warn); background: var(--warn-soft); }
+.pvs svg { width: 100%; max-width: 340px; height: auto; display: block; margin: 0 auto; }
+.scheme svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.scheme .pk { pointer-events: none; }
+.scheme .big { visibility: hidden; }
+.gc { position: absolute; transform: translate(-50%, -50%); box-sizing: border-box; font: inherit; font-weight: 700; font-size: 13px; color: var(--ink); background: transparent; border: 1.5px dashed var(--muted); border-radius: 10px; cursor: pointer; padding: 0; }
+.gc.filled { border: 1.5px solid var(--accent); background: var(--soft); }
+.gc.sel { border-color: var(--warn); background: var(--warn-soft); }
+.gc.ok { border: 1.5px solid var(--accent); background: var(--soft); }
+.gc.bad { border: 1.5px solid var(--o); background: var(--surface); }
+.prs { display: grid; gap: 8px; }
+.pr { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: stretch; }
+.prl { display: flex; align-items: center; font-weight: 600; font-size: 14px; line-height: 1.3; }
+.pslot { font: inherit; font-size: 14px; color: var(--ink); background: transparent; border: 1.5px dashed var(--muted); border-radius: 10px; padding: 8px 10px; text-align: left; cursor: pointer; min-height: 40px; }
+.pslot.filled { border: 1.5px solid var(--accent); background: var(--soft); }
+.pslot.sel { border-color: var(--warn); background: var(--warn-soft); }
+.pslot.ok { border: 1.5px solid var(--accent); background: var(--soft); }
+.pslot.bad { border: 1.5px solid var(--o); }
