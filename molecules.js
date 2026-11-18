@@ -161,7 +161,7 @@
     return n;
   }
 
-  window.DATA_VERSION = '2026-11-18f';
+  window.DATA_VERSION = '2026-11-18g';
   window.CATEGORIES = ['Alkohole & Carbonyle', 'Säuren & Ester', 'Aromaten', 'Aminosäuren', 'Nucleobasen & Purine', 'Wirkstoffe & Aromastoffe', 'Stoffwechsel & Pflanzen', 'Vitamine', 'Zucker & Nucleotide', 'Steroide & Botenstoffe', 'Kleine Moleküle'];
 
 
@@ -1039,25 +1039,25 @@
     { id: 'gap', cat: 'Stoffwechsel & Pflanzen', name: 'Glycerinaldehyd-3-phosphat', alt: 'GAP · G3P', formula: 'C₃H₇O₆P', groups: ['Aldehyd', 'Phosphatester', 'Hydroxygruppe'],
       ster: 'D-Glycerinaldehyd-3-phosphat, (R)',
       where: 'Zentrales Zwischenprodukt der Glykolyse und des Calvin-Zyklus. Die GAP-Dehydrogenase oxidiert den Aldehyd und bildet dabei NADH. Die Summenformel gilt für die ungeladene Säure.',
-      m: mol(function (h) { var c0 = h.add(0, 0), c1 = h.at(c0, 30), c2 = h.at(c1, -30), o1 = h.at(c1, 90, 'OH'), o2 = h.at(c2, 90, 'O'); h.bd(c0, c1); h.bd(c1, c2); h.bd(c1, o1, 'w'); h.bd(c2, o2, 2); h.st(c1, [o1, c2, c0], 'R'); phosL(h, c0, 1); }) },
+      m: mol(function (h) { var c0 = h.add(0, 0), c1 = h.at(c0, 30), c2 = h.at(c1, -30), o1 = h.at(c1, 90, 'OH'), o2 = h.at(c2, 30, 'O'); h.bd(c0, c1); h.bd(c1, c2); h.bd(c1, o1, 'w'); h.bd(c2, o2, 2); h.st(c1, [o1, c2, c0], 'R'); phosL(h, c0, 1); }) },
     { id: 'bpg13', cat: 'Stoffwechsel & Pflanzen', name: '1,3-Bisphosphoglycerat', alt: '1,3-BPG', formula: 'C₃H₈O₁₀P₂', groups: ['Acylphosphat (energiereich)', 'Phosphatester', 'Hydroxygruppe'],
       ster: '(R)-1,3-Bisphosphoglycerat',
       where: 'Entsteht in der Glykolyse durch die GAP-Dehydrogenase. Das Acylphosphat überträgt sein Phosphat auf ADP (Substratkettenphosphorylierung). In Erythrocyten zweigt davon 2,3-BPG ab, das die Sauerstoffabgabe des Hämoglobins erleichtert. Die Summenformel gilt für die ungeladene Säure.',
       m: mol(function (h) {
-        var c0 = h.add(0, 0), c1 = h.at(c0, 30), c2 = h.at(c1, -30), o1 = h.at(c1, 90, 'OH'), o2 = h.at(c2, 90, 'O'), ob = h.at(c2, -30, 'O');
+        var c0 = h.add(0, 0), c1 = h.at(c0, 30), c2 = h.at(c1, -30), o1 = h.at(c1, 90, 'OH'), o2 = h.at(c2, 30, 'O'), ob = h.at(c2, -90, 'O');
         h.bd(c0, c1); h.bd(c1, c2); h.bd(c1, o1, 'w'); h.bd(c2, o2, 2); h.bd(c2, ob);
-        var p = h.at(ob, 30, 'P'); h.bd(ob, p); h.bd(p, h.at(p, 90, 'O'), 2); h.bd(p, h.at(p, 0, 'O⁻')); h.bd(p, h.at(p, 300, 'O⁻'));
+        var p = h.at(ob, -30, 'P'); h.bd(ob, p); h.bd(p, h.at(p, 270, 'O'), 2); h.bd(p, h.at(p, 330, 'O⁻')); h.bd(p, h.at(p, 30, 'O⁻'));
         h.st(c1, [o1, c2, c0], 'R'); phosL(h, c0, 1);
       }) },
     { id: 'pg3', cat: 'Stoffwechsel & Pflanzen', name: '3-Phosphoglycerat', alt: '3-PG', formula: 'C₃H₇O₇P', groups: ['Carboxygruppe', 'Phosphatester', 'Hydroxygruppe'],
       ster: '(R)-3-Phosphoglycerat',
       where: 'Produkt der Phosphoglycerat-Kinase in der Glykolyse (hier entsteht das erste ATP). Auch erstes stabiles Produkt der CO₂-Fixierung im Calvin-Zyklus der Pflanzen. Die Summenformel gilt für die ungeladene Säure.',
-      m: mol(function (h) { var c0 = h.add(0, 0), c1 = h.at(c0, 30), c2 = h.at(c1, -30), o1 = h.at(c1, 90, 'OH'), o2 = h.at(c2, 90, 'O'), o3 = h.at(c2, -30, 'OH'); h.bd(c0, c1); h.bd(c1, c2); h.bd(c1, o1, 'w'); h.bd(c2, o2, 2); h.bd(c2, o3); h.st(c1, [o1, c2, c0], 'R'); phosL(h, c0, 1); }) },
+      m: mol(function (h) { var c0 = h.add(0, 0), c1 = h.at(c0, 30), c2 = h.at(c1, -30), o1 = h.at(c1, 90, 'OH'), o2 = h.at(c2, 30, 'O'), o3 = h.at(c2, -90, 'OH'); h.bd(c0, c1); h.bd(c1, c2); h.bd(c1, o1, 'w'); h.bd(c2, o2, 2); h.bd(c2, o3); h.st(c1, [o1, c2, c0], 'R'); phosL(h, c0, 1); }) },
     { id: 'pg2', cat: 'Stoffwechsel & Pflanzen', name: '2-Phosphoglycerat', alt: '2-PG', formula: 'C₃H₇O₇P', groups: ['Carboxygruppe', 'Phosphatester', 'Hydroxygruppe'],
       ster: '(R)-2-Phosphoglycerat',
       where: 'Zwischenprodukt der Glykolyse: Die Mutase verschiebt die Phosphatgruppe von C3 nach C2, danach spaltet die Enolase Wasser ab und bildet Phosphoenolpyruvat. Die Summenformel gilt für die ungeladene Säure.',
       m: mol(function (h) {
-        var o0 = h.add(0, 0, 'HO'), c0 = h.at(o0, -30), c1 = h.at(c0, 30), c2 = h.at(c1, -30), o1 = h.at(c1, 90, 'O'), o2 = h.at(c2, 90, 'O'), o3 = h.at(c2, -30, 'OH');
+        var o0 = h.add(0, 0, 'HO'), c0 = h.at(o0, -30), c1 = h.at(c0, 30), c2 = h.at(c1, -30), o1 = h.at(c1, 90, 'O'), o2 = h.at(c2, 30, 'O'), o3 = h.at(c2, -90, 'OH');
         h.bd(o0, c0); h.bd(c0, c1); h.bd(c1, c2); h.bd(c1, o1, 'w'); h.bd(c2, o2, 2); h.bd(c2, o3);
         var p = h.at(o1, 90, 'P'); h.bd(o1, p); h.bd(p, h.at(p, 90, 'O'), 2); h.bd(p, h.at(p, 180, '⁻O')); h.bd(p, h.at(p, 0, 'O⁻'));
         h.st(c1, [o1, c2, c0], 'R');
