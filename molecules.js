@@ -161,7 +161,7 @@
     return n;
   }
 
-  window.DATA_VERSION = '2026-11-18e';
+  window.DATA_VERSION = '2026-11-18f';
   window.CATEGORIES = ['Alkohole & Carbonyle', 'Säuren & Ester', 'Aromaten', 'Aminosäuren', 'Nucleobasen & Purine', 'Wirkstoffe & Aromastoffe', 'Stoffwechsel & Pflanzen', 'Vitamine', 'Zucker & Nucleotide', 'Steroide & Botenstoffe', 'Kleine Moleküle'];
 
 
@@ -411,14 +411,34 @@
         h.bd(idx[2], c5, 'd'); h.bd(c5, o5, 'd'); h.bd(c5, c6); h.bd(c6, o6);
         h.st(idx[2], [idx[3], idx[1], c5], 'R'); h.st(c5, [o5, idx[2], c6], 'S');
       }) },
-    { id: 'glucose', cat: 'Stoffwechsel & Pflanzen', name: 'Glucose', alt: 'Traubenzucker', formula: 'C₆H₁₂O₆', groups: ['Fünf Hydroxygruppen', 'Ring mit Halbacetal'],
-      ster: 'β-D-Glucopyranose (häufigste Form in Lösung)',
-      where: 'Zentraler Energieträger der Zellen und Baustein von Stärke und Cellulose.',
+    { id: 'glucose', cat: 'Stoffwechsel & Pflanzen', name: 'β-D-Glucose', alt: 'β-D-Glucopyranose, Traubenzucker', formula: 'C₆H₁₂O₆', groups: ['Fünf Hydroxygruppen', 'Ring mit Halbacetal', 'β-Anomer'],
+      ster: 'β-D-Glucopyranose (häufigste Form in Lösung, etwa 64 %)',
+      where: 'Zentraler Energieträger der Zellen und Baustein der Cellulose. Beim β-Anomer zeigt die OH-Gruppe am C1 nach oben, auf dieselbe Seite wie die CH₂OH-Gruppe. In Lösung wandeln sich α- und β-Form über die offene Kette ineinander um (Mutarotation).',
       m: mol(function (h) {
         var q = hpyr(h, 0, 0);
         var o1 = hoh(h, q[0], 1, 0), o2 = hoh(h, q[1], -1, 0), o3 = hoh(h, q[2], 1, 0), o4 = hoh(h, q[3], -1, 0), c6 = hch(h, q[4], 1, 0);
         h.st(q[0], [q[5], o1, q[1]], 'R'); h.st(q[1], [o2, q[0], q[2]], 'R'); h.st(q[2], [o3, q[1], q[3]], 'S');
         h.st(q[3], [o4, q[4], q[2]], 'S'); h.st(q[4], [q[5], q[3], c6], 'R');
+      }) },
+
+    { id: 'aglucose', cat: 'Stoffwechsel & Pflanzen', name: 'α-D-Glucose', alt: 'α-D-Glucopyranose', formula: 'C₆H₁₂O₆', groups: ['Fünf Hydroxygruppen', 'Ring mit Halbacetal', 'α-Anomer'],
+      ster: 'α-D-Glucopyranose (etwa 36 % in Lösung)',
+      where: 'Das α-Anomer: Die OH-Gruppe am C1 zeigt nach unten, auf die andere Seite als die CH₂OH-Gruppe. Stärke und Glykogen bestehen aus α-D-Glucose, und die Glykolyse beginnt mit dieser Form. Die Hexokinase akzeptiert beide Anomere, weil sie sich in Lösung rasch ineinander umwandeln.',
+      m: mol(function (h) {
+        var q = hpyr(h, 0, 0);
+        var o1 = hoh(h, q[0], -1, 0), o2 = hoh(h, q[1], -1, 0), o3 = hoh(h, q[2], 1, 0), o4 = hoh(h, q[3], -1, 0), c6 = hch(h, q[4], 1, 0);
+        h.st(q[0], [q[5], o1, q[1]], 'S'); h.st(q[1], [o2, q[0], q[2]], 'R'); h.st(q[2], [o3, q[1], q[3]], 'S');
+        h.st(q[3], [o4, q[4], q[2]], 'S'); h.st(q[4], [q[5], q[3], c6], 'R');
+      }) },
+    { id: 'glucosekette', cat: 'Stoffwechsel & Pflanzen', name: 'D-Glucose (offene Kette)', alt: 'Aldehydform, (2R,3S,4R,5R)-2,3,4,5,6-Pentahydroxyhexanal', formula: 'C₆H₁₂O₆', groups: ['Aldehyd', 'Fünf Hydroxygruppen', 'Kettenform'],
+      ster: 'D-Glucose, (2R,3S,4R,5R)',
+      where: 'Die offene Form liegt in Lösung nur zu etwa 0,02 % vor, sie ist aber das Zwischenstück der Mutarotation. Die Aldehydgruppe reagiert mit der OH-Gruppe am C5 zum Ring (Halbacetal). Wegen der freien Aldehydgruppe wirkt Glucose reduzierend (Fehling-Probe).',
+      m: mol(function (h) {
+        var c6 = h.add(0, 0), c5 = h.at(c6, 30), c4 = h.at(c5, -30), c3 = h.at(c4, 30), c2 = h.at(c3, -30), c1 = h.at(c2, 30);
+        var o6 = h.at(c6, 150, 'HO'), o5 = h.at(c5, 90, 'OH'), o4 = h.at(c4, 270, 'OH'), o3 = h.at(c3, 90, 'OH'), o2 = h.at(c2, 270, 'OH'), o1 = h.at(c1, 90, 'O');
+        h.bd(c6, c5); h.bd(c5, c4); h.bd(c4, c3); h.bd(c3, c2); h.bd(c2, c1); h.bd(c6, o6); h.bd(c1, o1, 2);
+        h.bd(c5, o5, 'w'); h.bd(c4, o4, 'd'); h.bd(c3, o3, 'd'); h.bd(c2, o2, 'd');
+        h.st(c2, [o2, c1, c3], 'R'); h.st(c3, [o3, c2, c4], 'S'); h.st(c4, [o4, c3, c5], 'R'); h.st(c5, [o5, c4, c6], 'R');
       }) },
 
     { id: 'alanin', cat: 'Aminosäuren', name: 'Alanin', alt: '2-Aminopropansäure', formula: 'C₃H₇NO₂', groups: ['Aminogruppe', 'Carboxygruppe', 'Methyl-Seitenkette'],
@@ -616,7 +636,15 @@
         var o1 = hoh(h, q[0], 1, 0), o3 = hoh(h, q[2], -1, 0), c5 = hch(h, q[3], 1, 0);
         h.st(q[0], [q[4], o1, q[1]], 'R'); h.st(q[2], [o3, q[3], q[1]], 'S'); h.st(q[3], [q[4], q[2], c5], 'R');
       }) },
-    { id: 'fructose', cat: 'Zucker & Nucleotide', name: 'Fructose', alt: 'Fruchtzucker', formula: 'C₆H₁₂O₆', groups: ['Fünfring (Furanose)', 'Hydroxygruppen', 'Keto-Zucker'],
+    { id: 'afructose', cat: 'Zucker & Nucleotide', name: 'α-D-Fructose', alt: 'α-D-Fructofuranose', formula: 'C₆H₁₂O₆', groups: ['Fünfring (Furanose)', 'Hydroxygruppen', 'Keto-Zucker', 'α-Anomer'],
+      ster: 'α-D-Fructofuranose',
+      where: 'Das α-Anomer der Fructose: Die OH-Gruppe am C2 zeigt nach unten. In Lösung liegt Fructose überwiegend als Pyranose vor, im Saccharose-Molekül und in den Phosphorylierungsprodukten der Glykolyse aber als Furanose.',
+      m: mol(function (h) {
+        var q = hring(h, 0, 0, 46, [342, 54, 126, 198, 270], { 4: 'O' });
+        var o2 = hv(h, q[0], -1, 'OH', 62), c1 = hch(h, q[0], 1, 0), o3 = hv(h, q[1], 1, 'HO'), o4 = hoh(h, q[2], -1, 0), c6 = hch(h, q[3], 1, 0);
+        h.st(q[0], [q[4], o2, q[1], c1], 'S'); h.st(q[1], [o3, q[0], q[2]], 'S'); h.st(q[2], [o4, q[3], q[1]], 'S'); h.st(q[3], [q[4], q[2], c6], 'R');
+      }) },
+    { id: 'fructose', cat: 'Zucker & Nucleotide', name: 'β-D-Fructose', alt: 'β-D-Fructofuranose, Fruchtzucker', formula: 'C₆H₁₂O₆', groups: ['Fünfring (Furanose)', 'Hydroxygruppen', 'Keto-Zucker'],
       ster: 'β-D-Fructofuranose',
       where: 'In Obst und Honig. Mit Glucose bildet sie den Haushaltszucker Saccharose.',
       m: mol(function (h) {
@@ -1411,11 +1439,11 @@
         var c5 = haworthNuc(h, r[3], true); oh(h, c5, 150);
       }) },
     { id: 'glucose6p', cat: 'Zucker & Nucleotide', name: 'Glucose-6-phosphat', alt: 'G6P', formula: 'C₆H₁₃O₉P', groups: ['Sechsring (Pyranose)', 'Phosphatester', 'Hydroxygruppen'],
-      ster: 'β-D-Glucopyranose-6-phosphat',
+      ster: 'α-D-Glucopyranose-6-phosphat',
       where: 'Der erste Schritt der Glykolyse: Hexokinase hängt ein Phosphat an Glucose. Die Phosphatgruppe ist bei pH 7 zweifach negativ geladen, so bleibt der Zucker in der Zelle gefangen. Die Summenformel gilt für die ungeladene Säure.',
       m: mol(function (h) {
-        var q = hpyr(h, 0, 0), o1 = hoh(h, q[0], 1, 0), o2 = hoh(h, q[1], -1, 0), o3 = hoh(h, q[2], 1, 0), o4 = hoh(h, q[3], -1, 0), c6 = hv(h, q[4], 1, '', 60);
-        h.st(q[0], [q[5], o1, q[1]], 'R'); h.st(q[1], [o2, q[0], q[2]], 'R'); h.st(q[2], [o3, q[1], q[3]], 'S'); h.st(q[3], [o4, q[4], q[2]], 'S'); h.st(q[4], [q[5], q[3], c6], 'R');
+        var q = hpyr(h, 0, 0), o1 = hoh(h, q[0], -1, 0), o2 = hoh(h, q[1], -1, 0), o3 = hoh(h, q[2], 1, 0), o4 = hoh(h, q[3], -1, 0), c6 = hv(h, q[4], 1, '', 60);
+        h.st(q[0], [q[5], o1, q[1]], 'S'); h.st(q[1], [o2, q[0], q[2]], 'R'); h.st(q[2], [o3, q[1], q[3]], 'S'); h.st(q[3], [o4, q[4], q[2]], 'S'); h.st(q[4], [q[5], q[3], c6], 'R');
         phosL(h, c6, 1);
       }) },
 

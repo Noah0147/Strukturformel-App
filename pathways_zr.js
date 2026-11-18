@@ -6,7 +6,7 @@
   function orderEnz(P, title) { return { title: title, items: P.steps.map(function (s, i) { return ['e' + i, s.e]; }) }; }
 
   var M = {
-    glc: { n: 'Glucose', m: 'glucose' }, g6p: { n: 'Glucose-6-phosphat', m: 'glucose6p' }, f6p: { n: 'Fructose-6-phosphat', m: 'fructose6p' },
+    glc: { n: 'α-D-Glucose', m: 'aglucose' }, g6p: { n: 'Glucose-6-phosphat', m: 'glucose6p' }, f6p: { n: 'Fructose-6-phosphat', m: 'fructose6p' },
     fbp: { n: 'Fructose-1,6-bisphosphat', m: 'fructose16bp' }, dhap: { n: 'Dihydroxyacetonphosphat', m: 'dhap' }, gap: { n: 'Glycerinaldehyd-3-phosphat', m: 'gap' },
     bpg: { n: '1,3-Bisphosphoglycerat', m: 'bpg13' }, pg3: { n: '3-Phosphoglycerat', m: 'pg3' }, pg2: { n: '2-Phosphoglycerat', m: 'pg2' },
     pep: { n: 'Phosphoenolpyruvat', m: 'pep' }, pyr: { n: 'Pyruvat', m: 'pyruvat' }, acoa: { n: 'Acetyl-CoA', m: 'acetylcoa' },
@@ -22,7 +22,7 @@
     mets: M,
     start: ['glc'],
     steps: [
-      { a: ['glc'], b: ['g6p'], e: 'Hexokinase', co: ['ATP → ADP'], irr: true, note: 'Die Phosphatgruppe macht das Molekül geladen, Glucose-6-phosphat kann die Zelle nicht mehr verlassen. In der Leber arbeitet die Glucokinase. Hexokinase wird durch ihr Produkt gehemmt.' },
+      { a: ['glc'], b: ['g6p'], e: 'Hexokinase', co: ['ATP → ADP'], irr: true, note: 'Gezeigt ist α-D-Glucose, die Hexokinase akzeptiert aber auch das β-Anomer. Die Phosphatgruppe macht das Molekül geladen, Glucose-6-phosphat kann die Zelle nicht mehr verlassen. In der Leber arbeitet die Glucokinase. Hexokinase wird durch ihr Produkt gehemmt.' },
       { a: ['g6p'], b: ['f6p'], e: 'Phosphoglucose-Isomerase', co: [], note: 'Isomerisierung von der Aldose zur Ketose, reversibel.' },
       { a: ['f6p'], b: ['fbp'], e: 'Phosphofructokinase-1', co: ['ATP → ADP'], irr: true, key: true, note: 'Schrittmacher der Glykolyse. Gehemmt durch ATP und Citrat, aktiviert durch AMP und Fructose-2,6-bisphosphat.' },
       { a: ['fbp'], b: ['gap', 'dhap'], e: 'Aldolase', co: [], note: 'Spaltet die Hexose in zwei Triosephosphate. Ab hier läuft jeder Schritt zweimal pro Glucose.' },
@@ -237,5 +237,5 @@
     atm.modes = ['comps', 'pairs0', 'pairs1', 'pairs2'];
   }
 
-  window.PATHWAYS = [ov, gly, pdh, tca].concat(window.PATHWAYS || []);
+  window.PATHWAYS = [gly, pdh, tca].concat(window.PATHWAYS || []).concat([ov]);
 })();

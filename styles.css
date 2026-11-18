@@ -339,3 +339,9 @@ span.gp { cursor: default; }
 .pzoom .zbox svg { width: 100%; height: auto; display: block; }
 .pzoom .zn { margin: 8px 0 0; text-align: center; font-weight: 700; font-size: 17px; }
 .pzoom .zc { margin: 8px 0 0; text-align: center; font-size: 12px; color: var(--muted); }
+
+/* zugeordnete Namen: mittig und füllend */
+.gn .gl.slot { display: flex; align-items: center; justify-content: center; text-align: center; min-height: 2.2em; font-size: 12px; font-size: 3.3cqw; font-weight: 700; padding: 3px 4px; }
+.gn .gl.slot.empty { font-weight: 400; }
+.gn.ov .gl.b.slot { min-height: 0; font-size: 14px; font-size: 4cqw; margin: 2px 0; padding: 8px 6px; }
+.pslot { display: flex; align-items: center; justify-content: center; text-align: center; font-weight: 600; }
