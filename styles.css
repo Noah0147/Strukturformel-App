@@ -327,3 +327,15 @@ span.gp { cursor: default; }
 .pslot.sel { border-color: var(--warn); background: var(--warn-soft); }
 .pslot.ok { border: 1.5px solid var(--accent); background: var(--soft); }
 .pslot.bad { border: 1.5px solid var(--o); }
+
+.gn .gt { position: relative; }
+.gn[data-zoom], .gt[data-zoom] { cursor: zoom-in; }
+.zm { position: absolute; top: 1px; right: 1px; width: 24px; height: 24px; display: grid; place-items: center; font-style: normal; font-size: 14px; line-height: 1; color: var(--accent); background: var(--surface); border: 1px solid var(--line); border-radius: 50%; cursor: zoom-in; z-index: 2; }
+.gn .zm { width: 18px; height: 18px; font-size: 11px; }
+.pick.st { position: relative; }
+.zhint { margin: 6px 0 0; text-align: center; font-size: 12px; color: var(--muted); }
+.pzoom { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px; background: rgba(0,0,0,.6); cursor: zoom-out; }
+.pzoom .zbox { background: var(--surface); border-radius: 16px; padding: 18px; width: 100%; max-width: 440px; }
+.pzoom .zbox svg { width: 100%; height: auto; display: block; }
+.pzoom .zn { margin: 8px 0 0; text-align: center; font-weight: 700; font-size: 17px; }
+.pzoom .zc { margin: 8px 0 0; text-align: center; font-size: 12px; color: var(--muted); }

@@ -45,11 +45,12 @@
       if (st.tag) {
         var tx, ty, an;
         if (d.ring) {
-          if (Math.abs(px - d.ring[0]) > 60) { an = px > d.ring[0] ? 'end' : 'start'; tx = px + (px > d.ring[0] ? -30 : 30); ty = py + 3.5; }
+          if (Math.abs(px - d.ring[0]) > 60) { an = px > d.ring[0] ? 'end' : 'start'; tx = px + (px > d.ring[0] ? -40 : 40); ty = py + 3.5; }
           else { an = px >= d.ring[0] ? 'start' : 'end'; tx = px + (px >= d.ring[0] ? 20 : -20); ty = py + 3.5; }
         } else if (off[0] > 0) { an = 'start'; tx = px + 21; ty = py + 3.5; }
         else if (off[0] < 0) { an = 'end'; tx = px - 21; ty = py + 3.5; }
         else { an = 'middle'; tx = px; ty = py + 22; }
+        var ta = d.tagAt && d.tagAt[i]; if (ta) { tx = px + ta[0]; ty = py + ta[1]; an = ta[2]; }
         tags.push([tx, ty, an, st.tag]);
       }
     });
@@ -66,7 +67,7 @@
     h = '<div class="gd" style="aspect-ratio:' + W + ' / ' + H + '"><svg class="gsvg" viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true"><defs><marker id="gar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--accent)"/></marker></defs>';
     if (d.ring) h += '<ellipse class="gring" cx="' + d.ring[0] + '" cy="' + d.ring[1] + '" rx="132" ry="185"/>';
     g.ar.forEach(function (a) { h += '<path class="ga" d="M' + a[0][0].toFixed(1) + ',' + a[0][1].toFixed(1) + ' L' + a[1][0].toFixed(1) + ',' + a[1][1].toFixed(1) + '" marker-end="url(#gar)"/>'; });
-    g.tags.forEach(function (t) { h += '<text class="gtag" x="' + t[0].toFixed(1) + '" y="' + t[1].toFixed(1) + '" text-anchor="' + t[2] + '">' + t[3] + '</text>'; });
+    g.tags.forEach(function (t) { var ls = String(t[3]).split('|'); h += '<text class="gtag" x="' + t[0].toFixed(1) + '" y="' + (t[1] - (ls.length - 1) * 5).toFixed(1) + '" text-anchor="' + t[2] + '">' + ls.map(function (l, li) { return '<tspan x="' + t[0].toFixed(1) + '" dy="' + (li ? 10 : 0) + '">' + l + '</tspan>'; }).join('') + '</text>'; });
     (d.notes || []).forEach(function (t) { h += '<text class="gtag" x="' + t[0] + '" y="' + t[1] + '" text-anchor="middle">' + t[2] + '</text>'; });
     h += '</svg>';
     Object.keys(d.nodes).forEach(function (key) { h += nodeHtml(key, o); });
@@ -90,7 +91,7 @@
     var cls = 'gn' + (ov ? ' ov' : '') + (slot && round.selSlot === k ? ' sel' : '') + (!o.train && selN && selN.t === 'n' && selN.k === k ? ' sel' : '');
     var sc = slot ? slotCls(k) : '';
     var st = 'left:' + pc(p[0], d.size[0]) + ';top:' + pc(p[1], d.size[1]) + ';width:' + pc(w, d.size[0]) + ';height:' + pc(hh, d.size[1]);
-    var attr = slot ? ' data-slot="' + k + '"' : (o.train ? ' disabled' : ' data-n="' + k + '"');
+    var attr = slot ? ' data-slot="' + k + '"' : (o.train ? (ov ? ' disabled' : ' data-zoom="' + cur.mets[k].m + '"') : ' data-n="' + k + '"');
     var inner;
     if (ov) {
       var s = cur.stages['gpca'.indexOf(k)], nameHtml = nm;
@@ -100,7 +101,10 @@
       var thumb = molSvg(cur.mets[k].m), lab = nm;
       if (slot && round.mode === 'structs') thumb = round.done ? molSvg(round.slotBy[k].val) : (round.put[k] != null ? molSvg(chipBy(round.put[k]).val) : '<span class="gq">?</span>');
       if (slot && round.mode === 'names') lab = slotText(k); else lab = hy(nm);
-      inner = '<span class="gt' + (slot && round.mode === 'structs' ? sc : '') + '">' + thumb + '</span><span class="gl' + (slot && round.mode === 'names' ? sc : '') + '">' + lab + '</span>';
+      var zA = '', zI = '';
+      if (slot && round.mode === 'names') zA = ' data-zoom="' + cur.mets[k].m + '"';
+      if (slot && round.mode === 'structs') { var zm = round.done ? round.slotBy[k].val : (round.put[k] != null ? chipBy(round.put[k]).val : null); if (zm) zI = '<i class="zm" data-zoom="' + zm + '">⤢</i>'; }
+      inner = '<span class="gt' + (slot && round.mode === 'structs' ? sc : '') + '"' + zA + '>' + thumb + zI + '</span><span class="gl' + (slot && round.mode === 'names' ? sc : '') + '">' + lab + '</span>';
     }
     return '<button type="button" class="' + cls + '" style="' + st + '"' + attr + '>' + inner + '</button>';
   }
@@ -241,7 +245,7 @@
   }
   function taskHtml() {
     var r = round, h = '';
-    if (r.mode === 'names' || r.mode === 'structs' || r.mode === 'enz') h = graphHtml({ train: true });
+    if (r.mode === 'names' || r.mode === 'structs' || r.mode === 'enz') { h = graphHtml({ train: true }); if (!isOv()) h += '<p class="zhint">Tipp: Auf eine Struktur tippen (bzw. auf ⤢) vergrößert sie.</p>'; }
     else if (r.mode === 'comps') {
       h = '<div class="gd scheme" style="aspect-ratio:' + cur.dia.size[0] + ' / ' + cur.dia.size[1] + '">' + cur.svg;
       r.slots.forEach(function (s) {
@@ -263,7 +267,7 @@
     if (round.done) return '';
     var used = {}, k; for (k in r.put) if (r.put[k] != null) used[r.put[k]] = 1;
     return r.chips.filter(function (c) { return !used[c.id]; }).map(function (c) {
-      return '<button type="button" class="pick' + (c.mol ? ' st' : '') + (r.selChip === c.id ? ' on' : '') + '" data-chip="' + c.id + '">' + (c.mol ? molSvg(c.mol) : c.label) + '</button>';
+      return '<button type="button" class="pick' + (c.mol ? ' st' : '') + (r.selChip === c.id ? ' on' : '') + '" data-chip="' + c.id + '">' + (c.mol ? molSvg(c.mol) + '<i class="zm" data-zoom="' + c.mol + '">⤢</i>' : c.label) + '</button>';
     }).join('');
   }
   function qHtml() {
@@ -332,9 +336,18 @@
     render();
   }
 
+  function zoom(id) {
+    var m = molObj(id); if (!m) return;
+    var nm = (mode === 'learn' || (round && round.done)) ? '<p class="zn">' + (m.name || m.n || '') + '</p>' : '';
+    var el = document.createElement('div'); el.className = 'pzoom';
+    el.innerHTML = '<div class="zbox">' + molSvg(id) + nm + '<p class="zc">Zum Schließen tippen</p></div>';
+    el.addEventListener('click', function () { el.remove(); });
+    document.body.appendChild(el);
+  }
   body.addEventListener('click', function (e) {
-    var t = e.target.closest ? e.target.closest('[data-k],[data-n],[data-e],[data-slot],[data-chip],[data-open],#p-check,#p-new,#p-new2') : null;
+    var t = e.target.closest ? e.target.closest('[data-zoom],[data-k],[data-n],[data-e],[data-slot],[data-chip],[data-open],#p-check,#p-new,#p-new2') : null;
     if (!t) return;
+    if (t.hasAttribute('data-zoom')) { zoom(t.getAttribute('data-zoom')); return; }
     if (t.hasAttribute('data-open')) { if (window.openMolecule) window.openMolecule(t.getAttribute('data-open')); return; }
     if (t.hasAttribute('data-k')) { selN = t.getAttribute('data-k'); mark(); var pi = document.getElementById('pinfo'); if (pi && pi.scrollIntoView && t.tagName !== 'BUTTON') pi.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return; }
     if (t.hasAttribute('data-n') || t.hasAttribute('data-e')) {

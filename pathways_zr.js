@@ -185,21 +185,25 @@
 
   /* ---------- Diagramme (Layout in einem 360-Einheiten-Raster) und Übungsmodi ---------- */
   var colL = 70, colR = 290;
-  gly.dia = { size: [360, 505], node: [88, 72],
-    nodes: { glc: [colL, 45], g6p: [colL, 145], f6p: [colL, 245], fbp: [colL, 345], gap: [colL, 460], dhap: [180, 392], bpg: [colR, 460], pg3: [colR, 345], pg2: [colR, 245], pep: [colR, 145], pyr: [colR, 45] },
-    pill: [[28, 0], [28, 0], [28, 0], [-28, 0], [6, 6], [0, 0], [-28, 0], [-28, 0], [-28, 0], [-28, 0]] };
-  ['−ATP', '', '−ATP', '', '', '+NADH', '+ATP', '', '−H₂O', '+ATP'].forEach(function (t, i) { gly.steps[i].tag = t; });
+  gly.dia = { size: [360, 568], node: [106, 88],
+    nodes: { glc: [56, 48], g6p: [56, 166], f6p: [56, 284], fbp: [56, 402], gap: [56, 520], dhap: [180, 461], bpg: [304, 520], pg3: [304, 402], pg2: [304, 284], pep: [304, 166], pyr: [304, 48] },
+    pill: [[28, 0], [28, 0], [28, 0], [-28, 0], [6, 6], [0, 0], [-28, 0], [-28, 0], [-28, 0], [-28, 0]],
+    tagAt: { 5: [0, 30, 'middle'], 6: [34, 3.5, 'start'], 8: [34, 3.5, 'start'], 9: [34, 3.5, 'start'] },
+    notes: [[180, 52, 'Angaben pro Glucose']] };
+  ['−1 ATP', '', '−1 ATP', '', '', '+2 NADH', '+2 ATP', '', '−2 H₂O', '+2 ATP'].forEach(function (t, i) { gly.steps[i].tag = t; });
   ['HK', 'PGI', 'PFK-1', 'ALD', 'TPI', 'GAPDH', 'PGK', 'PGM', 'ENO', 'PK'].forEach(function (t, i) { gly.steps[i].ab = t; });
   gly.modes = ['names', 'structs', 'enz'];
 
-  tca.dia = { size: [360, 470], node: [86, 72], ring: [180, 235],
-    nodes: { cit: [180, 50], iso: [292, 110], akg: [312, 235], scoa: [292, 360], suc: [180, 420], fum: [68, 360], mal: [48, 235], oaa: [68, 110], acoa: [180, 235] } };
-  ['', '', '+NADH, −CO₂', '+NADH, −CO₂', '+GTP', '+FADH₂', '', '+NADH'].forEach(function (t, i) { tca.steps[i].tag = t; });
+  tca.dia = { size: [360, 504], node: [90, 76], ring: [180, 245],
+    nodes: { cit: [180, 46], iso: [298, 124], akg: [316, 245], scoa: [298, 366], suc: [180, 444], fum: [62, 366], mal: [44, 245], oaa: [62, 124], acoa: [180, 245] },
+    tagAt: { 4: [22, 3.5, 'start'], 5: [-22, 3.5, 'end'] },
+    notes: [[180, 498, 'Angaben pro Acetyl-CoA']] };
+  ['', '', '+1 NADH|−1 CO₂', '+1 NADH|−1 CO₂', '+1 GTP', '+1 FADH₂', '', '+1 NADH'].forEach(function (t, i) { tca.steps[i].tag = t; });
   ['CS', 'ACO', 'IDH', 'KGDH', 'SCS', 'SDH', 'FUM', 'MDH'].forEach(function (t, i) { tca.steps[i].ab = t; });
   tca.modes = ['structs', 'names', 'enz'];
 
-  pdh.dia = { size: [360, 150], node: [100, 76], nodes: { pyr: [62, 75], acoa: [298, 75] }, pill: [[0, 0]], pillText: 'PDH',
-    notes: [[180, 38, '− CO₂'], [180, 118, 'NAD⁺ → NADH + H⁺, + CoA-SH']] };
+  pdh.dia = { size: [360, 160], node: [112, 96], nodes: { pyr: [58, 80], acoa: [302, 80] }, pill: [[0, 0]], pillText: 'PDH',
+    notes: [[180, 40, '−1 CO₂'], [180, 122, '+1 NADH'], [180, 134, '(NAD⁺ → NADH)'], [180, 148, '+ CoA-SH']] };
   pdh.steps[0].ab = 'PDH'; pdh.steps[0].tag = '';
   pdh.pairs = [
     { title: 'Cofaktor und Vitamin', hint: 'Welches Vitamin liefert welchen Cofaktor des PDH-Komplexes?', rows: [['Thiaminpyrophosphat (TPP)', 'Vitamin B₁ (Thiamin)'], ['FAD', 'Vitamin B₂ (Riboflavin)'], ['NAD⁺', 'Vitamin B₃ (Niacin)'], ['Coenzym A', 'Vitamin B₅ (Pantothensäure)'], ['Liponsäure', 'wird vom Körper selbst gebildet']] },
