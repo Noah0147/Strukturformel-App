@@ -143,8 +143,17 @@
   function balHtml() {
     var b = cur.bil;
     if (!b) return '<p class="pintro">' + cur.intro + '</p>';
-    function col(t, arr) { return '<div class="bcol"><span class="bh">' + t + '</span>' + arr.map(function (s) { return '<span class="bchip' + (/NADH|FADH₂|ATP|GTP/.test(s) ? ' e' : '') + '">' + s + '</span>'; }).join('') + '</div>'; }
-    return '<h3 class="ph3">Bilanz</h3><p class="bbasis">' + b.basis + '</p><div class="bil">' + col('Rein', b.rein) + '<span class="barr" aria-hidden="true">→</span>' + col('Raus', b.raus) + '</div>' + (b.note ? '<p class="bnote">' + b.note + '</p>' : '');
+    function side(arr) {
+      return arr.map(function (s) {
+        var q = s.split('|'), g = q[1] ? ' g' + q[1] : '';
+        return '<span class="bt' + g + '">' + q[0] + '</span>';
+      }).join('<span class="bp"> + </span>');
+    }
+    function sideA(arr) {
+      var h = side(arr), k = h.indexOf('<span class="bp">');
+      return '<span class="bnw"><span class="barr2">→</span> ' + (k < 0 ? h : h.slice(0, k)) + '</span>' + (k < 0 ? '' : h.slice(k));
+    }
+    return '<h3 class="ph3">Bilanz</h3><p class="bbasis">' + b.basis + '</p><p class="beq">' + side(b.rein) + '<span class="bp"> </span>' + sideA(b.raus) + '</p>' + (b.note ? '<p class="bnote">' + b.note + '</p>' : '');
   }
   function factsCard() { return '<div class="pcard"><h3 class="ph3">Zum Merken</h3><ul class="pfacts">' + cur.facts.map(function (f) { return '<li>' + f + '</li>'; }).join('') + '</ul></div>'; }
   function learnScheme() {

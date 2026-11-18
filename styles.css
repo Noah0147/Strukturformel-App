@@ -359,10 +359,13 @@ span.gp { cursor: default; }
 .vsnote { margin: 4px 0 0; text-align: center; font-size: 12px; font-weight: 600; color: var(--warn, #B45309); }
 
 .bbasis { margin: -4px 0 10px; font-size: 13px; color: var(--muted); }
-.bil { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: start; }
-.bcol { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.bh { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
-.bchip { padding: 6px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
-.bchip.e { background: var(--soft); border-color: var(--accent); color: var(--accent); }
-.barr { align-self: center; font-size: 22px; color: var(--accent); padding-top: 18px; }
+.beq { margin: 0; font-size: 14px; line-height: 2; font-weight: 600; }
+.bt { display: inline-block; padding: 0 6px; border-radius: 7px; border: 1px solid var(--line); background: var(--surface); white-space: nowrap; }
+.bp { color: var(--muted); }
+.barr2 { color: var(--accent); font-size: 16px; font-weight: 700; }
+.bt.g1 { --gc: #1F6FD1; } .bt.g2 { --gc: #0F8A5F; } .bt.g3 { --gc: #D2691E; } .bt.g4 { --gc: #8A3FC0; } .bt.g5 { --gc: #C2306B; }
+.bt[class*="g"] { color: var(--gc); border-color: var(--gc); background: color-mix(in srgb, var(--gc) 12%, var(--surface)); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .bt.g1 { --gc: #7DB2FF; } :root:not([data-theme="light"]) .bt.g2 { --gc: #4ADE9C; } :root:not([data-theme="light"]) .bt.g3 { --gc: #FFA55C; } :root:not([data-theme="light"]) .bt.g4 { --gc: #C79BFF; } :root:not([data-theme="light"]) .bt.g5 { --gc: #FF7FAE; } }
+:root[data-theme="dark"] .bt.g1 { --gc: #7DB2FF; } :root[data-theme="dark"] .bt.g2 { --gc: #4ADE9C; } :root[data-theme="dark"] .bt.g3 { --gc: #FFA55C; } :root[data-theme="dark"] .bt.g4 { --gc: #C79BFF; } :root[data-theme="dark"] .bt.g5 { --gc: #FF7FAE; }
 .bnote { margin: 10px 0 0; font-size: 13px; color: var(--muted); line-height: 1.4; }
+.bnw { white-space: nowrap; }

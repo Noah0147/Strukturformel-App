@@ -237,10 +237,10 @@
     atm.modes = ['comps', 'pairs0', 'pairs1', 'pairs2'];
   }
 
-  gly.bil = { basis: 'pro Glucose', rein: ['1 α-D-Glucose', '2 NAD⁺', '2 ADP', '2 Pᵢ'], raus: ['2 Pyruvat', '2 NADH', '2 ATP (netto)', '2 H⁺', '2 H₂O'], note: 'Brutto: 2 ATP werden verbraucht (Schritt 1 und 3), 4 ATP gebildet (Schritt 7 und 10).' };
-  pdh.bil = { basis: 'pro Pyruvat (pro Glucose zweimal)', rein: ['1 Pyruvat', '1 NAD⁺', '1 CoA-SH'], raus: ['1 Acetyl-CoA', '1 CO₂', '1 NADH', '1 H⁺'], note: '' };
-  tca.bil = { basis: 'pro Acetyl-CoA (pro Glucose zweimal)', rein: ['1 Acetyl-CoA', '3 NAD⁺', '1 FAD', '1 GDP', '1 Pᵢ', '2 H₂O'], raus: ['2 CO₂', '3 NADH', '1 FADH₂', '1 GTP', '1 CoA-SH', '3 H⁺'], note: '' };
-  ov.bil = { basis: 'pro Glucose, gesamt', rein: ['1 Glucose', '6 O₂', 'ca. 30–32 ADP', 'ca. 30–32 Pᵢ'], raus: ['6 CO₂', '6 H₂O', 'ca. 30–32 ATP'], note: 'ATP aus: 2 Glykolyse + 2 GTP im Citratzyklus + ca. 26–28 in der Atmungskette.' };
-  if (atm) atm.bil = { basis: 'pro Glucose (aus 10 NADH und 2 FADH₂)', rein: ['10 NADH', '2 FADH₂', '6 O₂', 'ca. 26–28 ADP', 'ca. 26–28 Pᵢ'], raus: ['10 NAD⁺', '2 FAD', '12 H₂O', 'ca. 26–28 ATP'], note: '' };
+  gly.bil = {"basis": "pro Glucose", "rein": ["1 α-D-Glucose|1", "2 NAD⁺|2", "2 ADP|3", "2 Pᵢ|3"], "raus": ["2 Pyruvat|1", "2 NADH|2", "2 ATP|3", "2 H⁺", "2 H₂O"], "note": "Brutto: 2 ATP werden verbraucht (Schritt 1 und 3), 4 ATP gebildet (Schritt 7 und 10)."};
+  pdh.bil = {"basis": "pro Pyruvat (pro Glucose zweimal)", "rein": ["1 Pyruvat|1", "1 NAD⁺|2", "1 CoA-SH"], "raus": ["1 Acetyl-CoA|1", "1 CO₂", "1 NADH|2", "1 H⁺"], "note": ""};
+  tca.bil = {"basis": "pro Acetyl-CoA (pro Glucose zweimal)", "rein": ["1 Acetyl-CoA|1", "3 NAD⁺|2", "1 FAD|4", "1 GDP|3", "1 Pᵢ|3", "2 H₂O"], "raus": ["2 CO₂|1", "3 NADH|2", "1 FADH₂|4", "1 GTP|3", "1 CoA-SH", "3 H⁺"], "note": ""};
+  ov.bil = {"basis": "pro Glucose, gesamt", "rein": ["1 Glucose|1", "6 O₂|5", "ca. 30–32 ADP|3", "ca. 30–32 Pᵢ|3"], "raus": ["6 CO₂|1", "6 H₂O|5", "ca. 30–32 ATP|3"], "note": "ATP aus: 2 Glykolyse + 2 GTP im Citratzyklus + ca. 26–28 in der Atmungskette."};
+  if (atm) atm.bil = {"basis": "pro Glucose (aus 10 NADH und 2 FADH₂)", "rein": ["10 NADH|2", "2 FADH₂|4", "6 O₂|1", "ca. 26–28 ADP|3", "ca. 26–28 Pᵢ|3"], "raus": ["10 NAD⁺|2", "2 FAD|4", "12 H₂O|1", "ca. 26–28 ATP|3"], "note": ""};
   window.PATHWAYS = [gly, pdh, tca].concat(window.PATHWAYS || []).concat([ov]);
 })();
