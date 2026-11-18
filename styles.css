@@ -359,8 +359,8 @@ span.gp { cursor: default; }
 .vsnote { margin: 4px 0 0; text-align: center; font-size: 12px; font-weight: 600; color: var(--warn, #B45309); }
 
 .bbasis { margin: -4px 0 10px; font-size: 13px; color: var(--muted); }
-.beq { margin: 0; font-size: 14px; line-height: 2; font-weight: 600; }
-.bt { display: inline-block; padding: 0 6px; border-radius: 7px; border: 1px solid var(--line); background: var(--surface); white-space: nowrap; }
+.beq { margin: 0; font-size: 14px; line-height: 2.5; font-weight: 600; }
+.bt { display: inline-block; line-height: 1.5; padding: 0 6px; border-radius: 7px; border: 1px solid var(--line); background: var(--surface); white-space: nowrap; }
 .bp { color: var(--muted); }
 .barr2 { color: var(--accent); font-size: 16px; font-weight: 700; }
 .bt { --gc: #4F6B7D; } .bt.g1 { --gc: #1F6FD1; } .bt.g2 { --gc: #0F8A5F; } .bt.g3 { --gc: #D2691E; } .bt.g4 { --gc: #8A3FC0; } .bt.g5 { --gc: #C2306B; }
