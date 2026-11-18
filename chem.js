@@ -63,44 +63,62 @@
     return { n: n, c1: c1, c2: c2 };
   }
 
-  var showH = false;
-  /* Kopie der Struktur mit allen freien H-Atomen an unbeschrifteten Kohlenstoffen (Valenz 4) */
+  var showH = false; /* true: Valenzstrichformel (alle Atome, auch C und H, einzeln gezeichnet) */
   function withH(m) {
-    var atoms = m.atoms.map(function (a) { return a; }), bonds = m.bonds.slice(), n0 = m.atoms.length, i;
+    var atoms = m.atoms.map(function (a) { return Object.assign({}, a); }), bonds = m.bonds.map(function (b) { return b; }), n0 = atoms.length, i;
+    function addH(i, ang, len, l) { atoms.push({ x: atoms[i].x + (len || 30) * Math.cos(ang), y: atoms[i].y + (len || 30) * Math.sin(ang), l: l || 'H' }); bonds.push({ i: i, j: atoms.length - 1, o: 1, ctr: null }); return atoms.length - 1; }
+    function angles(i) {
+      var angs = [];
+      bonds.forEach(function (b) { if (b.i === i || b.j === i) { var Q = atoms[b.i === i ? b.j : b.i]; angs.push(Math.atan2(Q.y - atoms[i].y, Q.x - atoms[i].x)); } });
+      return angs.sort(function (p, q) { return p - q; });
+    }
+    function spread(i, k, len) { /* k H-Atome gleichmäßig in die größte Lücke */
+      var angs = angles(i), start, gap, k2;
+      if (!angs.length) { start = -Math.PI / 2; gap = 2 * Math.PI; }
+      else { gap = -1; start = 0; angs.forEach(function (t, q) { var nx = q + 1 < angs.length ? angs[q + 1] : angs[0] + 2 * Math.PI, g = nx - t; if (g > gap) { gap = g; start = t; } }); }
+      for (k2 = 1; k2 <= k; k2++) addH(i, start + gap * k2 / (k + 1), len);
+    }
     for (i = 0; i < n0; i++) {
-      var A = m.atoms[i];
+      var A = atoms[i];
       if (A.l) continue;
-      var val = 0, angs = [];
-      m.bonds.forEach(function (b) {
-        if (b.i !== i && b.j !== i) return;
-        var Q = m.atoms[b.i === i ? b.j : b.i];
-        val += (b.o === 2 || b.o === 3) ? b.o : 1;
-        angs.push(Math.atan2(Q.y - A.y, Q.x - A.x));
-      });
+      var val = 0;
+      m.bonds.forEach(function (b) { if (b.i === i || b.j === i) val += (b.o === 2 || b.o === 3) ? b.o : 1; });
       var nh = 4 - val;
+      A.l = 'C';
       if (nh <= 0) continue;
       if (A.rc) { /* Haworth-Ring: H senkrecht, gegenüber der Gruppe */
         var vb = null;
         m.bonds.forEach(function (b) { if ((b.i === i || b.j === i) && b.v) vb = b; });
-        var dirs = vb ? [-vb.v] : (nh >= 2 ? [1, -1] : [1]);
-        dirs.forEach(function (dv) { atoms.push({ x: A.x, y: A.y - dv * 26, l: 'H' }); bonds.push({ i: i, j: atoms.length - 1, o: 1, ctr: null }); });
+        (vb ? [-vb.v] : (nh >= 2 ? [1, -1] : [1])).forEach(function (dv) { addH(i, dv > 0 ? -Math.PI / 2 : Math.PI / 2, 26); });
         continue;
       }
-      angs.sort(function (p, q) { return p - q; });
-      var start, gap;
-      if (!angs.length) { start = -Math.PI / 2; gap = 2 * Math.PI; }
-      else {
-        gap = -1; start = 0;
-        angs.forEach(function (t, k) {
-          var nx = k + 1 < angs.length ? angs[k + 1] : angs[0] + 2 * Math.PI, g = nx - t;
-          if (g > gap) { gap = g; start = t; }
-        });
-      }
-      var k2;
-      for (k2 = 1; k2 <= nh; k2++) {
-        var th = start + gap * k2 / (nh + 1);
-        atoms.push({ x: A.x + 30 * Math.cos(th), y: A.y + 30 * Math.sin(th), l: 'H' });
-        bonds.push({ i: i, j: atoms.length - 1, o: 1, ctr: null });
+      spread(i, nh, 30);
+    }
+    /* beschriftete Gruppen in einzelne Atome auflösen */
+    for (i = 0; i < n0; i++) {
+      var B = atoms[i], L = B.l, chg = '', f, z;
+      if (!L) continue;
+      f = L.charAt(0); z = L.charAt(L.length - 1);
+      if (f === '⁻' || f === '⁺') { chg = f; L = L.slice(1); } else if (z === '⁻' || z === '⁺') { chg = z; L = L.slice(0, -1); }
+      var nbs = [];
+      bonds.forEach(function (b) { if (b.i === i || b.j === i) nbs.push(atoms[b.i === i ? b.j : b.i]); });
+      if (L === 'OH' || L === 'HO' || L === 'SH' || L === 'HS') {
+        B.l = L.replace('H', '') + chg;
+        if (nbs.length === 1) {
+          var th = Math.atan2(nbs[0].y - B.y, nbs[0].x - B.x) + Math.PI, c1 = th + 0.95, c2 = th - 0.95;
+          addH(i, Math.sin(c1) < Math.sin(c2) ? c1 : c2, 28);
+        } else spread(i, 1, 28);
+      } else if (L === 'NH₂' || L === 'H₂N' || L === 'NH₃' || L === 'H₃N') {
+        B.l = 'N' + chg; spread(i, L.indexOf('₃') >= 0 ? 3 : 2, 28);
+      } else if (L === 'NH' || L === 'HN') {
+        B.l = 'N' + chg; spread(i, 1, 28);
+      } else if ((L === 'CH₂OH' || L === 'HOH₂C') && nbs.length === 1) {
+        var out = Math.atan2(B.y - nbs[0].y, B.x - nbs[0].x), oi = atoms.length;
+        B.l = 'C';
+        atoms.push({ x: B.x + 38 * Math.cos(out), y: B.y + 38 * Math.sin(out), l: 'O' }); bonds.push({ i: i, j: oi, o: 1, ctr: null });
+        spread(i, 2, 28);
+        var th2 = out, cc1 = th2 + 0.95, cc2 = th2 - 0.95;
+        addH(oi, Math.sin(cc1) < Math.sin(cc2) ? cc1 : cc2, 28);
       }
     }
     return Object.assign({}, m, { atoms: atoms, bonds: bonds, _h: true });
