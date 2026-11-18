@@ -84,7 +84,7 @@
       var val = 0;
       m.bonds.forEach(function (b) { if (b.i === i || b.j === i) val += (b.o === 2 || b.o === 3) ? b.o : 1; });
       var nh = 4 - val;
-      A.l = 'C';
+      if (!A.rc) A.l = 'C'; /* Haworth-Ring: Ringkohlenstoffe bleiben unbeschriftet (Konvention) */
       if (nh <= 0) continue;
       if (A.rc) { /* Haworth-Ring: H senkrecht, gegenüber der Gruppe */
         var vb = null;
@@ -102,6 +102,7 @@
       if (f === '⁻' || f === '⁺') { chg = f; L = L.slice(1); } else if (z === '⁻' || z === '⁺') { chg = z; L = L.slice(0, -1); }
       var nbs = [];
       bonds.forEach(function (b) { if (b.i === i || b.j === i) nbs.push(atoms[b.i === i ? b.j : b.i]); });
+      if (nbs.length === 1 && nbs[0].rc) continue; /* Gruppen am Haworth-Ring bleiben als OH, CH₂OH stehen */
       if (L === 'OH' || L === 'HO' || L === 'SH' || L === 'HS') {
         B.l = L.replace('H', '') + chg;
         if (nbs.length === 1) {
@@ -400,7 +401,7 @@
         if (e.kind === 'acid') l = ionState(e, pH) ? ACID[e.nf] : e.nf;
         else l = ionState(e, pH) ? BASE[e.nf] : e.nf;
       }
-      return { x: a.x, y: a.y, l: l };
+      return Object.assign({}, a, { l: l });
     });
     return render(Object.assign({}, m, { atoms: atoms }), label);
   }
