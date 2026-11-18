@@ -8,6 +8,19 @@
     c.svg = Chem.render(c.m, 'Strukturformel eines Moleküls');
   });
 
+  var HKEY = 'strukturformel-app-h-v1';
+  function renderAll() { CARDS.forEach(function (c) { c.svg = Chem.render(c.m, 'Strukturformel eines Moleküls'); }); }
+  function setH(v, initial) {
+    Chem.setH(v);
+    var b = document.getElementById('h-toggle');
+    if (b) { b.setAttribute('aria-pressed', v ? 'true' : 'false'); b.textContent = v ? 'H-Atome: an' : 'H-Atome anzeigen'; }
+    try { localStorage.setItem(HKEY, v ? '1' : '0'); } catch (e) {}
+    if (initial) return;
+    renderAll(); phCache = {};
+    window.dispatchEvent(new Event('hchange'));
+    if (typeof refreshViews === 'function') refreshViews();
+  }
+  try { if (localStorage.getItem(HKEY) === '1') { Chem.setH(true); renderAll(); } } catch (e) {}
   var KEY = 'strukturformel-app-v1';
   var SEEN_KEY = 'strukturformel-app-seen-v1';
   var DISMISS_KEY = 'strukturformel-app-install-dismissed';
@@ -345,6 +358,12 @@
     if (db) { renderDb(); setTimeout(function () { if (!dbOpen) $('q').focus(); }, 0); }
     try { history.replaceState(null, '', db ? '#datenbank' : pa ? '#stoffwechsel' : location.pathname + location.search); } catch (e) {}
   }
+  function refreshViews() {
+    if (!$('view-learn').hidden) fill();
+    if (!$('view-db').hidden) { if (dbOpen) { var y0 = window.pageYOffset; openDetail(dbOpen); window.scrollTo(0, y0); } else renderDb(); }
+  }
+  $('h-toggle').addEventListener('click', function () { setH(!Chem.getH()); });
+  setH(Chem.getH(), true);
   $('tab-learn').addEventListener('click', function () { tab('learn'); });
   $('tab-db').addEventListener('click', function () { tab('db'); });
   $('tab-path').addEventListener('click', function () { tab('path'); });

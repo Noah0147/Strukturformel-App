@@ -345,3 +345,6 @@ span.gp { cursor: default; }
 .gn .gl.slot.empty { font-weight: 400; }
 .gn.ov .gl.b.slot { min-height: 0; font-size: 14px; font-size: 4cqw; margin: 2px 0; padding: 8px 6px; }
 .pslot { display: flex; align-items: center; justify-content: center; text-align: center; font-weight: 600; }
+
+.hbtn { margin-top: 8px; padding: 5px 12px; font: inherit; font-size: 13px; color: var(--muted); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; cursor: pointer; }
+.hbtn[aria-pressed="true"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); font-weight: 500; }

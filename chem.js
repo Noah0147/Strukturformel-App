@@ -63,7 +63,50 @@
     return { n: n, c1: c1, c2: c2 };
   }
 
+  var showH = false;
+  /* Kopie der Struktur mit allen freien H-Atomen an unbeschrifteten Kohlenstoffen (Valenz 4) */
+  function withH(m) {
+    var atoms = m.atoms.map(function (a) { return a; }), bonds = m.bonds.slice(), n0 = m.atoms.length, i;
+    for (i = 0; i < n0; i++) {
+      var A = m.atoms[i];
+      if (A.l) continue;
+      var val = 0, angs = [];
+      m.bonds.forEach(function (b) {
+        if (b.i !== i && b.j !== i) return;
+        var Q = m.atoms[b.i === i ? b.j : b.i];
+        val += (b.o === 2 || b.o === 3) ? b.o : 1;
+        angs.push(Math.atan2(Q.y - A.y, Q.x - A.x));
+      });
+      var nh = 4 - val;
+      if (nh <= 0) continue;
+      if (A.rc) { /* Haworth-Ring: H senkrecht, gegenüber der Gruppe */
+        var vb = null;
+        m.bonds.forEach(function (b) { if ((b.i === i || b.j === i) && b.v) vb = b; });
+        var dirs = vb ? [-vb.v] : (nh >= 2 ? [1, -1] : [1]);
+        dirs.forEach(function (dv) { atoms.push({ x: A.x, y: A.y - dv * 26, l: 'H' }); bonds.push({ i: i, j: atoms.length - 1, o: 1, ctr: null }); });
+        continue;
+      }
+      angs.sort(function (p, q) { return p - q; });
+      var start, gap;
+      if (!angs.length) { start = -Math.PI / 2; gap = 2 * Math.PI; }
+      else {
+        gap = -1; start = 0;
+        angs.forEach(function (t, k) {
+          var nx = k + 1 < angs.length ? angs[k + 1] : angs[0] + 2 * Math.PI, g = nx - t;
+          if (g > gap) { gap = g; start = t; }
+        });
+      }
+      var k2;
+      for (k2 = 1; k2 <= nh; k2++) {
+        var th = start + gap * k2 / (nh + 1);
+        atoms.push({ x: A.x + 30 * Math.cos(th), y: A.y + 30 * Math.sin(th), l: 'H' });
+        bonds.push({ i: i, j: atoms.length - 1, o: 1, ctr: null });
+      }
+    }
+    return Object.assign({}, m, { atoms: atoms, bonds: bonds, _h: true });
+  }
   function render(m, label) {
+    if (showH && !m._h) m = withH(m);
     var lines = '', texts = '';
     m.atoms.forEach(function (a, ix) { a.idx = ix; /* Ladung vom Elementsymbol trennen: Bindungen enden am Buchstaben, die Ladung steht als Hochzeichen daneben */
       if (a.pp || !a.l) return;
@@ -344,5 +387,5 @@
     return render(Object.assign({}, m, { atoms: atoms }), label);
   }
 
-  window.Chem = { L: L, EXT: EXT, mol: mol, ring: ring, KEK: KEK, SAT: SAT, AP: AP, RP: RP, fusedPent: fusedPent, aaBase: aaBase, render: render, ionize: ionize, phInfo: phInfo, renderPH: renderPH };
+  window.Chem = { L: L, EXT: EXT, mol: mol, ring: ring, KEK: KEK, SAT: SAT, AP: AP, RP: RP, fusedPent: fusedPent, aaBase: aaBase, render: render, ionize: ionize, phInfo: phInfo, renderPH: renderPH, setH: function (v) { showH = !!v; }, getH: function () { return showH; } };
 })();

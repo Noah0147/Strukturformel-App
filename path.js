@@ -395,6 +395,7 @@
   document.getElementById('pm-train').addEventListener('click', function () { setMode('train'); });
   document.getElementById('pm-quiz').addEventListener('click', function () { setMode('quiz'); });
   sel.innerHTML = P.map(function (p, i) { return '<option value="' + i + '">' + esc(p.name) + '</option>'; }).join('');
+  window.addEventListener('hchange', function () { svgC = {}; if (!document.getElementById('view-path').hidden) render(); });
   sel.addEventListener('change', function () { cur = P[parseInt(sel.value, 10)]; selN = null; round = null; qz = null; render(); });
   window.PathUI = { _r: function () { return round; }, open: function () { if (!built) { built = true; setMode('learn'); } }, count: P.length };
 })();
