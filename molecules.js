@@ -102,6 +102,17 @@
       else { h.bd(pa, h.at(pa, 150, '⁻O')); }
     }
   }
+  function phosC(h, c5, n) { /* Phosphat nach rechts, mit Ladungen */
+    var prev = h.at(c5, 24, 'O'), k, pa, o1, q1, ob;
+    h.bd(c5, prev);
+    for (k = 0; k < n; k++) {
+      pa = h.at(prev, -30, 'P'); h.bd(prev, pa);
+      o1 = h.at(pa, 90, 'O'); h.bd(pa, o1, 2);
+      q1 = h.at(pa, 270, 'O⁻'); h.bd(pa, q1);
+      if (k < n - 1) { ob = h.at(pa, 30, 'O'); h.bd(pa, ob); prev = ob; }
+      else { h.bd(pa, h.at(pa, 30, 'O⁻')); }
+    }
+  }
   function hs(h, idx, deg, ord) { /* explizites H am Steroid-Ringschluss (kurze Bindung ins Ringinnere) */
     var A = h.m.atoms[idx], r = deg * Math.PI / 180, k = h.add(A.x + 0.55 * L * Math.cos(r), A.y - 0.55 * L * Math.sin(r), 'H');
     h.bd(idx, k, ord); return k;
@@ -150,7 +161,7 @@
     return n;
   }
 
-  window.DATA_VERSION = '2026-11-18';
+  window.DATA_VERSION = '2026-11-18b';
   window.CATEGORIES = ['Alkohole & Carbonyle', 'Säuren & Ester', 'Aromaten', 'Aminosäuren', 'Nucleobasen & Purine', 'Wirkstoffe & Aromastoffe', 'Stoffwechsel & Pflanzen', 'Vitamine', 'Zucker & Nucleotide', 'Steroide & Botenstoffe', 'Kleine Moleküle'];
 
 
@@ -976,6 +987,70 @@
         var o = h.at(c2, 210, 'O'), p = h.at(o, 150, 'P'); h.bd(c2, o); h.bd(o, p);
         var po = h.at(p, 90, 'O'), pa = h.at(p, 180, 'HO'), pb = h.at(p, 270, 'OH'); h.bd(p, po, 2); h.bd(p, pa); h.bd(p, pb);
       }) },
+    { id: 'fructose6p', cat: 'Zucker & Nucleotide', name: 'Fructose-6-phosphat', alt: 'F6P', formula: 'C₆H₁₃O₉P', groups: ['Fünfring (Furanose)', 'Phosphatester', 'Keto-Zucker'],
+      ster: 'β-D-Fructofuranose-6-phosphat',
+      where: 'Zweiter Zwischenschritt der Glykolyse: Die Phosphoglucose-Isomerase wandelt Glucose-6-phosphat in Fructose-6-phosphat um. Die Phosphatgruppe ist bei pH 7 zweifach negativ geladen. Die Summenformel gilt für die ungeladene Säure.',
+      m: mol(function (h) {
+        var q = hring(h, 0, 0, 46, [342, 54, 126, 198, 270], { 4: 'O' });
+        var o2 = hv(h, q[0], 1, 'OH', 62), c1 = hch(h, q[0], -1, 0), o3 = hv(h, q[1], 1, 'HO'), o4 = hoh(h, q[2], -1, 0), c6 = hv(h, q[3], 1, '', 60);
+        h.st(q[0], [q[4], o2, q[1], c1], 'R'); h.st(q[1], [o3, q[0], q[2]], 'S'); h.st(q[2], [o4, q[3], q[1]], 'S'); h.st(q[3], [q[4], q[2], c6], 'R');
+        phosL(h, c6, 1);
+      }) },
+    { id: 'fructose16bp', cat: 'Zucker & Nucleotide', name: 'Fructose-1,6-bisphosphat', alt: 'F1,6BP · FBP', formula: 'C₆H₁₄O₁₂P₂', groups: ['Fünfring (Furanose)', 'Zwei Phosphatester', 'Keto-Zucker'],
+      ster: 'β-D-Fructofuranose-1,6-bisphosphat',
+      where: 'Produkt der Phosphofructokinase-1, dem wichtigsten Regulationsschritt der Glykolyse. Die Aldolase spaltet es in zwei Triosephosphate. Die Summenformel gilt für die ungeladene Säure.',
+      m: mol(function (h) {
+        var q = hring(h, 0, 0, 46, [342, 54, 126, 198, 270], { 4: 'O' });
+        var o2 = hv(h, q[0], 1, 'OH', 62), c1 = hv(h, q[0], -1, '', 60), o3 = hv(h, q[1], 1, 'HO'), o4 = hoh(h, q[2], -1, 0), c6 = hv(h, q[3], 1, '', 60);
+        h.st(q[0], [q[4], o2, q[1], c1], 'R'); h.st(q[1], [o3, q[0], q[2]], 'S'); h.st(q[2], [o4, q[3], q[1]], 'S'); h.st(q[3], [q[4], q[2], c6], 'R');
+        phosC(h, c1, 1); phosL(h, c6, 1);
+      }) },
+    { id: 'dhap', cat: 'Stoffwechsel & Pflanzen', name: 'Dihydroxyacetonphosphat', alt: 'DHAP', formula: 'C₃H₇O₆P', groups: ['Keton', 'Phosphatester', 'Hydroxygruppe'],
+      where: 'Entsteht in der Glykolyse beim Spalten von Fructose-1,6-bisphosphat. Die Triosephosphat-Isomerase wandelt es in Glycerinaldehyd-3-phosphat um. Zugleich Ausgangsstoff für das Glycerin der Fette. Die Summenformel gilt für die ungeladene Säure.',
+      m: mol(function (h) { var o0 = h.add(0, 0, 'HO'), c0 = h.at(o0, -30), c1 = h.at(c0, 30), o1 = h.at(c1, 90, 'O'), c2 = h.at(c1, -30); h.bd(o0, c0); h.bd(c0, c1); h.bd(c1, o1, 2); h.bd(c1, c2); phosC(h, c2, 1); }) },
+    { id: 'gap', cat: 'Stoffwechsel & Pflanzen', name: 'Glycerinaldehyd-3-phosphat', alt: 'GAP · G3P', formula: 'C₃H₇O₆P', groups: ['Aldehyd', 'Phosphatester', 'Hydroxygruppe'],
+      ster: 'D-Glycerinaldehyd-3-phosphat, (R)',
+      where: 'Zentrales Zwischenprodukt der Glykolyse und des Calvin-Zyklus. Die GAP-Dehydrogenase oxidiert den Aldehyd und bildet dabei NADH. Die Summenformel gilt für die ungeladene Säure.',
+      m: mol(function (h) { var c0 = h.add(0, 0), c1 = h.at(c0, 30), c2 = h.at(c1, -30), o1 = h.at(c1, 90, 'OH'), o2 = h.at(c2, 90, 'O'); h.bd(c0, c1); h.bd(c1, c2); h.bd(c1, o1, 'w'); h.bd(c2, o2, 2); h.st(c1, [o1, c2, c0], 'R'); phosL(h, c0, 1); }) },
+    { id: 'bpg13', cat: 'Stoffwechsel & Pflanzen', name: '1,3-Bisphosphoglycerat', alt: '1,3-BPG', formula: 'C₃H₈O₁₀P₂', groups: ['Acylphosphat (energiereich)', 'Phosphatester', 'Hydroxygruppe'],
+      ster: '(R)-1,3-Bisphosphoglycerat',
+      where: 'Entsteht in der Glykolyse durch die GAP-Dehydrogenase. Das Acylphosphat überträgt sein Phosphat auf ADP (Substratkettenphosphorylierung). In Erythrocyten zweigt davon 2,3-BPG ab, das die Sauerstoffabgabe des Hämoglobins erleichtert. Die Summenformel gilt für die ungeladene Säure.',
+      m: mol(function (h) {
+        var c0 = h.add(0, 0), c1 = h.at(c0, 30), c2 = h.at(c1, -30), o1 = h.at(c1, 90, 'OH'), o2 = h.at(c2, 90, 'O'), ob = h.at(c2, -30, 'O');
+        h.bd(c0, c1); h.bd(c1, c2); h.bd(c1, o1, 'w'); h.bd(c2, o2, 2); h.bd(c2, ob);
+        var p = h.at(ob, 30, 'P'); h.bd(ob, p); h.bd(p, h.at(p, 90, 'O'), 2); h.bd(p, h.at(p, 0, 'O⁻')); h.bd(p, h.at(p, 300, 'O⁻'));
+        h.st(c1, [o1, c2, c0], 'R'); phosL(h, c0, 1);
+      }) },
+    { id: 'pg3', cat: 'Stoffwechsel & Pflanzen', name: '3-Phosphoglycerat', alt: '3-PG', formula: 'C₃H₇O₇P', groups: ['Carboxygruppe', 'Phosphatester', 'Hydroxygruppe'],
+      ster: '(R)-3-Phosphoglycerat',
+      where: 'Produkt der Phosphoglycerat-Kinase in der Glykolyse (hier entsteht das erste ATP). Auch erstes stabiles Produkt der CO₂-Fixierung im Calvin-Zyklus der Pflanzen. Die Summenformel gilt für die ungeladene Säure.',
+      m: mol(function (h) { var c0 = h.add(0, 0), c1 = h.at(c0, 30), c2 = h.at(c1, -30), o1 = h.at(c1, 90, 'OH'), o2 = h.at(c2, 90, 'O'), o3 = h.at(c2, -30, 'OH'); h.bd(c0, c1); h.bd(c1, c2); h.bd(c1, o1, 'w'); h.bd(c2, o2, 2); h.bd(c2, o3); h.st(c1, [o1, c2, c0], 'R'); phosL(h, c0, 1); }) },
+    { id: 'pg2', cat: 'Stoffwechsel & Pflanzen', name: '2-Phosphoglycerat', alt: '2-PG', formula: 'C₃H₇O₇P', groups: ['Carboxygruppe', 'Phosphatester', 'Hydroxygruppe'],
+      ster: '(R)-2-Phosphoglycerat',
+      where: 'Zwischenprodukt der Glykolyse: Die Mutase verschiebt die Phosphatgruppe von C3 nach C2, danach spaltet die Enolase Wasser ab und bildet Phosphoenolpyruvat. Die Summenformel gilt für die ungeladene Säure.',
+      m: mol(function (h) {
+        var o0 = h.add(0, 0, 'HO'), c0 = h.at(o0, -30), c1 = h.at(c0, 30), c2 = h.at(c1, -30), o1 = h.at(c1, 90, 'O'), o2 = h.at(c2, 90, 'O'), o3 = h.at(c2, -30, 'OH');
+        h.bd(o0, c0); h.bd(c0, c1); h.bd(c1, c2); h.bd(c1, o1, 'w'); h.bd(c2, o2, 2); h.bd(c2, o3);
+        var p = h.at(o1, 90, 'P'); h.bd(o1, p); h.bd(p, h.at(p, 90, 'O'), 2); h.bd(p, h.at(p, 180, '⁻O')); h.bd(p, h.at(p, 0, 'O⁻'));
+        h.st(c1, [o1, c2, c0], 'R');
+      }) },
+    { id: 'isocitrat', cat: 'Säuren & Ester', name: 'Isocitronensäure', alt: 'Isocitrat · 1-Hydroxypropan-1,2,3-tricarbonsäure', formula: 'C₆H₈O₇', groups: ['Drei Carboxygruppen', 'Hydroxygruppe'],
+      ster: '(2R,3S)-Isocitrat',
+      where: 'Zwischenprodukt des Citratzyklus. Die Aconitase lagert Citrat in Isocitrat um, danach spaltet die Isocitrat-Dehydrogenase CO₂ ab und bildet NADH. Kommt auch in Pflanzen und Obst (z. B. Brombeeren) vor.',
+      m: mol(function (h) {
+        var c0 = h.add(0, 0); cooStart(h, c0, -30);
+        var c2 = h.at(c0, -30), c3 = h.at(c2, 30), c4 = h.at(c3, -30), c5 = h.at(c4, 30), k3 = h.at(c3, 90);
+        h.bd(c0, c2); h.bd(c2, c3); h.bd(c3, c4); h.bd(c4, c5); h.bd(c3, k3, 'w');
+        var o2 = oh(h, c2, 270, 'w');
+        h.bd(k3, h.at(k3, 150, 'O'), 2); h.bd(k3, h.at(k3, 30, 'OH')); cooh(h, c5, 30);
+        h.st(c2, [o2, c0, c3], 'R'); h.st(c3, [k3, c2, c4], 'S');
+      }) },
+    { id: 'acetylcoa', cat: 'Stoffwechsel & Pflanzen', name: 'Acetyl-CoA', alt: 'Acetyl-Coenzym A · aktivierte Essigsäure', formula: 'C₂₃H₃₈N₇O₁₇P₃S', groups: ['Thioester (energiereich)', 'Acetylgruppe', 'Coenzym A (verkürzt dargestellt)'],
+      where: 'Drehscheibe des Stoffwechsels: entsteht aus Pyruvat (Glykolyse), aus dem Fettsäureabbau und aus Aminosäuren. Es speist den Citratzyklus und ist Baustein für Fettsäuren, Cholesterin und Acetylcholin. Coenzym A enthält Vitamin B₅ (Pantothensäure), hier nur als „CoA“ abgekürzt.',
+      m: mol(function (h) { var c0 = h.add(0, 0), c1 = h.at(c0, -30), o = h.at(c1, 270, 'O'), s = h.at(c1, 30, 'S'), coa = h.at(s, -30, 'CoA'); h.bd(c0, c1); h.bd(c1, o, 2); h.bd(c1, s); h.bd(s, coa); }) },
+    { id: 'succinylcoa', cat: 'Stoffwechsel & Pflanzen', name: 'Succinyl-CoA', alt: 'Succinyl-Coenzym A', formula: 'C₂₅H₄₀N₇O₁₉P₃S', groups: ['Thioester (energiereich)', 'Carboxygruppe', 'Coenzym A (verkürzt dargestellt)'],
+      where: 'Zwischenprodukt des Citratzyklus. Die Succinyl-CoA-Synthetase nutzt die Thioesterbindung, um GTP (bzw. ATP) zu bilden. Succinyl-CoA ist auch Ausgangsstoff für die Häm-Synthese.',
+      m: mol(function (h) { var c0 = h.add(0, 0); cooStart(h, c0, -30); var z = zig(h, c0, 3, -30), o = h.at(z[2], 270, 'O'), s = h.at(z[2], 30, 'S'), coa = h.at(s, -30, 'CoA'); h.bd(z[2], o, 2); h.bd(z[2], s); h.bd(s, coa); }) },
     { id: 'hydroxybutyrat', cat: 'Stoffwechsel & Pflanzen', name: 'β-Hydroxybutyrat', alt: '3-Hydroxybuttersäure', formula: 'C₄H₈O₃', groups: ['Hydroxygruppe', 'Carboxygruppe'],
       ster: '(R)-3-Hydroxybutyrat, die natürliche Form',
       where: 'Ein Ketonkörper. Die Leber bildet ihn beim Fasten, bei Low-Carb-Ernährung und bei Diabetes. Das Gehirn kann ihn dann als Energiequelle nutzen.',

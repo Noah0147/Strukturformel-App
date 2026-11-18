@@ -348,6 +348,7 @@
   $('tab-learn').addEventListener('click', function () { tab('learn'); });
   $('tab-db').addEventListener('click', function () { tab('db'); });
   $('tab-path').addEventListener('click', function () { tab('path'); });
+  window.openMolecule = function (id) { tab('db'); openDetail(id); };
   if (location.hash === '#datenbank') tab('db'); else if (location.hash === '#stoffwechsel') tab('path');
 
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
