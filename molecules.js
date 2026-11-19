@@ -161,7 +161,7 @@
     return n;
   }
 
-  window.DATA_VERSION = '2026-11-19b';
+  window.DATA_VERSION = '2026-11-19c';
   window.CATEGORIES = ['Alkohole & Carbonyle', 'Säuren & Ester', 'Aromaten', 'Aminosäuren', 'Nucleobasen & Purine', 'Wirkstoffe & Aromastoffe', 'Stoffwechsel & Pflanzen', 'Vitamine', 'Zucker & Nucleotide', 'Steroide & Botenstoffe', 'Kleine Moleküle'];
 
 
@@ -771,7 +771,7 @@
       m: mol(function (h) { var c0 = h.add(0, 0), z = zig(h, c0, 3, 30), o = h.at(z[2], -30, 'OH'); h.bd(z[2], o); }) },
     { id: 'formaldehyd', cat: 'Alkohole & Carbonyle', name: 'Formaldehyd', alt: 'Methanal', formula: 'CH₂O', groups: ['Aldehyd'],
       where: 'In wässriger Lösung (Formalin) als Konservierungsmittel für Präparate. Es vernetzt Aminogruppen von Proteinen, deshalb "fixiert" es Gewebe. Entsteht auch beim Abbau von Methanol.',
-      m: mol(function (h) { var c = h.add(0, 0), o = h.at(c, 30, 'O'); h.bd(c, o, 2); }) },
+      m: mol(function (h) { var c = h.add(0, 0), a = h.at(c, 150, 'H'), b = h.at(c, 210, 'H'), o = h.at(c, 0, 'O'); h.bd(c, a); h.bd(c, b); h.bd(c, o, 2); }) },
     { id: 'benzaldehyd', cat: 'Alkohole & Carbonyle', name: 'Benzaldehyd', alt: '', formula: 'C₇H₆O', groups: ['Aromatischer Ring', 'Aldehyd'],
       where: 'Das Bittermandelaroma. Es steckt in Marzipan, Persipan und in Bittermandeln und Aprikosenkernen.',
       m: mol(function (h) { var r = ring(h, 0, 0, 90, KEK), c = h.at(r[0], 90), o = h.at(c, 30, 'O'); h.bd(r[0], c); h.bd(c, o, 2); }) },
@@ -1261,7 +1261,7 @@
       m: mol(function (h) { var c0 = h.add(0, 0), c1 = h.at(c0, 30), c2 = h.at(c1, -30), o = h.at(c1, 90, 'O'), c3 = h.at(c2, 30); h.bd(c0, c1); h.bd(c1, o, 2); h.bd(c1, c2); h.bd(c2, c3); }) },
     { id: 'diacetyl', cat: 'Alkohole & Carbonyle', name: 'Diacetyl', alt: 'Butan-2,3-dion', formula: 'C₄H₆O₂', groups: ['Zwei benachbarte Ketogruppen (1,2-Diketon)'],
       where: 'Der Buttergeschmack in Butter, Popcorn-Aroma und manchen Bieren. Entsteht bei der Gärung als Nebenprodukt.',
-      m: mol(function (h) { var c0 = h.add(0, 0), c1 = h.at(c0, 60), c2 = h.at(c1, 0), c3 = h.at(c2, -60), o1 = h.at(c1, 120, 'O'), o2 = h.at(c2, 60, 'O'); h.bd(c0, c1); h.bd(c1, c2); h.bd(c2, c3); h.bd(c1, o1, 2); h.bd(c2, o2, 2); }) },
+      m: mol(function (h) { var c0 = h.add(0, 0), c1 = h.at(c0, 30), c2 = h.at(c1, -30), c3 = h.at(c2, 30), o1 = h.at(c1, 90, 'O'), o2 = h.at(c2, 270, 'O'); h.bd(c0, c1); h.bd(c1, c2); h.bd(c2, c3); h.bd(c1, o1, 2); h.bd(c2, o2, 2); }) },
     { id: 'acrolein', cat: 'Alkohole & Carbonyle', name: 'Acrolein', alt: 'Propenal', formula: 'C₃H₄O', groups: ['Aldehyd', 'C=C-Doppelbindung (α,β-ungesättigt)'],
       where: 'Entsteht, wenn Fett stark überhitzt wird (Rauchpunkt) und riecht dann stechend. Es ist ein reaktives Reizgas, das Proteine verändert.',
       m: mol(function (h) { var c0 = h.add(0, 0), c1 = h.at(c0, 30), c2 = h.at(c1, -30), o = h.at(c2, 30, 'O'); h.bd(c0, c1, 2); h.bd(c1, c2); h.bd(c2, o, 2); }) },
