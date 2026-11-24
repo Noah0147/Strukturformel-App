@@ -414,8 +414,8 @@ i.good { background: var(--accent); } i.mid { background: var(--warn); } i.low {
 .hn { display: flex; flex-direction: column; min-width: 0; font-weight: 600; } .hn small { font-weight: 400; color: var(--muted); font-size: 12px; }
 .achs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .ach { border: 1px solid var(--line); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 2px; opacity: .72; min-width: 0; }
-.ach .ai { font-size: 20px; color: var(--muted); line-height: 1; } .ach b { font-size: 14px; } .ach .ad { font-size: 12px; color: var(--muted); line-height: 1.3; } .ach .af { font-size: 12px; font-weight: 600; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.ach .ai { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; color: var(--muted); background: var(--soft); margin-bottom: 4px; } .ach b { font-size: 14px; } .ach .ad { font-size: 12px; color: var(--muted); line-height: 1.3; } .ach .af { font-size: 12px; font-weight: 600; margin-top: 2px; font-variant-numeric: tabular-nums; }
 .ach.on { opacity: 1; border-color: var(--s); background: color-mix(in srgb, var(--s) 12%, var(--surface)); box-shadow: 0 0 10px color-mix(in srgb, var(--s) 30%, transparent); }
-.ach.on .ai { color: var(--s); }
+.ach.on .ai { color: var(--s); background: color-mix(in srgb, var(--s) 20%, var(--surface)); box-shadow: 0 0 10px color-mix(in srgb, var(--s) 45%, transparent); }
 .sreset p { margin: 0; font-size: 14px; }
 .toast { position: fixed; z-index: 50; left: 50%; transform: translateX(-50%); top: max(12px, env(safe-area-inset-top, 0px)); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-weight: 600; font-size: 14px; box-shadow: var(--shadow); max-width: calc(100vw - 32px); text-align: center; }

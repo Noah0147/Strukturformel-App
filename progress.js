@@ -4,13 +4,13 @@
   'use strict';
   var KEY = 'strukturformel-app-progress-v1';
   var GAPS = [0, 1, 3, 7, 16]; // Tage bis zur nächsten Wiederholung je Box 1..5
-  var D = { cards: {}, days: {}, groups: {}, run: 0, bestRun: 0, ach: {} };
+  var D = { cards: {}, days: {}, groups: {}, paths: {}, run: 0, bestRun: 0, ach: {} };
   var meta = {}; // id -> {cat}
 
   try {
     var s = JSON.parse(localStorage.getItem(KEY) || 'null');
     if (s && typeof s === 'object') {
-      ['cards', 'days', 'groups', 'ach'].forEach(function (k) { if (s[k] && typeof s[k] === 'object') D[k] = s[k]; });
+      ['cards', 'days', 'groups', 'paths', 'ach'].forEach(function (k) { if (s[k] && typeof s[k] === 'object') D[k] = s[k]; });
       D.run = +s.run || 0; D.bestRun = +s.bestRun || 0;
     }
   } catch (e) {}
@@ -49,6 +49,17 @@
     bump(D.groups, group, ok, n); bumpDay(group, n, ok);
     var fresh = checkAch(); save(); return fresh;
   }
+
+  /* Eine Stoffwechsel-Runde (kind: 't' = Zuordnen, 'q' = Fragen) wurde ausgewertet. */
+  function recordPath(pid, kind, n, ok) {
+    if (!n) return [];
+    var q = D.paths[pid] || (D.paths[pid] = { t: 0, q: 0, r: 0 });
+    q.r++; if (ok === n) q[kind]++;
+    return recordGroup('Stoffwechsel', n, ok);
+  }
+  function pathPerfect(pid) { var q = D.paths[pid]; return q ? q.t + q.q : 0; }
+  function pathSum(f) { var s = 0; Object.keys(D.paths).forEach(function (k) { s += f(D.paths[k]); }); return s; }
+  function pathAll() { return ['glykolyse', 'pdh', 'citratzyklus', 'atmungskette', 'ueberblick'].filter(function (k) { return pathPerfect(k) > 0; }).length; }
 
   function dueIds(ids) {
     var tn = todayNum();
@@ -90,6 +101,16 @@
     { k: 'st7', t: 'Wochenstreber', d: '7 Tage in Folge gelernt.', v: streak, g: 7 },
     { k: 'm10', t: 'Sitzt', d: '10 Karten sicher gelernt (Box 4 oder höher).', v: mastered, g: 10 },
     { k: 'm50', t: 'Fest im Kopf', d: '50 Karten sicher gelernt.', v: mastered, g: 50 },
+    { k: 'sr1', t: 'Erste Reaktion', d: 'Die erste Stoffwechsel-Runde ausgewertet.', v: function () { return pathSum(function (q) { return q.r; }); }, g: 1 },
+    { k: 'sp1', t: 'Volltreffer', d: 'Eine Stoffwechsel-Runde komplett richtig.', v: function () { return pathSum(function (q) { return q.t + q.q; }); }, g: 1, nogoal: true },
+    { k: 'sp5', t: 'Stoffwechsel-Profi', d: '5 Stoffwechsel-Runden komplett richtig.', v: function () { return pathSum(function (q) { return q.t + q.q; }); }, g: 5 },
+    { k: 'sz', t: 'Zuordnungs-Ass', d: 'Eine „Zuordnen“-Runde komplett richtig.', v: function () { return pathSum(function (q) { return q.t; }); }, g: 1, nogoal: true },
+    { k: 'sq', t: 'Quizmeister', d: 'Eine „Fragen“-Runde komplett richtig.', v: function () { return pathSum(function (q) { return q.q; }); }, g: 1, nogoal: true },
+    { k: 'sgly', t: 'Zuckerbrecher', d: 'Eine Glykolyse-Runde komplett richtig.', v: function () { return pathPerfect('glykolyse'); }, g: 1, nogoal: true },
+    { k: 'spdh', t: 'Brückenbauer', d: 'Eine Runde zur Pyruvat-Dehydrogenase komplett richtig.', v: function () { return pathPerfect('pdh'); }, g: 1, nogoal: true },
+    { k: 'stca', t: 'Kreislauf', d: 'Eine Citratzyklus-Runde komplett richtig.', v: function () { return pathPerfect('citratzyklus'); }, g: 1, nogoal: true },
+    { k: 'satm', t: 'Kraftwerk', d: 'Eine Runde zur Atmungskette komplett richtig.', v: function () { return pathPerfect('atmungskette'); }, g: 1, nogoal: true },
+    { k: 'sall', t: 'Zellatmungs-Meister', d: 'In allen fünf Stoffwechselwegen eine Runde komplett richtig.', v: pathAll, g: 5 },
     { k: 'cat', t: 'Gruppe gemeistert', d: 'Alle Karten einer Kategorie mindestens in Box 3.', v: function () { return catDone().length; }, g: 1 }
   ];
   function checkAch() {
@@ -100,10 +121,10 @@
     return fresh;
   }
 
-  function reset() { D = { cards: {}, days: {}, groups: {}, run: 0, bestRun: 0, ach: {} }; save(); }
+  function reset() { D = { cards: {}, days: {}, groups: {}, paths: {}, run: 0, bestRun: 0, ach: {} }; save(); }
 
   window.Progress = {
-    record: record, recordGroup: recordGroup, dueIds: dueIds, box: box, totals: totals, today: today, streak: streak,
+    record: record, recordGroup: recordGroup, recordPath: recordPath, dueIds: dueIds, box: box, totals: totals, today: today, streak: streak,
     mastered: mastered, ach: ACH, got: function (k) { return D.ach[k] || null; }, reset: reset,
     data: function () { return D; }, key: key, dayAdd: dayAdd, catDone: catDone, bestRun: function () { return D.bestRun; }
   };
