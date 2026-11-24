@@ -106,5 +106,5 @@
     else if (t.id === 'st-yes') { P.reset(); resetAsk = false; render(); }
     else if (t.classList.contains('hrow') && window.openMolecule) window.openMolecule(t.getAttribute('data-id'));
   });
-  window.StatsUI = { open: render };
+  window.StatsUI = { open: render, icon: icon };
 })();

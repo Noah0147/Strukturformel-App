@@ -418,4 +418,22 @@ i.good { background: var(--accent); } i.mid { background: var(--warn); } i.low {
 .ach.on { opacity: 1; border-color: var(--s); background: color-mix(in srgb, var(--s) 12%, var(--surface)); box-shadow: 0 0 10px color-mix(in srgb, var(--s) 30%, transparent); }
 .ach.on .ai { color: var(--s); background: color-mix(in srgb, var(--s) 20%, var(--surface)); box-shadow: 0 0 10px color-mix(in srgb, var(--s) 45%, transparent); }
 .sreset p { margin: 0; font-size: 14px; }
-.toast { position: fixed; z-index: 50; left: 50%; transform: translateX(-50%); top: max(12px, env(safe-area-inset-top, 0px)); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-weight: 600; font-size: 14px; box-shadow: var(--shadow); max-width: calc(100vw - 32px); text-align: center; }
+.toast { position: fixed; z-index: 50; left: 50%; top: max(12px, env(safe-area-inset-top, 0px)); transform: translateX(-50%); display: flex; align-items: center; gap: 12px; background: var(--ink); color: var(--bg); padding: 10px 18px 10px 10px; border-radius: 999px; box-shadow: var(--shadow), 0 0 0 1px color-mix(in srgb, var(--s) 50%, transparent), 0 0 24px color-mix(in srgb, var(--s) 45%, transparent); max-width: calc(100vw - 32px); overflow: hidden; }
+.toast .ti { width: 40px; height: 40px; border-radius: 50%; flex: none; display: grid; place-items: center; color: #3A2B00; background: linear-gradient(135deg, #FFE28A, #E6B422); }
+.toast .ti svg { width: 24px; height: 24px; }
+.toast .tt { display: flex; flex-direction: column; min-width: 0; text-align: left; line-height: 1.25; }
+.toast small { white-space: nowrap; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; opacity: .75; }
+.toast b { font-size: 15px; }
+.toast::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.35) 50%, transparent 65%); transform: translateX(-120%); pointer-events: none; }
+.toast.show { animation: toastIn .55s cubic-bezier(.2, 1.35, .4, 1) both; }
+.toast.show::after { animation: toastShine 1s .45s ease-out both; }
+.toast.show .ti { animation: toastPop .7s .2s cubic-bezier(.2, 1.6, .4, 1) both; }
+.toast.hide { animation: toastOut .4s ease-in both; }
+@keyframes toastIn { from { opacity: 0; transform: translate(-50%, -140%) scale(.85); } to { opacity: 1; transform: translate(-50%, 0) scale(1); } }
+@keyframes toastOut { from { opacity: 1; transform: translate(-50%, 0) scale(1); } to { opacity: 0; transform: translate(-50%, -60%) scale(.94); } }
+@keyframes toastPop { 0% { transform: scale(.3) rotate(-25deg); } 60% { transform: scale(1.2) rotate(8deg); } 100% { transform: scale(1) rotate(0); } }
+@keyframes toastShine { to { transform: translateX(120%); } }
+@media (prefers-reduced-motion: reduce) {
+  .toast.show, .toast.show .ti, .toast.show::after { animation: none; }
+  .toast.hide { animation: none; opacity: 0; }
+}

@@ -62,7 +62,7 @@
 
   $('sub').textContent = CARDS.length + ' Moleküle aus Alltag und Biochemie. Erst raten, dann umdrehen.';
   var ver = (window.DATA_VERSION || '').split('-');
-  $('foot').textContent = CARDS.length + ' Karten' + (ver.length === 3 ? ' · Stand ' + parseInt(ver[2], 10) + '.' + ver[1] + '.' + ver[0] : '') + ' · Version 45';
+  $('foot').textContent = CARDS.length + ' Karten' + (ver.length === 3 ? ' · Stand ' + parseInt(ver[2], 10) + '.' + ver[1] + '.' + ver[0] : '') + ' · Version 46';
 
   function buildCatOptions() {
     var html = '<option value="all">Alle Kategorien (' + CARDS.length + ')</option>';
@@ -256,11 +256,19 @@
   });
 
   /* Kurzer Hinweis, wenn ein Erfolg freigeschaltet wurde. */
-  var toastT = null;
+  var toastT = null, toastT2 = null;
   function toastAch(list) {
     if (!list || !list.length) return;
-    var t = $('toast'); t.textContent = '★ Erfolg: ' + list.join(', '); t.hidden = false;
-    clearTimeout(toastT); toastT = setTimeout(function () { t.hidden = true; }, 3800);
+    var t = $('toast'), P = window.Progress, ic = '';
+    var ach = P.ach.filter(function (x) { return x.t === list[0]; })[0];
+    if (ach && window.StatsUI) ic = window.StatsUI.icon(ach.k);
+    t.innerHTML = '<span class="ti">' + ic + '</span><span class="tt"><small>Erfolg freigeschaltet</small><b>' + list.join(' · ') + '</b></span>';
+    clearTimeout(toastT); clearTimeout(toastT2);
+    t.hidden = false; t.classList.remove('show', 'hide'); void t.offsetWidth; t.classList.add('show');
+    toastT = setTimeout(function () {
+      t.classList.remove('show'); t.classList.add('hide');
+      toastT2 = setTimeout(function () { t.hidden = true; t.classList.remove('hide'); }, 420);
+    }, 3600);
   }
   window.toastAch = toastAch;
 
