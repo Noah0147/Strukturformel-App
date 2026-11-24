@@ -298,6 +298,7 @@
     var r = round, ok = r.slots.filter(isRight).length;
     return { d: ok, dn: r.slots.length };
   }
+  function notify(f) { if (window.toastAch) window.toastAch(f); }
   function qscore() {
     return { q: qz.qs.filter(function (q) { return q.chosen === q.a; }).length, qn: qz.qs.length };
   }
@@ -385,12 +386,12 @@
       var pv = document.getElementById('gprev'); if (pv && pv.scrollIntoView) pv.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       return;
     }
-    if (t.id === 'q-check') { qz.done = true; paintQ(); document.getElementById('pres').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return; }
+    if (t.id === 'q-check') { if (!qz.done && window.Progress) { var qs0 = qscore(); notify(Progress.recordGroup('Stoffwechsel', qs0.qn, qs0.q)); } qz.done = true; paintQ(); document.getElementById('pres').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return; }
     if (t.id === 'q-new' || t.id === 'q-new2') { qz = null; quiz(); window.scrollTo(0, 0); return; }
     if (!round) return;
     if (t.hasAttribute('data-slot')) { onSlot(t.getAttribute('data-slot')); return; }
     if (t.hasAttribute('data-chip')) { onChip(t.getAttribute('data-chip')); return; }
-    if (t.id === 'p-check') { round.done = true; paint(true); document.getElementById('pres').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return; }
+    if (t.id === 'p-check') { if (!round.done && window.Progress) { var s0 = score(); notify(Progress.recordGroup('Stoffwechsel', s0.dn, s0.d)); } round.done = true; paint(true); document.getElementById('pres').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return; }
     if (t.id === 'p-new' || t.id === 'p-new2') { newRound(); train(); window.scrollTo(0, 0); }
   });
   body.addEventListener('keydown', function (e) {

@@ -28,7 +28,7 @@
   var byId = {}; CARDS.forEach(function (c) { byId[c.id] = c; });
   function svgOf(c) { if (c.svgH !== Chem.getH()) { c.svg = Chem.render(c.m, 'Strukturformel eines Moleküls'); c.svgH = Chem.getH(); } return c.svg; }
   var ids = CARDS.map(function (c) { return c.id; });
-  var st = { status: {}, mode: 'struct', order: ids.slice(), pos: 0, retryOnly: false, cat: 'all' };
+  var st = { status: {}, mode: 'struct', order: ids.slice(), pos: 0, retryOnly: false, dueOnly: false, cat: 'all' };
 
   try {
     var saved = JSON.parse(localStorage.getItem(KEY) || 'null');
@@ -62,7 +62,7 @@
 
   $('sub').textContent = CARDS.length + ' Moleküle aus Alltag und Biochemie. Erst raten, dann umdrehen.';
   var ver = (window.DATA_VERSION || '').split('-');
-  $('foot').textContent = CARDS.length + ' Karten' + (ver.length === 3 ? ' · Stand ' + parseInt(ver[2], 10) + '.' + ver[1] + '.' + ver[0] : '') + ' · Version 43';
+  $('foot').textContent = CARDS.length + ' Karten' + (ver.length === 3 ? ' · Stand ' + parseInt(ver[2], 10) + '.' + ver[1] + '.' + ver[0] : '') + ' · Version 44';
 
   function buildCatOptions() {
     var html = '<option value="all">Alle Kategorien (' + CARDS.length + ')</option>';
@@ -82,7 +82,11 @@
     return byId[id].cat === st.cat;
   }
   function base() { return st.order.filter(inCat); }
-  function deck() { var b = base(); return st.retryOnly ? b.filter(function (id) { return st.status[id] === 'retry'; }) : b; }
+  function deck() {
+    var b = base();
+    if (st.dueOnly) return window.Progress.dueIds(b);
+    return st.retryOnly ? b.filter(function (id) { return st.status[id] === 'retry'; }) : b;
+  }
   function clampPos() { var d = deck(); if (!d.length) { st.pos = 0; } else if (st.pos >= d.length || st.pos < 0) { st.pos = ((st.pos % d.length) + d.length) % d.length; } }
 
   /* ---------- pH-Regler ---------- */
@@ -185,9 +189,13 @@
     $('mode-struct').setAttribute('aria-pressed', st.mode === 'struct');
     $('mode-name').setAttribute('aria-pressed', st.mode === 'name');
     $('retry-only').setAttribute('aria-pressed', st.retryOnly);
+    var nDue = window.Progress.dueIds(b).length;
+    $('due-only').setAttribute('aria-pressed', st.dueOnly);
+    $('due-only').textContent = 'Heute fällig (' + nDue + ')';
+    $('empty-text').textContent = st.dueOnly ? 'Nichts mehr zur Wiederholung fällig. Gut gemacht.' : 'Keine Karte ist mit „Nochmal“ markiert.';
     $('cat').value = st.cat;
-    $('done').hidden = !(known === b.length && b.length > 0 && !st.retryOnly);
-    $('empty').hidden = !(st.retryOnly && d.length === 0);
+    $('done').hidden = !(known === b.length && b.length > 0 && !st.retryOnly && !st.dueOnly);
+    $('empty').hidden = !((st.retryOnly || st.dueOnly) && d.length === 0);
   }
 
   function update() { clampPos(); chrome(); show(); save(); }
@@ -203,7 +211,8 @@
     var id = d[st.pos];
     st.status[id] = s;
     markSeen(id);
-    if (st.retryOnly) { clampPos(); } else { st.pos = (st.pos + 1) % d.length; }
+    toastAch(window.Progress.record(id, s === 'known', byId[id].cat));
+    if (st.retryOnly || st.dueOnly) { clampPos(); } else { st.pos = (st.pos + 1) % d.length; }
     update();
   }
 
@@ -227,23 +236,33 @@
   $('mode-struct').addEventListener('click', function () { st.mode = 'struct'; update(); });
   $('mode-name').addEventListener('click', function () { st.mode = 'name'; update(); });
   $('cat').addEventListener('change', function () { st.cat = $('cat').value; st.pos = 0; update(); });
-  $('retry-only').addEventListener('click', function () { st.retryOnly = !st.retryOnly; st.pos = 0; update(); });
+  $('retry-only').addEventListener('click', function () { st.retryOnly = !st.retryOnly; st.dueOnly = false; st.pos = 0; update(); });
+  $('due-only').addEventListener('click', function () { st.dueOnly = !st.dueOnly; st.retryOnly = false; st.pos = 0; update(); });
   $('shuffle').addEventListener('click', function () {
     var o = st.order.slice();
     for (var i = o.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = o[i]; o[i] = o[j]; o[j] = t; }
     st.order = o; st.pos = 0; update();
   });
-  $('reset').addEventListener('click', function () { st.status = {}; st.pos = 0; st.retryOnly = false; update(); });
+  $('reset').addEventListener('click', function () { st.status = {}; st.pos = 0; st.retryOnly = false; st.dueOnly = false; update(); });
   $('again').addEventListener('click', function () {
     base().forEach(function (id) { delete st.status[id]; });
-    st.pos = 0; st.retryOnly = false; update();
+    st.pos = 0; st.retryOnly = false; st.dueOnly = false; update();
   });
-  $('show-all').addEventListener('click', function () { st.retryOnly = false; st.pos = 0; update(); });
+  $('show-all').addEventListener('click', function () { st.retryOnly = false; st.dueOnly = false; st.pos = 0; update(); });
   $('dots').addEventListener('click', function (e) {
     var b = e.target.closest ? e.target.closest('.dot') : null;
     if (!b) return;
-    st.retryOnly = false; st.pos = base().indexOf(b.getAttribute('data-id')); update();
+    st.retryOnly = false; st.dueOnly = false; st.pos = base().indexOf(b.getAttribute('data-id')); update();
   });
+
+  /* Kurzer Hinweis, wenn ein Erfolg freigeschaltet wurde. */
+  var toastT = null;
+  function toastAch(list) {
+    if (!list || !list.length) return;
+    var t = $('toast'); t.textContent = '★ Erfolg: ' + list.join(', '); t.hidden = false;
+    clearTimeout(toastT); toastT = setTimeout(function () { t.hidden = true; }, 3800);
+  }
+  window.toastAch = toastAch;
 
   /* Installationshinweis: Android/Chrome per Button, iPhone per Anleitung. */
   var deferred = null;
@@ -353,13 +372,14 @@
   });
   $('db-detail').addEventListener('click', function (e) { if (e.target.id === 'db-back') closeDetail(); });
   function tab(which) {
-    var db = which === 'db', pa = which === 'path';
-    $('view-db').hidden = !db; $('view-path').hidden = !pa; $('view-learn').hidden = db || pa;
-    $('tab-db').setAttribute('aria-selected', db); $('tab-path').setAttribute('aria-selected', pa); $('tab-learn').setAttribute('aria-selected', !db && !pa);
-    $('sub').textContent = pa ? 'Stoffwechselwege verstehen und üben.' : db ? CARDS.length + ' Strukturen zum Nachschlagen.' : CARDS.length + ' Moleküle aus Alltag und Biochemie. Erst raten, dann umdrehen.';
+    var db = which === 'db', pa = which === 'path', sa = which === 'stats';
+    $('view-db').hidden = !db; $('view-path').hidden = !pa; $('view-stats').hidden = !sa; $('view-learn').hidden = db || pa || sa;
+    $('tab-db').setAttribute('aria-selected', db); $('tab-path').setAttribute('aria-selected', pa); $('tab-stats').setAttribute('aria-selected', sa); $('tab-learn').setAttribute('aria-selected', !db && !pa && !sa);
+    $('sub').textContent = sa ? 'Dein Lernfortschritt und deine Erfolge.' : pa ? 'Stoffwechselwege verstehen und üben.' : db ? CARDS.length + ' Strukturen zum Nachschlagen.' : CARDS.length + ' Moleküle aus Alltag und Biochemie. Erst raten, dann umdrehen.';
     if (pa && window.PathUI) window.PathUI.open();
+    if (sa && window.StatsUI) window.StatsUI.open();
     if (db) { renderDb(); setTimeout(function () { if (!dbOpen) $('q').focus(); }, 0); }
-    try { history.replaceState(null, '', db ? '#datenbank' : pa ? '#stoffwechsel' : location.pathname + location.search); } catch (e) {}
+    try { history.replaceState(null, '', db ? '#datenbank' : pa ? '#stoffwechsel' : sa ? '#statistik' : location.pathname + location.search); } catch (e) {}
   }
   function refreshViews() {
     if (!$('view-learn').hidden) fill();
@@ -370,8 +390,10 @@
   $('tab-learn').addEventListener('click', function () { tab('learn'); });
   $('tab-db').addEventListener('click', function () { tab('db'); });
   $('tab-path').addEventListener('click', function () { tab('path'); });
+  $('tab-stats').addEventListener('click', function () { tab('stats'); });
+  window.startDue = function () { st.dueOnly = true; st.retryOnly = false; st.cat = 'all'; st.pos = 0; tab('learn'); update(); window.scrollTo(0, 0); };
   window.openMolecule = function (id) { tab('db'); openDetail(id); };
-  if (location.hash === '#datenbank') tab('db'); else if (location.hash === '#stoffwechsel') tab('path');
+  if (location.hash === '#datenbank') tab('db'); else if (location.hash === '#stoffwechsel') tab('path'); else if (location.hash === '#statistik') tab('stats');
 
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
     window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
