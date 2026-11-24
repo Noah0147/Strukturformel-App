@@ -62,7 +62,7 @@
 
   $('sub').textContent = CARDS.length + ' Moleküle aus Alltag und Biochemie. Erst raten, dann umdrehen.';
   var ver = (window.DATA_VERSION || '').split('-');
-  $('foot').textContent = CARDS.length + ' Karten' + (ver.length === 3 ? ' · Stand ' + parseInt(ver[2], 10) + '.' + ver[1] + '.' + ver[0] : '') + ' · Version 46';
+  $('foot').textContent = CARDS.length + ' Karten' + (ver.length === 3 ? ' · Stand ' + parseInt(ver[2], 10) + '.' + ver[1] + '.' + ver[0] : '') + ' · Version 47';
 
   function buildCatOptions() {
     var html = '<option value="all">Alle Kategorien (' + CARDS.length + ')</option>';
@@ -256,19 +256,25 @@
   });
 
   /* Kurzer Hinweis, wenn ein Erfolg freigeschaltet wurde. */
-  var toastT = null, toastT2 = null;
+  var toastQ = [], toastBusy = false;
+  function toastNext() {
+    var t = $('toast');
+    if (!toastQ.length) { toastBusy = false; return; }
+    toastBusy = true;
+    var title = toastQ.shift(), ach = window.Progress.ach.filter(function (x) { return x.t === title; })[0];
+    var ic = ach && window.StatsUI ? window.StatsUI.icon(ach.k) : '';
+    t.innerHTML = '<span class="ti">' + ic + '</span><span class="tt"><small>Erfolg freigeschaltet</small><b>' + title + '</b></span>';
+    t.hidden = false; t.classList.remove('show', 'hide'); void t.offsetWidth; t.classList.add('show');
+    setTimeout(function () {
+      t.classList.remove('show'); t.classList.add('hide');
+      setTimeout(function () { t.hidden = true; t.classList.remove('hide'); setTimeout(toastNext, 150); }, 420);
+    }, toastQ.length ? 2600 : 3600);
+  }
+  /* Mehrere Erfolge auf einmal werden nacheinander angezeigt. */
   function toastAch(list) {
     if (!list || !list.length) return;
-    var t = $('toast'), P = window.Progress, ic = '';
-    var ach = P.ach.filter(function (x) { return x.t === list[0]; })[0];
-    if (ach && window.StatsUI) ic = window.StatsUI.icon(ach.k);
-    t.innerHTML = '<span class="ti">' + ic + '</span><span class="tt"><small>Erfolg freigeschaltet</small><b>' + list.join(' · ') + '</b></span>';
-    clearTimeout(toastT); clearTimeout(toastT2);
-    t.hidden = false; t.classList.remove('show', 'hide'); void t.offsetWidth; t.classList.add('show');
-    toastT = setTimeout(function () {
-      t.classList.remove('show'); t.classList.add('hide');
-      toastT2 = setTimeout(function () { t.hidden = true; t.classList.remove('hide'); }, 420);
-    }, 3600);
+    list.forEach(function (x) { toastQ.push(x); });
+    if (!toastBusy) toastNext();
   }
   window.toastAch = toastAch;
 

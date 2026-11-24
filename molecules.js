@@ -161,7 +161,7 @@
     return n;
   }
 
-  window.DATA_VERSION = '2026-11-24c';
+  window.DATA_VERSION = '2026-11-24d';
   window.CATEGORIES = ['Alkohole & Carbonyle', 'Säuren & Ester', 'Aromaten', 'Aminosäuren', 'Nucleobasen & Purine', 'Wirkstoffe & Aromastoffe', 'Stoffwechsel & Pflanzen', 'Vitamine', 'Zucker & Nucleotide', 'Steroide & Botenstoffe', 'Kleine Moleküle'];
 
 
