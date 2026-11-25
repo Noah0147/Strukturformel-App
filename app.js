@@ -63,7 +63,7 @@
 
   $('sub').textContent = CARDS.length + ' Moleküle aus Alltag und Biochemie. Erst raten, dann umdrehen.';
   var ver = (window.DATA_VERSION || '').split('-');
-  $('foot').textContent = CARDS.length + ' Karten' + (ver.length === 3 ? ' · Stand ' + parseInt(ver[2], 10) + '.' + ver[1] + '.' + ver[0] : '') + ' · Version 48';
+  $('foot').textContent = CARDS.length + ' Karten' + (ver.length === 3 ? ' · Stand ' + parseInt(ver[2], 10) + '.' + ver[1] + '.' + ver[0] : '') + ' · Version 49';
 
   function buildCatOptions() {
     var html = '<option value="all">Alle Kategorien (' + CARDS.length + ')</option>';
@@ -150,14 +150,20 @@
     };
   }
 
+  /* Zeigt unter jedem Bewertungs-Knopf, wann die Karte wiederkommt. */
+  function rateLabels() {
+    var d = deck(); if (!d.length) return;
+    var pv = window.Progress.preview(d[st.pos]);
+    ['again', 'hard', 'mid', 'good'].forEach(function (k) { $('l-' + k).textContent = pv[k]; });
+  }
   function setFlip(v) {
     flipped = v;
     card.classList.toggle('flipped', v);
     front.setAttribute('aria-hidden', v ? 'true' : 'false');
     back.setAttribute('aria-hidden', v ? 'false' : 'true');
     $('flip').hidden = v;
-    $('r-retry').hidden = !v;
-    $('r-known').hidden = !v;
+    $('rates').hidden = !v;
+    if (v) rateLabels();
   }
 
   function fill() {
@@ -195,13 +201,22 @@
     $('retry-only').setAttribute('aria-pressed', st.retryOnly);
     var nDue = window.Progress.dueIds(b).length;
     $('due-only').setAttribute('aria-pressed', st.dueOnly);
-    $('due-only').textContent = 'Heute fällig (' + nDue + ')';
-    $('empty-text').textContent = st.dueOnly ? 'Nichts mehr zur Wiederholung fällig. Gut gemacht.' : 'Keine Karte ist mit „Nochmal“ markiert.';
+    $('due-only').textContent = 'Fällig (' + nDue + ')';
+    var nxt = st.dueOnly && nDue === 0 ? window.Progress.nextIn(b) : null;
+    $('empty-text').textContent = st.dueOnly ? 'Nichts mehr zur Wiederholung fällig. Gut gemacht.' + (nxt ? ' Die nächste Karte kommt in ' + nxt + '.' : '') : 'Keine Karte ist mit „Nochmal“ markiert.';
     $('cat').value = st.cat;
     $('done').hidden = !(known === b.length && b.length > 0 && !st.retryOnly && !st.dueOnly);
     $('empty').hidden = !((st.retryOnly || st.dueOnly) && d.length === 0);
   }
 
+  /* Wird eine Karte im Fälligkeits-Modus inzwischen fällig, erscheint sie von selbst. */
+  setInterval(function () {
+    if (document.hidden || !st.dueOnly) return;
+    var n = deck().length;
+    if (n !== lastDue && !(flipped && n > lastDue)) update();
+    lastDue = n;
+  }, 20000);
+  var lastDue = -1;
   function update() { clampPos(); chrome(); show(); save(); }
 
   function go(delta) {
@@ -209,14 +224,15 @@
     st.pos = (st.pos + delta + d.length) % d.length;
     update();
   }
-  function rate(s) {
+  function rate(grade) {
     if (!flipped) return;
+    var s = (grade === 'again' || grade === 'hard') ? 'retry' : 'known';
     var d = deck(); if (!d.length) return;
     var id = d[st.pos];
     st.status[id] = s;
     if (s === 'retry') st.rts[id] = Date.now(); else delete st.rts[id];
     markSeen(id);
-    toastAch(window.Progress.record(id, s === 'known', byId[id].cat));
+    toastAch(window.Progress.record(id, grade, byId[id].cat));
     if (st.retryOnly || st.dueOnly) {
       var nd = deck();
       if (nd.length > 1 && nd[st.pos] === id) st.pos = 0; // Karte steht jetzt hinten: weiter mit der ersten
@@ -234,12 +250,16 @@
     if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) return;
     if (e.key === 'ArrowRight') { go(1); }
     else if (e.key === 'ArrowLeft') { go(-1); }
-    else if (e.key === '1') { rate('retry'); }
-    else if (e.key === '2') { rate('known'); }
+    else if (e.key === '1') { rate('again'); }
+    else if (e.key === '2') { rate('hard'); }
+    else if (e.key === '3') { rate('mid'); }
+    else if (e.key === '4') { rate('good'); }
   });
   $('flip').addEventListener('click', function () { setFlip(true); });
-  $('r-retry').addEventListener('click', function () { rate('retry'); });
-  $('r-known').addEventListener('click', function () { rate('known'); });
+  $('r-again').addEventListener('click', function () { rate('again'); });
+  $('r-hard').addEventListener('click', function () { rate('hard'); });
+  $('r-mid').addEventListener('click', function () { rate('mid'); });
+  $('r-good').addEventListener('click', function () { rate('good'); });
   $('prev').addEventListener('click', function () { go(-1); });
   $('next').addEventListener('click', function () { go(1); });
   $('mode-struct').addEventListener('click', function () { st.mode = 'struct'; update(); });

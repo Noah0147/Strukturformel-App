@@ -49,7 +49,7 @@
       '<div class="stile"><span class="sl">Sicher gelernt</span><b>' + P.mastered() + '</b><span class="ss">von ' + M.length + ' Karten</span></div>' +
       '</div>';
 
-    h += '<div class="banner"><p>' + (due ? '<b>' + due + '</b> ' + (due === 1 ? 'Karte ist' : 'Karten sind') + ' heute zur Wiederholung fällig.' : 'Heute ist nichts zur Wiederholung fällig.') + '</p>' +
+    h += '<div class="banner"><p>' + (due ? '<b>' + due + '</b> ' + (due === 1 ? 'Karte ist' : 'Karten sind') + ' zur Wiederholung fällig.' : 'Gerade ist nichts zur Wiederholung fällig.') + '</p>' +
       (due ? '<button type="button" class="tbtn" id="st-due">Jetzt wiederholen</button>' : '') + '</div>';
 
     // Letzte 7 Tage
@@ -94,7 +94,7 @@
 
     h += '<div class="scard sreset">' + (resetAsk ? '<p>Wirklich alle Statistiken, Erfolge und Wiederholungstermine löschen? Die „Gewusst“/„Nochmal“-Markierungen im Lernen-Tab bleiben.</p><div class="tools"><button type="button" class="tbtn" id="st-yes">Ja, löschen</button><button type="button" class="tbtn" id="st-no">Abbrechen</button></div>'
       : '<button type="button" class="tbtn" id="st-reset">Statistik zurücksetzen</button>') + '</div>';
-    h += '<p class="sfoot">Wiederholung: Eine Karte, die du weißt, kommt nach 1, 3, 7 und 16 Tagen wieder. Eine, die du nicht wusstest, sofort. Die Daten bleiben nur auf diesem Gerät.</p>';
+    h += '<p class="sfoot">Wiederholung: „Nochmal“ kommt nach 5 Minuten wieder, „Schwer“ nach 20 Minuten, „Mittel“ nach 1 Stunde. „Gut“ schiebt die Karte in die nächste Box (1, 3, 7, dann 16 Tage). Als richtig zählen „Mittel“ und „Gut“. Die Daten bleiben nur auf diesem Gerät.</p>';
     root.innerHTML = h;
   }
 

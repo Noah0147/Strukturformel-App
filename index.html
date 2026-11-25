@@ -72,7 +72,7 @@
     <select class="sel" id="cat" aria-label="Kategorie"></select>
   </div>
   <div class="tools">
-    <button type="button" class="tbtn" id="due-only" aria-pressed="false">Heute fällig</button>
+    <button type="button" class="tbtn" id="due-only" aria-pressed="false">Fällig</button>
     <button type="button" class="tbtn" id="retry-only" aria-pressed="false">Nur „Nochmal“</button>
     <button type="button" class="tbtn" id="shuffle">Mischen</button>
     <button type="button" class="tbtn" id="reset">Zurücksetzen</button>
@@ -111,10 +111,14 @@
 
     <div class="actions">
       <button type="button" class="btn primary wide" id="flip">Umdrehen</button>
-      <button type="button" class="btn retry" id="r-retry" hidden>Nochmal</button>
-      <button type="button" class="btn primary" id="r-known" hidden>Gewusst</button>
+      <div class="rates" id="rates" hidden>
+        <button type="button" class="btn rt again" id="r-again"><span>Nochmal</span><small id="l-again">5 Min</small></button>
+        <button type="button" class="btn rt hard" id="r-hard"><span>Schwer</span><small id="l-hard">20 Min</small></button>
+        <button type="button" class="btn rt mid" id="r-mid"><span>Mittel</span><small id="l-mid">1 Std</small></button>
+        <button type="button" class="btn rt good" id="r-good"><span>Gut</span><small id="l-good">1 Tag</small></button>
+      </div>
     </div>
-    <p class="keys">Tastatur: Leertaste dreht um, Pfeiltasten blättern, 1 = Nochmal, 2 = Gewusst</p>
+    <p class="keys">Tastatur: Leertaste dreht um, Pfeiltasten blättern, 1 = Nochmal, 2 = Schwer, 3 = Mittel, 4 = Gut</p>
   </div>
 
   </div>

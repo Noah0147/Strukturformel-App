@@ -437,3 +437,10 @@ i.good { background: var(--accent); } i.mid { background: var(--warn); } i.low {
   .toast.show, .toast.show .ti, .toast.show::after { animation: none; }
   .toast.hide { animation: none; opacity: 0; }
 }
+
+/* Vier Bewertungs-Knöpfe mit Wiederkehr-Zeit */
+.rates { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.btn.rt { --rc: var(--accent); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 6px 2px; min-height: 54px; font-weight: 700; font-size: 14px; color: var(--rc); border: 1.5px solid var(--rc); background: color-mix(in srgb, var(--rc) 10%, var(--surface)); }
+.btn.rt small { font-size: 11px; font-weight: 500; color: var(--muted); }
+.btn.rt.again { --rc: var(--o); } .btn.rt.hard { --rc: var(--s); } .btn.rt.mid { --rc: var(--n); } .btn.rt.good { --rc: var(--accent); }
+.btn.rt span { color: var(--rc); }

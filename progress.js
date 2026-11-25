@@ -3,7 +3,8 @@
 (function () {
   'use strict';
   var KEY = 'strukturformel-app-progress-v1';
-  var GAPS = [0, 1, 3, 7, 16]; // Tage bis zur nächsten Wiederholung je Box 1..5
+  var GAPS = [0, 1, 3, 7, 16]; // Tage bis zur nächsten Wiederholung je Box 1..5 (nur für „Gut“)
+  var MIN = { again: 5, hard: 20, mid: 60 }; // Minuten bis zur nächsten Abfrage
   var D = { cards: {}, days: {}, groups: {}, paths: {}, run: 0, bestRun: 0, ach: {} };
   var meta = {}; // id -> {cat}
 
@@ -14,6 +15,8 @@
       D.run = +s.run || 0; D.bestRun = +s.bestRun || 0;
     }
   } catch (e) {}
+  function midnight(dn) { var d = new Date(dn * 864e5); return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()).getTime(); }
+  Object.keys(D.cards).forEach(function (id) { var c = D.cards[id]; if (c.dt == null) c.dt = midnight(c.due || 0); });
   function save() { try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e) {} }
 
   function pad(n) { return (n < 10 ? '0' : '') + n; }
@@ -28,20 +31,43 @@
     d.n += n; d.ok += ok; bump(d.g, group, ok, n);
   }
 
-  /* Eine Karte wurde bewertet. Gibt neu erreichte Erfolge zurück. */
-  function record(id, ok, cat) {
-    var c = D.cards[id], first = !c;
-    if (!c) c = D.cards[id] = { b: 1, due: 0, n: 0, ok: 0, ts: 0 };
-    var tn = todayNum(), wasDue = first || c.due <= tn;
+  /* Eine Karte wurde bewertet (grade: again, hard, mid, good). Gibt neu erreichte Erfolge zurück.
+     Nochmal 5 Min, Schwer 20 Min, Mittel 1 Std, Gut je nach Box 1 / 3 / 7 / 16 Tage. */
+  function record(id, grade, cat) {
+    var c = D.cards[id], first = !c, ok = grade === 'good' || grade === 'mid';
+    if (!c) c = D.cards[id] = { b: 1, dt: 0, n: 0, ok: 0, ts: 0 };
+    var now = Date.now(), wasDue = first || c.dt <= now;
     c.n++; if (ok) c.ok++;
-    c.ts = Date.now();
-    if (!ok) { c.b = 1; c.due = tn; }
-    else if (wasDue) { c.b = Math.min(5, (first ? 1 : c.b) + 1); c.due = tn + GAPS[c.b - 1]; }
+    c.ts = now;
+    if (grade === 'good') {
+      if (wasDue) { c.b = Math.min(5, (first ? 1 : c.b) + 1); c.dt = midnight(todayNum() + GAPS[c.b - 1]); }
+    } else {
+      if (grade === 'again') c.b = 1; else if (grade === 'hard') c.b = Math.max(1, first ? 1 : c.b - 1);
+      var target = now + MIN[grade] * 6e4;
+      c.dt = (wasDue || grade === 'again') ? target : Math.min(c.dt, target);
+    }
     if (cat) { meta[id] = cat; bump(D.groups, cat, ok ? 1 : 0, 1); bumpDay(cat, 1, ok ? 1 : 0); }
     if (ok) { D.run++; if (D.run > D.bestRun) D.bestRun = D.run; } else D.run = 0;
     var fresh = checkAch();
     save();
     return fresh;
+  }
+  function fmtGap(ms) {
+    var m = Math.max(1, Math.round(ms / 6e4));
+    if (m < 60) return m + ' Min';
+    if (m < 60 * 24) return Math.round(m / 60) + ' Std';
+    var d = Math.round(m / 1440); return d + (d === 1 ? ' Tag' : ' Tage');
+  }
+  /* Vorschau der Zeiten für die Bewertungs-Knöpfe. */
+  function preview(id) {
+    var c = D.cards[id], b = c ? c.b : 1, nb = Math.min(5, (c ? b : 1) + 1);
+    return { again: '5 Min', hard: '20 Min', mid: '1 Std', good: (c && c.dt > Date.now()) ? 'unverändert' : GAPS[nb - 1] + (GAPS[nb - 1] === 1 ? ' Tag' : ' Tage') };
+  }
+  /* Wann wird die nächste noch nicht fällige Karte fällig? (ms, oder null) */
+  function nextIn(ids) {
+    var now = Date.now(), m = null;
+    ids.forEach(function (id) { var c = D.cards[id]; if (c && c.dt > now && (m === null || c.dt < m)) m = c.dt; });
+    return m === null ? null : fmtGap(m - now);
   }
   /* Stoffwechsel-Runden zählen als Gruppe, ohne einzelne Karte. */
   function recordGroup(group, n, ok) {
@@ -62,9 +88,9 @@
   function pathAll() { return ['glykolyse', 'pdh', 'citratzyklus', 'atmungskette', 'ueberblick'].filter(function (k) { return pathPerfect(k) > 0; }).length; }
 
   function dueIds(ids) {
-    var tn = todayNum();
-    return ids.filter(function (id) { var c = D.cards[id]; return c && c.due <= tn; })
-      .sort(function (a, b) { var x = D.cards[a], y = D.cards[b]; return (x.due - y.due) || (x.b - y.b) || (x.ts - y.ts); });
+    var now = Date.now();
+    return ids.filter(function (id) { var c = D.cards[id]; return c && c.dt <= now; })
+      .sort(function (a, b) { var x = D.cards[a], y = D.cards[b]; return (x.dt - y.dt) || (x.b - y.b) || (x.ts - y.ts); });
   }
   function box(id) { return D.cards[id] ? D.cards[id].b : 0; }
 
@@ -124,7 +150,7 @@
   function reset() { D = { cards: {}, days: {}, groups: {}, paths: {}, run: 0, bestRun: 0, ach: {} }; save(); }
 
   window.Progress = {
-    record: record, recordGroup: recordGroup, recordPath: recordPath, dueIds: dueIds, box: box, totals: totals, today: today, streak: streak,
+    record: record, preview: preview, nextIn: nextIn, recordGroup: recordGroup, recordPath: recordPath, dueIds: dueIds, box: box, totals: totals, today: today, streak: streak,
     mastered: mastered, ach: ACH, got: function (k) { return D.ach[k] || null; }, reset: reset,
     data: function () { return D; }, key: key, dayAdd: dayAdd, catDone: catDone, bestRun: function () { return D.bestRun; }
   };
