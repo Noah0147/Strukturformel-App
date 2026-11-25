@@ -161,7 +161,7 @@
     return n;
   }
 
-  window.DATA_VERSION = '2026-11-25g';
+  window.DATA_VERSION = '2026-11-25h';
   window.CATEGORIES = ['Alkohole & Carbonyle', 'Säuren & Ester', 'Aromaten', 'Aminosäuren', 'Nucleobasen & Purine', 'Wirkstoffe & Aromastoffe', 'Stoffwechsel & Pflanzen', 'Vitamine', 'Zucker & Nucleotide', 'Steroide & Botenstoffe', 'Kleine Moleküle'];
 
 
@@ -830,7 +830,7 @@
       where: 'Wintergrünöl, bekannt aus Rheumasalben und Kaugummi-Aroma. Im Körper wird es zu Salicylsäure gespalten, der Muttersubstanz von Aspirin.',
       m: mol(function (h) {
         var r = ring(h, 0, 0, 90, KEK), ho = h.at(r[1], 150, 'HO'); h.bd(r[1], ho);
-        var c = h.at(r[0], 90), o1 = h.at(c, 180, 'O'), o2 = h.at(c, 30, 'O'), me = h.at(o2, 90);
+        var c = h.at(r[0], 90), o1 = h.at(c, 150, 'O'), o2 = h.at(c, 30, 'O'), me = h.at(o2, 90);
         h.bd(r[0], c); h.bd(c, o1, 2); h.bd(c, o2); h.bd(o2, me);
       }) },
     { id: 'kohlensaeure', cat: 'Säuren & Ester', name: 'Kohlensäure', alt: 'H₂CO₃', formula: 'H₂CO₃', groups: ['Carbonylgruppe', 'Zwei Hydroxygruppen'],
