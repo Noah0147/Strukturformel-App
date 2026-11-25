@@ -161,7 +161,7 @@
     return n;
   }
 
-  window.DATA_VERSION = '2026-11-25e';
+  window.DATA_VERSION = '2026-11-25f';
   window.CATEGORIES = ['Alkohole & Carbonyle', 'Säuren & Ester', 'Aromaten', 'Aminosäuren', 'Nucleobasen & Purine', 'Wirkstoffe & Aromastoffe', 'Stoffwechsel & Pflanzen', 'Vitamine', 'Zucker & Nucleotide', 'Steroide & Botenstoffe', 'Kleine Moleküle'];
 
 
@@ -327,7 +327,7 @@
       }) },
     { id: 'oxal', cat: 'Säuren & Ester', name: 'Oxalsäure', alt: 'Ethandisäure', formula: 'C₂H₂O₄', groups: ['Zwei Carboxygruppen'],
       where: 'In Rhabarber und Spinat. Ihre Salze (Oxalate) können Nierensteine bilden.',
-      m: mol(function (h) { var c0 = h.add(0, 0), c1 = h.at(c0, 0), a = h.at(c0, 120, 'O'), b = h.at(c0, 240, 'HO'), c = h.at(c1, 60, 'O'), d = h.at(c1, -60, 'OH'); h.bd(c0, c1); h.bd(c0, a, 2); h.bd(c0, b); h.bd(c1, c, 2); h.bd(c1, d); }) },
+      m: mol(function (h) { var c0 = h.add(0, 0), c1 = h.at(c0, 0), a = h.at(c0, 120, 'HO'), b = h.at(c0, 240, 'O'), c = h.at(c1, 60, 'O'), d = h.at(c1, -60, 'OH'); h.bd(c0, c1); h.bd(c0, a); h.bd(c0, b, 2); h.bd(c1, c, 2); h.bd(c1, d); }) },
     { id: 'pyruvat', cat: 'Säuren & Ester', name: 'Brenztraubensäure', alt: 'Pyruvat, 2-Oxopropansäure', formula: 'C₃H₄O₃', groups: ['Carbonylgruppe (Keton)', 'Carboxygruppe'],
       where: 'Endprodukt der Glykolyse. Wird zu Acetyl-CoA oder bei Sauerstoffmangel zu Lactat umgesetzt.',
       m: mol(function (h) { var c0 = h.add(0, 0), c1 = h.at(c0, -30), o1 = h.at(c1, 270, 'O'), c2 = h.at(c1, 30), o2 = h.at(c2, 90, 'O'), o3 = h.at(c2, 330, 'OH'); h.bd(c0, c1); h.bd(c1, o1, 2); h.bd(c1, c2); h.bd(c2, o2, 2); h.bd(c2, o3); }) },
@@ -796,7 +796,7 @@
     { id: 'fumarsaeure', cat: 'Säuren & Ester', name: 'Fumarsäure', alt: 'trans-Butendisäure (Fumarat)', formula: 'C₄H₄O₄', groups: ['Zwei Carboxygruppen', 'trans-C=C-Doppelbindung'],
       ster: 'E-Form (trans), das cis-Isomer ist Maleinsäure',
       where: 'Zwischenprodukt des Citratzyklus und Säuerungsmittel E297. Ihr cis-Isomer heißt Maleinsäure.',
-      m: mol(function (h) { var c0 = h.add(0, 0); cooStart(h, c0, -30); var z = zig(h, c0, 3, -30, [1, 2, 1]); cooh(h, z[2], -30); }) },
+      m: mol(function (h) { var c0 = h.add(0, 0); cooStart(h, c0, 30); var z = zig(h, c0, 3, 30, [1, 2, 1]); cooh(h, z[2], 30); }) },
     { id: 'malat', cat: 'Säuren & Ester', name: 'Äpfelsäure', alt: 'Hydroxybutandisäure (Malat)', formula: 'C₄H₆O₅', groups: ['Zwei Carboxygruppen', 'Hydroxygruppe'],
       ster: 'L-Malat, (S)',
       where: 'Gibt unreifen Äpfeln und Stachelbeeren den sauren Geschmack (Säuerungsmittel E296). Als Malat Teil des Citratzyklus.',
@@ -804,10 +804,10 @@
     { id: 'weinsaeure', cat: 'Säuren & Ester', name: 'Weinsäure', alt: '2,3-Dihydroxybutandisäure', formula: 'C₄H₆O₆', groups: ['Zwei Carboxygruppen', 'Zwei Hydroxygruppen'],
       ster: 'L-(+)-Weinsäure, (2R,3R)',
       where: 'In Trauben und Wein, ihr Salz fällt als Weinstein aus. Sie steckt im Weinsteinbackpulver.',
-      m: mol(function (h) { var c0 = h.add(0, 0); cooStart(h, c0, -30); var z = zig(h, c0, 3, -30), o1 = oh(h, z[0], 270, 'w'), o2 = oh(h, z[1], 90, 'w'); cooh(h, z[2], -30); h.st(z[0], [o1, c0, z[1]], 'R'); h.st(z[1], [o2, z[2], z[0]], 'R'); }) },
+      m: mol(function (h) { var c0 = h.add(0, 0); cooStart(h, c0, 30); var z = zig(h, c0, 3, 30), o1 = oh(h, z[0], 90, 'd'), o2 = oh(h, z[1], 270, 'd'); cooh(h, z[2], 30); h.st(z[0], [o1, c0, z[1]], 'R'); h.st(z[1], [o2, z[2], z[0]], 'R'); }) },
     { id: 'oxalacetat', cat: 'Säuren & Ester', name: 'Oxalessigsäure', alt: 'Oxobutandisäure (Oxalacetat)', formula: 'C₄H₄O₅', groups: ['Zwei Carboxygruppen', 'Ketogruppe'],
       where: 'Im Citratzyklus nimmt sie Acetyl-CoA auf und bildet Citrat. Sie ist auch Ausgangspunkt der Gluconeogenese.',
-      m: mol(function (h) { var c0 = h.add(0, 0); cooStart(h, c0, -30); var z = zig(h, c0, 3, -30), o = h.at(z[0], 270, 'O'); h.bd(z[0], o, 2); cooh(h, z[2], -30); }) },
+      m: mol(function (h) { var c0 = h.add(0, 0); cooStart(h, c0, 30); var z = zig(h, c0, 3, 30), o = h.at(z[0], 90, 'O'); h.bd(z[0], o, 2); cooh(h, z[2], 30); }) },
     { id: 'ketoglutarat', cat: 'Säuren & Ester', name: 'α-Ketoglutarsäure', alt: '2-Oxopentandisäure (α-Ketoglutarat)', formula: 'C₅H₆O₅', groups: ['Zwei Carboxygruppen', 'Ketogruppe'],
       where: 'Zwischenprodukt des Citratzyklus. Durch Transaminierung wird daraus die Aminosäure Glutamat.',
       m: mol(function (h) { var c0 = h.add(0, 0); cooStart(h, c0, -30); var z = zig(h, c0, 4, -30), o = h.at(z[0], 270, 'O'); h.bd(z[0], o, 2); cooh(h, z[3], 30); }) },
@@ -822,7 +822,7 @@
       ster: 'Z-Form (cis) an der Doppelbindung C9=C10',
       where: 'Hauptfettsäure im Olivenöl. Die cis-Doppelbindung knickt die Kette, deshalb ist Olivenöl bei Zimmertemperatur flüssig.',
       m: mol(function (h) {
-        var c = h.add(0, 0), prev = c, steps = [30, -30, 30, -30, 30, -30, 30, -30, 30, 90, 150, 210, 150, 210, 150, 210, 150], k, i;
+        var c = h.add(0, 0), prev = c, steps = [30, 90, 30, -30, 30, -30, 30, -30, 30, 90, 150, 210, 150, 210, 150, 210, 150], k, i;
         cooStart(h, c, 30);
         for (k = 0; k < steps.length; k++) { i = h.at(prev, steps[k]); h.bd(prev, i, k === 8 ? 2 : 1); prev = i; }
       }) },
@@ -830,7 +830,7 @@
       where: 'Wintergrünöl, bekannt aus Rheumasalben und Kaugummi-Aroma. Im Körper wird es zu Salicylsäure gespalten, der Muttersubstanz von Aspirin.',
       m: mol(function (h) {
         var r = ring(h, 0, 0, 90, KEK), ho = h.at(r[1], 150, 'HO'); h.bd(r[1], ho);
-        var c = h.at(r[0], 90), o1 = h.at(c, 150, 'O'), o2 = h.at(c, 30, 'O'), me = h.at(o2, -30);
+        var c = h.at(r[0], 90), o1 = h.at(c, 180, 'O'), o2 = h.at(c, 30, 'O'), me = h.at(o2, 90);
         h.bd(r[0], c); h.bd(c, o1, 2); h.bd(c, o2); h.bd(o2, me);
       }) },
     { id: 'kohlensaeure', cat: 'Säuren & Ester', name: 'Kohlensäure', alt: 'H₂CO₃', formula: 'H₂CO₃', groups: ['Carbonylgruppe', 'Zwei Hydroxygruppen'],
@@ -1271,7 +1271,7 @@
 
     { id: 'acrylsaeure', cat: 'Säuren & Ester', name: 'Acrylsäure', alt: 'Propensäure', formula: 'C₃H₄O₂', groups: ['Carboxygruppe', 'C=C-Doppelbindung'],
       where: 'Grundbaustein der Polyacrylate. Diese Polymere sind in Superabsorbern, etwa in Windeln, enthalten.',
-      m: mol(function (h) { var c0 = h.add(0, 0), c1 = h.at(c0, 30), c2 = h.at(c1, -30); h.bd(c0, c1, 2); h.bd(c1, c2); cooh(h, c2, -30); }) },
+      m: mol(function (h) { var c0 = h.add(0, 0), c1 = h.at(c0, -30), c2 = h.at(c1, 30); h.bd(c0, c1, 2); h.bd(c1, c2); cooh(h, c2, 30); }) },
     { id: 'acetessigsaeure', cat: 'Säuren & Ester', name: 'Acetessigsäure', alt: '3-Oxobutansäure', formula: 'C₄H₆O₃', groups: ['Ketogruppe', 'Carboxygruppe', 'β-Ketosäure'],
       where: 'Eines der Ketonkörper-Moleküle, die die Leber beim Hungern oder im Diabetes bildet. Sie zerfällt leicht in Aceton und CO₂.',
       m: mol(function (h) { var c0 = h.add(0, 0), c1 = h.at(c0, 30), o = h.at(c1, 90, 'O'), c2 = h.at(c1, -30), c3 = h.at(c2, 30); h.bd(c0, c1); h.bd(c1, o, 2); h.bd(c1, c2); h.bd(c2, c3); cooh(h, c3, 30); }) },
@@ -1547,7 +1547,7 @@
       }) },
     { id: 'glutarsaeure', cat: 'Säuren & Ester', name: 'Glutarsäure', alt: 'Pentandisäure', formula: 'C₅H₈O₄', groups: ['Zwei Carboxygruppen (Dicarbonsäure)'],
       where: 'Entsteht beim Abbau der Aminosäuren Lysin und Tryptophan. Ein Enzymdefekt dabei führt zur Glutarazidurie.',
-      m: mol(function (h) { var c0 = h.add(0, 0), z = zig(h, c0, 4, 30); cooStart(h, c0, 30); cooh(h, z[3], -30); }) },
+      m: mol(function (h) { var c0 = h.add(0, 0), z = zig(h, c0, 4, -30); cooStart(h, c0, -30); cooh(h, z[3], 30); }) },
     { id: 'isoamylacetat', cat: 'Säuren & Ester', name: 'Isoamylacetat', alt: 'Isopentylacetat', formula: 'C₇H₁₄O₂', groups: ['Ester', 'Verzweigte Alkylkette'],
       where: 'Das Bananenaroma. Der Geruch wird auch als Duftstoff in Lebensmitteln genutzt, außerdem warnen Honigbienen mit einem ähnlichen Stoff vor Gefahr.',
       m: mol(function (h) { var c0 = h.add(0, 0), c1 = h.at(c0, 30), o = h.at(c1, 90, 'O'), o2 = h.at(c1, -30, 'O'), c3 = h.at(o2, 30), c4 = h.at(c3, -30), c5 = h.at(c4, 30), m1 = h.at(c5, 90), m2 = h.at(c5, 330); h.bd(c0, c1); h.bd(c1, o, 2); h.bd(c1, o2); h.bd(o2, c3); h.bd(c3, c4); h.bd(c4, c5); h.bd(c5, m1); h.bd(c5, m2); }) },
@@ -1561,8 +1561,8 @@
       where: 'Ihre Ester, die Phthalate, werden als Weichmacher in Kunststoffen verwendet und stehen wegen hormonähnlicher Wirkungen in der Kritik.',
       m: mol(function (h) {
         var r = ring(h, 0, 0, 0, KEK), ca = h.at(r[1], 60), cb = h.at(r[2], 120); h.bd(r[1], ca); h.bd(r[2], cb);
-        var a1 = h.at(ca, 0, 'OH'), a2 = h.at(ca, 120, 'O'), b1 = h.at(cb, 180, 'HO'), b2 = h.at(cb, 60, 'O');
-        h.bd(ca, a1); h.bd(ca, a2, 2); h.bd(cb, b1); h.bd(cb, b2, 2);
+        var a1 = h.at(ca, 0, 'O'), a2 = h.at(ca, 120, 'OH'), b1 = h.at(cb, 180, 'O'), b2 = h.at(cb, 60, 'HO');
+        h.bd(ca, a1, 2); h.bd(ca, a2); h.bd(cb, b1, 2); h.bd(cb, b2);
       }) },
 
     { id: 'nitrobenzol', cat: 'Aromaten', name: 'Nitrobenzol', alt: '', formula: 'C₆H₅NO₂', groups: ['Aromatischer Ring', 'Nitrogruppe'],
