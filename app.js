@@ -28,12 +28,13 @@
   var byId = {}; CARDS.forEach(function (c) { byId[c.id] = c; });
   function svgOf(c) { if (c.svgH !== Chem.getH()) { c.svg = Chem.render(c.m, 'Strukturformel eines Moleküls'); c.svgH = Chem.getH(); } return c.svg; }
   var ids = CARDS.map(function (c) { return c.id; });
-  var st = { status: {}, mode: 'struct', order: ids.slice(), pos: 0, retryOnly: false, dueOnly: false, cat: 'all' };
+  var st = { status: {}, rts: {}, mode: 'struct', order: ids.slice(), pos: 0, retryOnly: false, dueOnly: false, cat: 'all' };
 
   try {
     var saved = JSON.parse(localStorage.getItem(KEY) || 'null');
     if (saved) {
       if (saved.status) st.status = saved.status;
+      if (saved.rts && typeof saved.rts === 'object') st.rts = saved.rts;
       if (saved.mode === 'name' || saved.mode === 'struct') st.mode = saved.mode;
       if (saved.cat === 'new' || CATS.indexOf(saved.cat) >= 0) st.cat = saved.cat;
       if (Array.isArray(saved.order)) {
@@ -62,7 +63,7 @@
 
   $('sub').textContent = CARDS.length + ' Moleküle aus Alltag und Biochemie. Erst raten, dann umdrehen.';
   var ver = (window.DATA_VERSION || '').split('-');
-  $('foot').textContent = CARDS.length + ' Karten' + (ver.length === 3 ? ' · Stand ' + parseInt(ver[2], 10) + '.' + ver[1] + '.' + ver[0] : '') + ' · Version 47';
+  $('foot').textContent = CARDS.length + ' Karten' + (ver.length === 3 ? ' · Stand ' + parseInt(ver[2], 10) + '.' + ver[1] + '.' + ver[0] : '') + ' · Version 48';
 
   function buildCatOptions() {
     var html = '<option value="all">Alle Kategorien (' + CARDS.length + ')</option>';
@@ -85,7 +86,10 @@
   function deck() {
     var b = base();
     if (st.dueOnly) return window.Progress.dueIds(b);
-    return st.retryOnly ? b.filter(function (id) { return st.status[id] === 'retry'; }) : b;
+    if (!st.retryOnly) return b;
+    /* „Nochmal“-Stapel: zuletzt markierte Karte steht ganz hinten. */
+    return b.filter(function (id) { return st.status[id] === 'retry'; })
+      .sort(function (x, y) { return (st.rts[x] || 0) - (st.rts[y] || 0); });
   }
   function clampPos() { var d = deck(); if (!d.length) { st.pos = 0; } else if (st.pos >= d.length || st.pos < 0) { st.pos = ((st.pos % d.length) + d.length) % d.length; } }
 
@@ -210,9 +214,14 @@
     var d = deck(); if (!d.length) return;
     var id = d[st.pos];
     st.status[id] = s;
+    if (s === 'retry') st.rts[id] = Date.now(); else delete st.rts[id];
     markSeen(id);
     toastAch(window.Progress.record(id, s === 'known', byId[id].cat));
-    if (st.retryOnly || st.dueOnly) { clampPos(); } else { st.pos = (st.pos + 1) % d.length; }
+    if (st.retryOnly || st.dueOnly) {
+      var nd = deck();
+      if (nd.length > 1 && nd[st.pos] === id) st.pos = 0; // Karte steht jetzt hinten: weiter mit der ersten
+      clampPos();
+    } else { st.pos = (st.pos + 1) % d.length; }
     update();
   }
 
@@ -243,7 +252,7 @@
     for (var i = o.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = o[i]; o[i] = o[j]; o[j] = t; }
     st.order = o; st.pos = 0; update();
   });
-  $('reset').addEventListener('click', function () { st.status = {}; st.pos = 0; st.retryOnly = false; st.dueOnly = false; update(); });
+  $('reset').addEventListener('click', function () { st.status = {}; st.rts = {}; st.pos = 0; st.retryOnly = false; st.dueOnly = false; update(); });
   $('again').addEventListener('click', function () {
     base().forEach(function (id) { delete st.status[id]; });
     st.pos = 0; st.retryOnly = false; st.dueOnly = false; update();
