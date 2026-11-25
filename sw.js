@@ -1,5 +1,5 @@
 /* Service Worker: Netz zuerst, damit neue Karten sofort erscheinen. Ohne Netz kommt die letzte Kopie aus dem Cache. */
-var CACHE = 'strukturformel-karten-v53';
+var CACHE = 'strukturformel-karten-v54';
 var ASSETS = ['./', 'index.html', 'styles.css', 'chem.js', 'molecules.js', 'app.js', 'pathways.js', 'pathways_zr.js', 'path.js', 'progress.js', 'stats.js', 'manifest.webmanifest',
   'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png', 'favicon.png'];
 

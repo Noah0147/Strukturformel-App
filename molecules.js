@@ -161,7 +161,7 @@
     return n;
   }
 
-  window.DATA_VERSION = '2026-11-25f';
+  window.DATA_VERSION = '2026-11-25g';
   window.CATEGORIES = ['Alkohole & Carbonyle', 'Säuren & Ester', 'Aromaten', 'Aminosäuren', 'Nucleobasen & Purine', 'Wirkstoffe & Aromastoffe', 'Stoffwechsel & Pflanzen', 'Vitamine', 'Zucker & Nucleotide', 'Steroide & Botenstoffe', 'Kleine Moleküle'];
 
 
@@ -822,7 +822,7 @@
       ster: 'Z-Form (cis) an der Doppelbindung C9=C10',
       where: 'Hauptfettsäure im Olivenöl. Die cis-Doppelbindung knickt die Kette, deshalb ist Olivenöl bei Zimmertemperatur flüssig.',
       m: mol(function (h) {
-        var c = h.add(0, 0), prev = c, steps = [30, 90, 30, -30, 30, -30, 30, -30, 30, 90, 150, 210, 150, 210, 150, 210, 150], k, i;
+        var c = h.add(0, 0), prev = c, steps = [30, -30, 30, -30, 30, -30, 30, -30, 30, 90, 150, 210, 150, 210, 150, 90, 150], k, i;
         cooStart(h, c, 30);
         for (k = 0; k < steps.length; k++) { i = h.at(prev, steps[k]); h.bd(prev, i, k === 8 ? 2 : 1); prev = i; }
       }) },
