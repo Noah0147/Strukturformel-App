@@ -202,7 +202,11 @@
     body.innerHTML = h + factsCard();
     gpreview();
   }
-  function learn() { if (cur.type === 'steps' || cur.type === 'overview') learnGraph(); else learnScheme(); }
+  function learnAnim() {
+    body.innerHTML = '<div class="pcard">' + balHtml() + '<div id="panim"></div></div>' + factsCard();
+    if (window.PhotoAnim) window.PhotoAnim.mount(document.getElementById('panim'));
+  }
+  function learn() { if (cur.type === 'anim') learnAnim(); else if (cur.type === 'steps' || cur.type === 'overview') learnGraph(); else learnScheme(); }
   function refreshLearn() { var g = document.getElementById('gdia'); if (g) g.innerHTML = graphHtml({}); gpreview(); }
 
   /* ---------- Üben ---------- */
